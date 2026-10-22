@@ -1,0 +1,16 @@
+## Postgres 18 with pgvector (nearest-meaning search) and pg_search (BM25 keyword search).
+## `docker compose up -d`, then `rag-trend-radar db-reset`. Data survives restarts in the volume.
+services:
+  db:
+    image: paradedb/paradedb:0.26.2-pg18
+    environment:
+      POSTGRES_DB: radar
+      POSTGRES_USER: radar
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    ports:
+      - "5432:5432"
+    volumes:
+      - radar-db:/var/lib/postgresql
+
+volumes:
+  radar-db:

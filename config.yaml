@@ -1,0 +1,21 @@
+## rag-trend-radar settings. Secrets live in .env. Every key is validated at startup
+## (rag_trend_radar/config.py): a misspelt one fails instead of being ignored.
+
+## Off-repo: the Enron dataset, model caches, replay snapshots.
+data_dir: data
+
+## Postgres in docker compose (ParadeDB image: pgvector + pg_search). Password in .env.
+db_host: localhost
+db_port: 5432
+db_name: radar
+db_user: radar
+
+## A simulated day starts and ends at midnight in Houston, where Enron was.
+timezone: America/Chicago
+
+## Swappable by name: each model gets its own vectors_<model> table.
+embedding_model: google/embeddinggemma-2
+embedding_dims: 768
+rerank_model: BAAI/bge-reranker-v2-m3
+
+answer_model: claude-sonnet-5-5

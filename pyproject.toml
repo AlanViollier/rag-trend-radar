@@ -1,0 +1,76 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rag-trend-radar"
+version = "0.1.0"
+description = "RAG and a trend radar over one Postgres store, fed day by day"
+requires-python = ">=3.14"
+
+dependencies = [
+    "anthropic>=1.0",           # answers with native citations, digests through the Batch API
+    "mail-parser-reply>=1.36",  # splits an email's own text from the quoted replies below it
+    "numpy>=2.4",               # vectors between the embedder and Postgres
+    "pgvector>=0.5",            # vector / halfvec types for psycopg
+    "psycopg[binary]>=3.3",     # Postgres driver; plain SQL, no ORM
+    "pydantic>=2.12",           # every record in and out
+    "pydantic-settings>=2.11",  # config.yaml + .env as one typed settings object
+    "pyyaml>=6.0.3",            # config.yaml
+    "ranx>=0.3.21",             # retrieval metrics checked against trec_eval
+    "rich>=14",                 # anything a human reads in the terminal
+    "semchunk>=4.1",            # splits the few emails too long to embed whole
+    "typer>=0.27",              # the CLI
+]
+
+## Local models, kept out of CI: `uv sync --extra models`.
+[project.optional-dependencies]
+models = [
+    "sentence-transformers>=6.2",  # EmbeddingGemma 2, MiniLM baseline, cross-encoder rerankers
+]
+
+[project.scripts]
+rag-trend-radar = "rag_trend_radar.cli:app"
+
+## `uv run` and `uv sync` install this group by default.
+[dependency-groups]
+dev = [
+    "pytest>=8.4",
+    "hypothesis>=6.140",  # property tests for round-trips and invariants
+    "ruff>=0.15",
+    "mypy>=1.18",
+    "pre-commit>=4.3",
+    "pip-audit>=2.9",     # CVE scan: `make audit` and CI
+    "types-pyyaml>=6.0.12",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["rag_trend_radar"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+## E/F/W pycodestyle + pyflakes · I import order · UP pyupgrade · B bugbear · SIM simplify
+## BLE no blind `except Exception` · T20 no print() in library code
+## D1 docstrings on public names only (private helpers may skip them, per STYLE)
+## ERA no commented-out code · S security (what bandit used to catch)
+## RET returns · PT pytest style · PIE misc smells · C4 comprehensions
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "BLE", "T20", "D1", "ERA", "S", "RET", "PT", "PIE", "C4"]
+## E501 line length is the formatter's job · B008 pydantic Field() defaults are fine
+## D104/D105/D107 package, magic-method and __init__ docstrings · S603/S607 subprocess calls are deliberate
+ignore = ["E501", "B008", "D104", "D105", "D107", "S603", "S607"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D1", "S101"]
+"scripts/**" = ["T20"]
+
+[tool.mypy]
+strict = true
+plugins = ["pydantic.mypy"]
+explicit_package_bases = true
+## The private context repo can hold scripts (chart refreshers, one-offs) that aren't the package.
+exclude = ["^llm_context/"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
