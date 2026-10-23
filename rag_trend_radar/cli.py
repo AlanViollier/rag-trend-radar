@@ -2,13 +2,15 @@
 
 import typer
 
+from rag_trend_radar.db import connect as db
+
 app = typer.Typer(no_args_is_help=True)
 
 
 @app.command()
 def db_reset() -> None:
     """Drop everything and recreate the tables."""
-    raise NotImplementedError
+    db.reset()
 
 
 @app.command()

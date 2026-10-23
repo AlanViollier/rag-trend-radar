@@ -7,3 +7,7 @@ class AppError(Exception):
 
 class ConfigError(AppError):
     """Settings are missing or invalid."""
+
+
+class ParseError(AppError):
+    """A dataset file can't become a record; the message is the quarantine reason."""

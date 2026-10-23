@@ -33,11 +33,18 @@ class ParsedEmail(Record):
     body: str
 
 
+class QuotedBlock(Record):
+    """One quoted or forwarded message inside a body: its header lines, then its text."""
+
+    header: str
+    text: str
+
+
 class SplitBody(Record):
-    """An email body split into its own text and the replies it quotes."""
+    """An email body split into its own text and the messages it quotes, outermost first."""
 
     own: str
-    quoted: str
+    quoted: tuple[QuotedBlock, ...]
 
 
 class Document(Record):
@@ -53,6 +60,7 @@ class Document(Record):
     body_hash: str
     public: bool
     readers: tuple[str, ...]
+    date_uncertain: bool = False
 
 
 class SearchHit(Record):

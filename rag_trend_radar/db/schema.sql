@@ -47,7 +47,9 @@ CREATE TABLE emails (
     cc_addrs    text[] NOT NULL DEFAULT '{}',
     bcc_addrs   text[] NOT NULL DEFAULT '{}',
     thread_id   text,
-    mailboxes   text[] NOT NULL            -- every mailbox a copy was found in
+    mailboxes   text[] NOT NULL,           -- every mailbox a copy was found in
+    -- Copies disagreed on the date and none was stamped to the second: off by up to ~12 hours.
+    date_uncertain boolean NOT NULL DEFAULT false
 );
 
 -- Every address seen. The 150 mailbox owners are the employees who can log in.
@@ -105,8 +107,11 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 GRANT radar_reader TO CURRENT_USER;
 GRANT USAGE ON SCHEMA public TO radar_reader;
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO radar_reader;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO radar_reader;
+
+-- Readers get tables by name, never by default: a new table stays invisible until it's granted
+-- here with a policy. raw_files and quarantine hold every email whole, so they're never granted.
+-- index.py grants each vectors_<model> table with a policy through chunks.
+GRANT SELECT ON documents, emails, access, people, chunks, batches TO radar_reader;
 
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 CREATE POLICY documents_visible ON documents FOR SELECT TO radar_reader USING (
@@ -122,8 +127,21 @@ CREATE POLICY documents_visible ON documents FOR SELECT TO radar_reader USING (
     )
 );
 
--- A chunk is visible when its document is; the subquery goes through documents' policy.
+-- Your own grants only; the investigator sees all of them.
+ALTER TABLE access ENABLE ROW LEVEL SECURITY;
+CREATE POLICY access_visible ON access FOR SELECT TO radar_reader USING (
+    person = current_setting('app.person', true)
+    OR current_setting('app.person', true) = 'investigator'
+);
+
+-- A chunk or an email's details are visible when its document is; the subquery goes through
+-- documents' policy.
 ALTER TABLE chunks ENABLE ROW LEVEL SECURITY;
 CREATE POLICY chunks_visible ON chunks FOR SELECT TO radar_reader USING (
     EXISTS (SELECT 1 FROM documents WHERE documents.id = chunks.document_id)
+);
+
+ALTER TABLE emails ENABLE ROW LEVEL SECURITY;
+CREATE POLICY emails_visible ON emails FOR SELECT TO radar_reader USING (
+    EXISTS (SELECT 1 FROM documents WHERE documents.id = emails.document_id)
 );
