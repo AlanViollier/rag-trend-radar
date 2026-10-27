@@ -7,7 +7,6 @@ import numpy as np
 from numpy.typing import NDArray
 from ranx import Qrels, Run, evaluate
 
-from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.schema import EvalQuestion, SearchHit
 from rag_trend_radar.search import hybrid, keyword, vector
@@ -40,15 +39,18 @@ def score(
 
 
 def rankings(
-    questions: Sequence[EvalQuestion], vectors: NDArray[np.float32], depth: int
+    questions: Sequence[EvalQuestion],
+    vectors: NDArray[np.float32],
+    model: str,
+    depth: int,
+    reranker: str | None,
 ) -> dict[str, dict[str, list[SearchHit]]]:
     """Every method's ranked chunks per question, each question asked as its person.
 
     Returns {method: {question id: hits}}. The reranker reorders the same `depth` candidates the
-    method under it found, so its row shows what reordering adds and nothing else.
+    method under it found, so its row shows what reordering adds and nothing else. With no
+    `reranker`, those rows are skipped: they cost most of the run's time.
     """
-    settings = get_settings()
-    model, reranker = settings.embedding_model, settings.rerank_model
     out: dict[str, dict[str, list[SearchHit]]] = defaultdict(dict)
     for q, vector_ in zip(questions, vectors, strict=True):
         with db.connect(q.person) as conn:
@@ -57,8 +59,9 @@ def rankings(
                 "vector": vector.search(conn, vector_, model, q.as_of, depth),
                 "hybrid": hybrid.search(conn, q.question, vector_, model, q.as_of, depth),
             }
-        lists["vector + rerank"] = rerank(q.question, lists["vector"], reranker, depth)
-        lists["hybrid + rerank"] = rerank(q.question, lists["hybrid"], reranker, depth)
+        if reranker is not None:
+            lists["vector + rerank"] = rerank(q.question, lists["vector"], reranker, depth)
+            lists["hybrid + rerank"] = rerank(q.question, lists["hybrid"], reranker, depth)
         for method, hits in lists.items():
             out[method][q.id] = hits
     return dict(out)

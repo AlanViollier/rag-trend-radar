@@ -36,10 +36,19 @@ Write one question {mailbox} might type to find what this email says. Rules:
 - Ask about one specific fact the email states: who, what, how much, when, or what was decided. \
 One fact, one question. Never ask about something the email doesn't say.
 - Use your own words. Don't copy the subject line, numbers as written, distinctive phrases, or \
-rare terms; a person or company may be named when the question needs it.
+rare terms; {names_rule}
 - Don't mention "this email" or "the email": the person asking hasn't seen it.
 - If the email holds no fact worth asking about, set usable to false: bounce or delivery-failure \
 notices, other automated messages, empty or pleasantry-only mail."""
+
+
+## The no-names variant tests meaning over matching: without exact names to lean on, keyword
+## search loses its edge, and what's left is how well vectors capture what a question means.
+NAMES = "a person or company may be named when the question needs it."
+NO_NAMES = (
+    'name no person, company, place or product: describe them instead ("the Canadian pipeline '
+    'company", "our head of research").'
+)
 
 
 class Source(Record):
@@ -81,13 +90,17 @@ def sample(conn: psycopg.Connection[TupleRow], kind: str, n: int, seed: int) -> 
     ]
 
 
-def write(sources: list[Source], as_of: date, model: str) -> Iterator[EvalQuestion]:
+def write(
+    sources: list[Source], as_of: date, model: str, *, names: bool = True
+) -> Iterator[EvalQuestion]:
     """A question per usable source; unusable ones are skipped. Cached per source (rule 6)."""
     client = anthropic.Anthropic(api_key=get_settings().anthropic_api_key.get_secret_value())
     ## Calls run 8 at a time and come back in source order, so the set reproduces. Every source
     ## is asked, even past the ones the caller keeps: the spares are cached for the next run.
     with ThreadPoolExecutor(max_workers=8) as pool:
-        answers = list(pool.map(lambda s: _cached(s, model) or _ask(client, s, model), sources))
+        answers = list(
+            pool.map(lambda s: _cached(s, model, names) or _ask(client, s, model, names), sources)
+        )
     for source, written in zip(sources, answers, strict=True):
         if written.usable and _one_question(written.question):
             yield EvalQuestion(
@@ -106,7 +119,7 @@ def _one_question(text: str) -> bool:
     return text.endswith("?") and text.count("?") == 1 and "\n" not in text and "<" not in text
 
 
-def _ask(client: anthropic.Anthropic, source: Source, model: str) -> _Written:
+def _ask(client: anthropic.Anthropic, source: Source, model: str, names: bool) -> _Written:
     response = client.beta.messages.parse(
         model=model,
         max_tokens=16000,
@@ -114,7 +127,9 @@ def _ask(client: anthropic.Anthropic, source: Source, model: str) -> _Written:
         messages=[
             {
                 "role": "user",
-                "content": INSTRUCTIONS.format(**source.model_dump()),
+                "content": INSTRUCTIONS.format(
+                    **source.model_dump(), names_rule=NAMES if names else NO_NAMES
+                ),
             }
         ],
         output_format=_Written,
@@ -125,18 +140,18 @@ def _ask(client: anthropic.Anthropic, source: Source, model: str) -> _Written:
     written = response.parsed_output
     if written is None:
         return _Written(usable=False, question="")
-    path = _cache_path(source, model)
+    path = _cache_path(source, model, names)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(written.model_dump_json())
     return written
 
 
-def _cached(source: Source, model: str) -> _Written | None:
-    path = _cache_path(source, model)
+def _cached(source: Source, model: str, names: bool) -> _Written | None:
+    path = _cache_path(source, model, names)
     return _Written.model_validate_json(path.read_text()) if path.exists() else None
 
 
-def _cache_path(source: Source, model: str) -> Path:
-    key = f"{PROMPT_VERSION}\x00{model}\x00{source.model_dump_json()}"
+def _cache_path(source: Source, model: str, names: bool) -> Path:
+    key = f"{PROMPT_VERSION}\x00{model}\x00{names}\x00{source.model_dump_json()}"
     digest = hashlib.blake2b(key.encode(), digest_size=16).hexdigest()
     return get_settings().data_dir / "cache" / "questions" / f"{digest}.json"

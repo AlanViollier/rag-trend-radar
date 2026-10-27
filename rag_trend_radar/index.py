@@ -125,6 +125,26 @@ def unembedded(conn: psycopg.Connection[TupleRow], model: str, dims: int) -> dic
     return dict(rows)
 
 
+def derive_vectors(conn: psycopg.Connection[TupleRow], model: str, dims: int, wider: int) -> int:
+    """Fill `model` at `dims` from its `wider` vectors: the first `dims` numbers, renormalised.
+
+    Only for models trained with Matryoshka representation learning (EmbeddingGemma), whose
+    leading dimensions carry a usable embedding alone; the result equals embedding again with
+    truncate_dim, without the 27 minutes. Returns how many vectors were added.
+    """
+    table = _vectors(conn, model, dims)
+    source = sql.Identifier(vectors_table(model, wider))
+    cur = conn.execute(
+        sql.SQL(
+            "INSERT INTO {} (chunk_id, embedding)"
+            " SELECT chunk_id, l2_normalize(subvector(embedding, 1, %s)) FROM {}"
+            " ON CONFLICT (chunk_id) DO NOTHING"
+        ).format(table, source),
+        (dims,),
+    )
+    return cur.rowcount
+
+
 def write_vectors(
     conn: psycopg.Connection[TupleRow],
     model: str,

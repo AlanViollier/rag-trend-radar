@@ -71,11 +71,18 @@ def load(since: str = "2001-09-01", until: str = "2001-09-30") -> None:
 
 
 @app.command("embed")
-def embed_chunks(model: str = "", dims: int = 0, batch: int = 512) -> None:
-    """Embed every chunk with no vector yet (default: the configured model and size)."""
+def embed_chunks(model: str = "", dims: int = 0, batch: int = 512, from_dims: int = 0) -> None:
+    """Embed every chunk with no vector yet (default: the configured model and size).
+
+    `--from-dims 768` derives the vectors from the model's stored 768-dim ones instead (Matryoshka
+    models only, EmbeddingGemma among them).
+    """
     settings = get_settings()
     model, dims = model or settings.embedding_model, dims or settings.embedding_dims
     with db.connect() as conn:
+        if from_dims:
+            show(f"{index.derive_vectors(conn, model, dims, from_dims):,} vectors derived")
+            return
         todo = list(index.unembedded(conn, model, dims).items())
         for start in track(range(0, len(todo), batch), description=f"{model} @ {dims}"):
             texts, ids = zip(*todo[start : start + batch], strict=True)
@@ -121,8 +128,14 @@ def ask(question: str, person: str = "investigator", as_of: str = "") -> None:
 
 
 @app.command()
-def questions(emails: int = 150, quoted: int = 50, out: Path = QUESTIONS, seed: int = 1) -> None:
-    """Have Claude write labelled questions from sampled emails and quoted messages (paid)."""
+def questions(
+    emails: int = 150, quoted: int = 50, out: Path = QUESTIONS, seed: int = 1, names: bool = True
+) -> None:
+    """Have Claude write labelled questions from sampled emails and quoted messages (paid).
+
+    `--no-names` forbids naming people, companies, places or products, so keyword search can't
+    lean on exact terms. A different `--seed` samples different documents.
+    """
     settings = get_settings()
     with db.connect() as conn:
         day = last_day(conn)
@@ -134,7 +147,7 @@ def questions(emails: int = 150, quoted: int = 50, out: Path = QUESTIONS, seed: 
     written = [
         q
         for kind, n in (("email", emails), ("quoted", quoted))
-        for q in islice(write(sources[kind], day, settings.answer_model), n)
+        for q in islice(write(sources[kind], day, settings.answer_model, names=names), n)
     ]
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("".join(q.model_dump_json() + "\n" for q in written))
@@ -142,9 +155,20 @@ def questions(emails: int = 150, quoted: int = 50, out: Path = QUESTIONS, seed: 
 
 
 @app.command()
-def recall(path: Path = QUESTIONS, depth: int = hybrid.DEPTH) -> None:
-    """recall@k and MRR for every search method over the labelled questions (free, local)."""
+def recall(
+    path: Path = QUESTIONS,
+    depth: int = hybrid.DEPTH,
+    model: str = "",
+    dims: int = 0,
+    rerank_rows: bool = True,
+) -> None:
+    """recall@k and MRR for every search method over the labelled questions (free, local).
+
+    `--model` and `--dims` score another embedding (embed it first); `--no-rerank-rows` skips the
+    reranked rows, which take most of the time.
+    """
     settings = get_settings()
+    model, dims = model or settings.embedding_model, dims or settings.embedding_dims
     labelled = [EvalQuestion.model_validate_json(line) for line in path.read_text().splitlines()]
     with db.connect() as conn:
         ids: dict[str, int] = dict(
@@ -156,18 +180,16 @@ def recall(path: Path = QUESTIONS, depth: int = hybrid.DEPTH) -> None:
     relevant = {q.id: {ids[x] for x in q.relevant} for q in labelled}
     vectors = embed(
         [q.question for q in labelled],
-        settings.embedding_model,
-        settings.embedding_dims,
+        model,
+        dims,
         query=True,
     )
-    table = Table(
-        title=f"{len(labelled)} questions, {settings.embedding_model} @ "
-        f"{settings.embedding_dims}, depth {depth}"
-    )
+    table = Table(title=f"{path.name}: {len(labelled)} questions, {model} @ {dims}, depth {depth}")
     table.add_column("method")
     for metric in METRICS:
         table.add_column(metric, justify="right")
-    for method, results in rankings(labelled, vectors, depth).items():
+    reranker = settings.rerank_model if rerank_rows else None
+    for method, results in rankings(labelled, vectors, model, depth, reranker).items():
         scores = score(relevant, results, METRICS)
         table.add_row(method, *(f"{scores[m]:.3f}" for m in METRICS))
     show(table)
