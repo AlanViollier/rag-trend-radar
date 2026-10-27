@@ -9,7 +9,7 @@ from pgvector import HalfVector
 from psycopg import sql
 from psycopg.rows import TupleRow
 
-from rag_trend_radar.index import vectors_table
+from rag_trend_radar.index import vectors_identifier
 from rag_trend_radar.schema import SearchHit
 from rag_trend_radar.search.ranking import cutoff, hits
 
@@ -20,7 +20,7 @@ def ranked(model: str, dims: int) -> sql.Composed:
         "SELECT v.chunk_id AS id, 1 - (v.embedding <=> %(vector)s) AS score FROM {} v"
         " JOIN chunks c ON c.id = v.chunk_id JOIN documents d ON d.id = c.document_id"
         " WHERE d.sent_at < %(cutoff)s ORDER BY v.embedding <=> %(vector)s LIMIT %(depth)s"
-    ).format(sql.Identifier(vectors_table(model, dims)))
+    ).format(vectors_identifier(model, dims))
 
 
 def search(

@@ -21,7 +21,7 @@ from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.embed import embed
 from rag_trend_radar.evals.retrieval import score
-from rag_trend_radar.index import vectors_table
+from rag_trend_radar.index import vectors_identifier, vectors_table
 from rag_trend_radar.schema import EvalQuestion, SearchHit
 from rag_trend_radar.search import vector
 from rag_trend_radar.search.ranking import cutoff
@@ -39,7 +39,7 @@ def main(paths: list[Path]) -> None:
         stored: dict[int, HalfVector] = dict(
             conn.execute(
                 sql.SQL("SELECT chunk_id, embedding FROM {}").format(
-                    sql.Identifier(vectors_table(model, dims))
+                    vectors_identifier(model, dims)
                 )
             ).fetchall()
         )

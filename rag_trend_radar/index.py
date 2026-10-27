@@ -11,6 +11,7 @@ from pgvector import HalfVector
 from psycopg import sql
 from psycopg.rows import TupleRow
 
+from rag_trend_radar.config import get_settings
 from rag_trend_radar.ingest.dedup import text_hash
 from rag_trend_radar.schema import Assembled, Document
 
@@ -112,6 +113,15 @@ def vectors_table(model: str, dims: int) -> str:
     return f"vectors_{re.sub(r'\W+', '_', model.rsplit('/', 1)[-1].lower())}_{dims}"
 
 
+def vectors_identifier(model: str, dims: int) -> sql.Identifier:
+    """The vectors table in the configured schema, never another found through the search path.
+
+    In an experiment's schema an unqualified name falls through to public when the experiment
+    has no such table yet, and reads or writes the store's vectors (2026-10-27).
+    """
+    return sql.Identifier(get_settings().db_schema, vectors_table(model, dims))
+
+
 def unembedded(conn: psycopg.Connection[TupleRow], model: str, dims: int) -> dict[str, list[int]]:
     """Chunks with no vector yet in `model` at `dims`, grouped by text: equal texts embed once."""
     table = _vectors(conn, model, dims)
@@ -133,7 +143,7 @@ def derive_vectors(conn: psycopg.Connection[TupleRow], model: str, dims: int, wi
     truncate_dim, without the 27 minutes. Returns how many vectors were added.
     """
     table = _vectors(conn, model, dims)
-    source = sql.Identifier(vectors_table(model, wider))
+    source = vectors_identifier(model, wider)
     cur = conn.execute(
         sql.SQL(
             "INSERT INTO {} (chunk_id, embedding)"
@@ -170,9 +180,9 @@ def delete_document(conn: psycopg.Connection[TupleRow], document_id: int) -> Non
 
 def _vectors(conn: psycopg.Connection[TupleRow], model: str, dims: int) -> sql.Identifier:
     ## Readers see a vector only when they see its chunk; the grant is by name like every table.
-    name = vectors_table(model, dims)
-    table = sql.Identifier(name)
-    if conn.execute("SELECT to_regclass(%s)", (name,)).fetchall()[0][0] is None:
+    table = vectors_identifier(model, dims)
+    exists = conn.execute("SELECT to_regclass(%s)", (table.as_string(conn),)).fetchall()[0][0]
+    if exists is None:
         for statement in (
             "CREATE TABLE {t} (chunk_id bigint PRIMARY KEY REFERENCES chunks (id)"
             " ON DELETE CASCADE, embedding halfvec({dims}) NOT NULL)",
