@@ -84,6 +84,13 @@ merged list and the reranker covered for the broken layer, which is why each lay
 measured on its own. Halfvec storage costs one question in 200 against full precision
 (`scripts/precision.py`).
 
+Two chunking choices were checked the same way, each in its own Postgres schema so the store
+stays untouched. Leading every chunk with its subject, sender and date puts the right email
+first 4 to 6 points more often than the bare body (hybrid .820 against .780, vector .795
+against .735, 200 questions). Chunk size barely matters: 256, 512 and 1,024 tokens land within
+a couple of points of each other, because most emails fit whole under all three. The Qwen3
+reranker scored within noise of bge (.875 against .890 first), so bge stays.
+
 ## Run it
 
 ```sh
