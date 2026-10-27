@@ -3,6 +3,8 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from rag_trend_radar.ingest.clean import (
+    block_author,
+    block_subject,
     frequent_lines,
     normalize,
     split_quoted,
@@ -259,3 +261,41 @@ def test_boilerplate_keeps_a_prefix_and_never_returns_nothing(
     trimmed = strip_boilerplate(own, keys)
     assert own.startswith(trimmed)
     assert trimmed.strip()
+
+
+## Who wrote a quoted message, in each header layout.
+
+
+@pytest.mark.parametrize(
+    ("header", "author"),
+    [
+        ("From: Pat Rowe on 07/05/2001 02:28 PM\nTo: Dana Kim/NA/Enron@Enron", "Pat Rowe"),
+        ("Lee Park\n\t07/05/2001 03:32 PM\n\t\t To: Dana Kim/NA/Enron@Enron", "Lee Park"),
+        ("Robin Cole/ENRON@enronXgate\n\t07/05/2001 02:20 PM", "Robin Cole"),
+        ("Sam Bell@ECT\n\t01/05/2001 08:44 AM", "Sam Bell"),
+        (
+            '"Kit Moss" <KMOSS@LAW.COM> on 01/04/2001 06:01:45 PM\nTo: <pat.rowe@enron.com>',
+            "Kit Moss",
+        ),
+        (
+            "-----Original Message-----\nFrom: \tPat Rowe [mailto:pat@x.com]\nSent: Monday",
+            "Pat Rowe",
+        ),
+        (
+            "----- Forwarded by Lee Park/NA/Enron on 07/05/2001 02:27 PM -----\n\nPat Rowe",
+            "Pat Rowe",
+        ),
+        ("From: pat.rowe@enron.com\nTo: dana.kim@enron.com", "pat.rowe@enron.com"),
+        ("To: Dana Kim/HOU/EES@EES\ncc:\nSubject: lunch", ""),
+        ("", ""),
+    ],
+)
+def test_block_author(header: str, author: str) -> None:
+    assert block_author(header) == author
+
+
+def test_block_subject_reads_the_field_wherever_it_sits() -> None:
+    assert block_subject("Lee Park\n\t\t To: Dana Kim\n\t\t Subject: Re: Dunn Subpoena") == (
+        "Re: Dunn Subpoena"
+    )
+    assert block_subject("On Monday, Pat wrote:") == ""

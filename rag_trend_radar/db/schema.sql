@@ -5,14 +5,15 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS pg_search;
 
--- One row per searchable thing: an email now, a digest or an arXiv paper later.
+-- One row per searchable thing: an email, a quoted message no email of ours holds, later a
+-- digest or an arXiv paper.
 -- (source, external_id) is the stable outside id; a changed body_hash on it is an edit.
 CREATE TABLE documents (
     id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     source      text NOT NULL,
     external_id text NOT NULL,
-    kind        text NOT NULL CHECK (kind IN ('email', 'digest')),
-    sent_at     timestamptz NOT NULL,
+    kind        text NOT NULL CHECK (kind IN ('email', 'quoted', 'digest')),
+    sent_at     timestamptz NOT NULL,  -- for a quoted message: when it was first quoted
     title       text NOT NULL,
     body        text NOT NULL,           -- the document's own text: what gets chunked
     quoted      text NOT NULL DEFAULT '', -- quoted replies, kept but never chunked
@@ -47,23 +48,23 @@ CREATE TABLE emails (
     cc_addrs    text[] NOT NULL DEFAULT '{}',
     bcc_addrs   text[] NOT NULL DEFAULT '{}',
     thread_id   text,
-    mailboxes   text[] NOT NULL,           -- every mailbox a copy was found in
     -- Copies disagreed on the date and none was stamped to the second: off by up to ~12 hours.
     date_uncertain boolean NOT NULL DEFAULT false
 );
 
--- Every address seen. The 150 mailbox owners are the employees who can log in.
-CREATE TABLE people (
-    address          text PRIMARY KEY,
-    name             text,
-    is_mailbox_owner boolean NOT NULL DEFAULT false
+-- The 150 mailbox owners, the employees who can log in, named by their mailbox (kean-s).
+-- A mailbox, not an address: owners write under several addresses and assistants send from
+-- their boss's account, so addresses can't say whose mail it is.
+CREATE TABLE employees (
+    mailbox text PRIMARY KEY
 );
 
--- Who may see which document. Row-level security below reads it.
+-- Who may see which document: every mailbox a copy sat in; for a quoted message, every mailbox
+-- holding an email that quotes it. Row-level security below reads it.
 CREATE TABLE access (
     document_id bigint REFERENCES documents (id) ON DELETE CASCADE,
-    person      text REFERENCES people (address),
-    PRIMARY KEY (document_id, person)
+    mailbox     text REFERENCES employees (mailbox),
+    PRIMARY KEY (document_id, mailbox)
 );
 
 -- Pieces of a document small enough to embed well.
@@ -100,7 +101,7 @@ CREATE TABLE batches (
 
 -- Row-level security. The pipeline writes as the owner (radar), which bypasses it.
 -- Every search runs as radar_reader with app.person set on the connection
--- ('investigator', or an employee's address). Unset means nothing is visible.
+-- ('investigator', or an employee's mailbox). Unset means nothing is visible.
 DO $$ BEGIN
     CREATE ROLE radar_reader NOLOGIN;
 EXCEPTION WHEN duplicate_object THEN NULL;
@@ -111,7 +112,7 @@ GRANT USAGE ON SCHEMA public TO radar_reader;
 -- Readers get tables by name, never by default: a new table stays invisible until it's granted
 -- here with a policy. raw_files and quarantine hold every email whole, so they're never granted.
 -- index.py grants each vectors_<model> table with a policy through chunks.
-GRANT SELECT ON documents, emails, access, people, chunks, batches TO radar_reader;
+GRANT SELECT ON documents, emails, access, employees, chunks, batches TO radar_reader;
 
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 CREATE POLICY documents_visible ON documents FOR SELECT TO radar_reader USING (
@@ -122,7 +123,7 @@ CREATE POLICY documents_visible ON documents FOR SELECT TO radar_reader USING (
         OR EXISTS (
             SELECT 1 FROM access
             WHERE access.document_id = documents.id
-              AND access.person = current_setting('app.person', true)
+              AND access.mailbox = current_setting('app.person', true)
         )
     )
 );
@@ -130,7 +131,7 @@ CREATE POLICY documents_visible ON documents FOR SELECT TO radar_reader USING (
 -- Your own grants only; the investigator sees all of them.
 ALTER TABLE access ENABLE ROW LEVEL SECURITY;
 CREATE POLICY access_visible ON access FOR SELECT TO radar_reader USING (
-    person = current_setting('app.person', true)
+    mailbox = current_setting('app.person', true)
     OR current_setting('app.person', true) = 'investigator'
 );
 

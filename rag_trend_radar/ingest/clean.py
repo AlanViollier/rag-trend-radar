@@ -30,6 +30,9 @@ _HEADER_FIELD = re.compile(
     _Q + r"(?:From|To|Sent|Date|cc|bcc|Subject|Importance|Sent by)\s*:", re.I
 )
 _SUBJECT = re.compile(_Q + r"Subject\s*:", re.I)
+_FROM = re.compile(r"^From\s*:\s*", re.I)
+## Where an author's name ends: a date, an address in brackets, or Lotus routing (`/HOU/ECT`).
+_AUTHOR_END = re.compile(r"\s+on\s+\d|\s*\[mailto:|\s*<|/|\s+\d{1,2}/\d{1,2}/\d{2,4}")
 ## The rest of a "Forwarded by" line wrapped onto the next: `PM -----` or only the dashes.
 _FORWARD_WRAP = re.compile(_Q + r"(?:[\d: ]*[AP]M )?-{3,}[ \t]*$")
 _QUOTE_PREFIX = re.compile(r"^>+ ?", re.MULTILINE)
@@ -100,6 +103,34 @@ def strip_boilerplate(own: str, frequent: frozenset[str]) -> str:
     while end and (not lines[end - 1].strip() or _key(lines[end - 1]) in frequent):
         end -= 1
     return "\n".join(lines[:end]).rstrip() if end else own
+
+
+def block_subject(header: str) -> str:
+    """The Subject field of a quoted message's header, or "" when it has none."""
+    for line in header.split("\n"):
+        if match := _SUBJECT.match(line):
+            return line[match.end() :].strip()
+    return ""
+
+
+def block_author(header: str) -> str:
+    """Who wrote a quoted message, as its header names them, or "" when it doesn't.
+
+    The first line that isn't a forward banner names the author in every layout that has one:
+    `From: Mark Palmer on 07/05/2001`, Lotus `Robert C Williams/ENRON@enronXgate`,
+    `"Keith McCrea" <KMCCREA@SABLAW.COM> on …`. Routing and dates are cut off.
+    """
+    for line in header.split("\n"):
+        line = _unquote(line).strip()
+        if not line or _LOTUS_FORWARD.match(line) or _FORWARD_WRAP.match(line):
+            continue
+        if _OUTLOOK.match(line) or _SENT_BY.match(line):
+            continue
+        if _HEADER_FIELD.match(line) and not _FROM.match(line):
+            return ""
+        name = _AUTHOR_END.split(_FROM.sub("", line), maxsplit=1)[0].strip(' "')
+        return name.split("@")[0] if " " in name else name
+    return ""
 
 
 ## Finding where quoted messages start.

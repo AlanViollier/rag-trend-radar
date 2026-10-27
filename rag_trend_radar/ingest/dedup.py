@@ -12,8 +12,12 @@ def content_hash(subject: str, body: str) -> str:
     (`walton@` vs `leann.walton@`) and shift dates by whole hours, while subject and body survive
     both up to whitespace.
     """
-    text = subject.strip().lower() + "\x00" + " ".join(body.split())
-    return hashlib.blake2b(text.encode(), digest_size=16).hexdigest()
+    return text_hash(subject.strip().lower() + "\x00" + body)
+
+
+def text_hash(text: str) -> str:
+    """Fingerprint of `text` up to whitespace: a quoted copy of a message matches the original."""
+    return hashlib.blake2b(" ".join(text.split()).encode(), digest_size=16).hexdigest()
 
 
 def resolve_sent_at(dates: Iterable[datetime]) -> tuple[datetime, bool]:

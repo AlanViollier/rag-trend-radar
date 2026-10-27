@@ -6,15 +6,35 @@ from typing import cast
 
 from semchunk.semchunk import chunk as split
 
+from rag_trend_radar.ingest.clean import strip_boilerplate
+from rag_trend_radar.schema import Document
+
 ## 90% of own texts are under ~400 tokens, so most emails stay whole. 256 and 1,024 are rival
 ## rows in the M1 recall table. No overlap between pieces: semchunk's overlap adds a piece that
 ## straddles the paragraph break, mixing the two topics the split had just separated.
 MAX_TOKENS = 512
 
 
-def header(subject: str, sender: str, sent_at: datetime) -> str:
-    """The lines that lead every chunk: a bare "sounds good" is findable by its subject."""
-    return f"Subject: {subject}\nFrom: {sender}\nDate: {sent_at:%Y-%m-%d}"
+def pieces(
+    document: Document, count_tokens: Callable[[str], int], boilerplate: frozenset[str]
+) -> list[str]:
+    """The chunks of a document: its own text minus trailing boilerplate, led by its header."""
+    sent_at = document.sent_at if document.kind == "email" else None
+    lead = header(document.title, document.author, sent_at)
+    return chunk(strip_boilerplate(document.body, boilerplate), count_tokens, lead=lead)
+
+
+def header(subject: str, sender: str = "", sent_at: datetime | None = None) -> str:
+    """The lines that lead every chunk: a bare "sounds good" is findable by its subject.
+
+    A field that isn't known is left out rather than guessed.
+    """
+    lines = [f"Subject: {subject}"]
+    if sender:
+        lines.append(f"From: {sender}")
+    if sent_at is not None:
+        lines.append(f"Date: {sent_at:%Y-%m-%d}")
+    return "\n".join(lines)
 
 
 def chunk(

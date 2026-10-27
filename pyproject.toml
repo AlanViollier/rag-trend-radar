@@ -71,5 +71,10 @@ explicit_package_bases = true
 ## The private context repo can hold scripts (chart refreshers, one-offs) that aren't the package.
 exclude = ["^llm_context/"]
 
+## The models extra isn't installed in CI; embed.py imports it lazily.
+[[tool.mypy.overrides]]
+module = ["transformers", "sentence_transformers"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

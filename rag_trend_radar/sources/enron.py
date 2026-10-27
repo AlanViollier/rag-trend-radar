@@ -26,17 +26,24 @@ _BOUNCE_SUBJECTS = re.compile(
     r"|mail delivery failed|delivery failure)"
 )
 
+_FOLD = re.compile(r"\r?\n[ \t]+")
+
 
 def iter_raw_files(root: Path) -> Iterator[RawFile]:
     """Yield every email file under `root` (the extracted maildir/), in path order."""
     for path in sorted(p for p in root.rglob("*") if p.is_file()):
-        mailbox, *folders, _name = path.relative_to(root).parts
-        yield RawFile(
-            path=path.relative_to(root).as_posix(),
-            mailbox=mailbox,
-            folder="/".join(folders),
-            content=path.read_bytes(),
-        )
+        yield read_raw_file(root, path)
+
+
+def read_raw_file(root: Path, path: Path) -> RawFile:
+    """One file under `root`, its mailbox and folder taken from where it sits."""
+    mailbox, *folders, _name = path.relative_to(root).parts
+    return RawFile(
+        path=path.relative_to(root).as_posix(),
+        mailbox=mailbox,
+        folder="/".join(folders),
+        content=path.read_bytes(),
+    )
 
 
 def parse(raw: RawFile) -> ParsedEmail:
@@ -76,7 +83,9 @@ def _addresses(msg: Message, header: str) -> tuple[str, ...]:
 
 def _subject(msg: Message) -> str:
     ## Encoded words (`=?cp1252?Q?...?=`) come back as bytes, sometimes with no charset at all.
-    parts = decode_header(msg["Subject"] or "")
+    ## A long subject is folded over lines (a line break, then a space or tab); compat32 keeps
+    ## the fold, so it's unfolded here.
+    parts = decode_header(_FOLD.sub(" ", msg["Subject"] or ""))
     return "".join(
         part if isinstance(part, str) else _text(part, charset) for part, charset in parts
     )

@@ -18,7 +18,8 @@ def connect(person: str | None = None) -> psycopg.Connection[TupleRow]:
     ----------
     person:
         None for the pipeline (owner, no row filtering). 'investigator' or an employee's
-        address for searches: the connection switches to radar_reader and sets app.person.
+        mailbox (kean-s) for searches: the connection switches to radar_reader and sets
+        app.person.
     """
     conn = _open()
     register_vector(conn)

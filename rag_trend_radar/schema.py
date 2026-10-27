@@ -20,15 +20,20 @@ class RawFile(Record):
     content: bytes
 
 
-class ParsedEmail(Record):
-    """The headers and body of a raw file, before cleaning."""
+class EmailHeaders(Record):
+    """Who sent an email to whom: the `emails` row of a document."""
 
     message_id: str
-    sent_at: datetime
     sender: str
     to_addrs: tuple[str, ...]
     cc_addrs: tuple[str, ...]
     bcc_addrs: tuple[str, ...]
+
+
+class ParsedEmail(EmailHeaders):
+    """The headers and body of a raw file, before cleaning."""
+
+    sent_at: datetime
     subject: str
     body: str
 
@@ -48,19 +53,36 @@ class SplitBody(Record):
 
 
 class Document(Record):
-    """A searchable thing ready to upsert, with who may see it."""
+    """A searchable thing ready to upsert, with who may see it and the files it came from.
+
+    `author` and a known `sent_at` lead every chunk; a quoted message's date is when it was
+    first quoted, not when it was written, so it leads with its author only.
+    """
 
     source: str
     external_id: str
     kind: str
     sent_at: datetime
     title: str
+    author: str
     body: str
     quoted: str
     body_hash: str
     public: bool
     readers: tuple[str, ...]
+    paths: tuple[str, ...] = ()
+    email: EmailHeaders | None = None
     date_uncertain: bool = False
+
+
+class Assembled(Record):
+    """A span of days read from the dataset, ready for the store."""
+
+    mailboxes: tuple[str, ...]
+    raw_files: tuple[RawFile, ...]
+    rejected: dict[str, str]
+    documents: tuple[Document, ...]
+    boilerplate: frozenset[str]
 
 
 class SearchHit(Record):

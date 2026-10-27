@@ -70,3 +70,10 @@ def test_iter_raw_files_reads_mailbox_and_nested_folder(tmp_path: Path) -> None:
         ("kim-d/1.", "kim-d", ""),
         ("kim-d/projects/west/3.", "kim-d", "projects/west"),
     ]
+
+
+def test_a_folded_subject_is_unfolded() -> None:
+    raw = _raw(
+        (HEADERS + "Subject: Global Employment Law Alert for\r\n \tMid-September\r\n\r\nx").encode()
+    )
+    assert parse(raw).subject == "Global Employment Law Alert for Mid-September"

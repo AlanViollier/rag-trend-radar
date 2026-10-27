@@ -3,7 +3,8 @@ from datetime import datetime
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from rag_trend_radar.ingest.chunk import chunk, header
+from rag_trend_radar.ingest.chunk import chunk, header, pieces
+from rag_trend_radar.schema import Document
 
 
 def _words(text: str) -> int:
@@ -15,6 +16,30 @@ def test_a_short_email_is_one_piece_led_by_its_header() -> None:
     assert chunk("Sounds good, see you Thursday.", _words, lead=lead) == [
         "Subject: lunch\nFrom: pat.rowe@enron.com\nDate: 2001-05-09\n\n"
         "Sounds good, see you Thursday."
+    ]
+
+
+def test_unknown_header_fields_are_left_out() -> None:
+    assert header("lunch") == "Subject: lunch"
+    assert header("lunch", "Pat Rowe") == "Subject: lunch\nFrom: Pat Rowe"
+
+
+def test_a_quoted_message_leads_without_the_date_it_was_first_quoted() -> None:
+    doc = Document(
+        source="enron",
+        external_id="h",
+        kind="quoted",
+        sent_at=datetime(2001, 9, 3),
+        title="Gas",
+        author="Pat Rowe",
+        body="Prices rose.\n\nPat Rowe\nEnron",
+        quoted="",
+        body_hash="h",
+        public=False,
+        readers=("kim-d",),
+    )
+    assert pieces(doc, _words, frozenset({"Pat Rowe", "Enron"})) == [
+        "Subject: Gas\nFrom: Pat Rowe\n\nPrices rose."
     ]
 
 
