@@ -135,6 +135,28 @@ def unembedded(conn: psycopg.Connection[TupleRow], model: str, dims: int) -> dic
     return dict(rows)
 
 
+def reuse_vectors(conn: psycopg.Connection[TupleRow], model: str, dims: int, source: str) -> int:
+    """Copy `source` schema's vector for every chunk here whose text it already embedded.
+
+    A vector depends only on the text, so an experiment that re-chunks only the long emails
+    re-embeds only those: the rest match the store's chunks by text hash. Returns how many.
+    """
+    table = _vectors(conn, model, dims)
+    cur = conn.execute(
+        sql.SQL(
+            "INSERT INTO {} (chunk_id, embedding)"
+            " SELECT DISTINCT ON (c.id) c.id, v.embedding FROM chunks c"
+            " JOIN {} s ON s.text_hash = c.text_hash JOIN {} v ON v.chunk_id = s.id"
+            " ORDER BY c.id ON CONFLICT (chunk_id) DO NOTHING"
+        ).format(
+            table,
+            sql.Identifier(source, "chunks"),
+            sql.Identifier(source, vectors_table(model, dims)),
+        )
+    )
+    return cur.rowcount
+
+
 def derive_vectors(conn: psycopg.Connection[TupleRow], model: str, dims: int, wider: int) -> int:
     """Fill `model` at `dims` from its `wider` vectors: the first `dims` numbers, renormalised.
 

@@ -81,11 +81,14 @@ def load(
 
 
 @app.command("embed")
-def embed_chunks(model: str = "", dims: int = 0, batch: int = 512, from_dims: int = 0) -> None:
+def embed_chunks(
+    model: str = "", dims: int = 0, batch: int = 512, from_dims: int = 0, reuse_from: str = ""
+) -> None:
     """Embed every chunk with no vector yet (default: the configured model and size).
 
     `--from-dims 768` derives the vectors from the model's stored 768-dim ones instead (Matryoshka
-    models only, EmbeddingGemma among them).
+    models only, EmbeddingGemma among them). `--reuse-from public` first copies the store's vector
+    for every chunk whose text it already embedded, so an experiment embeds only what changed.
     """
     settings = get_settings()
     model, dims = model or settings.embedding_model, dims or settings.embedding_dims
@@ -93,6 +96,9 @@ def embed_chunks(model: str = "", dims: int = 0, batch: int = 512, from_dims: in
         if from_dims:
             show(f"{index.derive_vectors(conn, model, dims, from_dims):,} vectors derived")
             return
+        if reuse_from:
+            show(f"{index.reuse_vectors(conn, model, dims, reuse_from):,} vectors reused")
+            conn.commit()
         todo = list(index.unembedded(conn, model, dims).items())
         for start in track(range(0, len(todo), batch), description=f"{model} @ {dims}"):
             texts, ids = zip(*todo[start : start + batch], strict=True)
