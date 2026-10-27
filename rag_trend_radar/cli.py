@@ -171,11 +171,12 @@ def recall(
     model: str = "",
     dims: int = 0,
     rerank_rows: bool = True,
+    reranker: str = "",
 ) -> None:
     """recall@k and MRR for every search method over the labelled questions (free, local).
 
-    `--model` and `--dims` score another embedding (embed it first); `--no-rerank-rows` skips the
-    reranked rows, which take most of the time.
+    `--model` and `--dims` score another embedding (embed it first), `--reranker` another
+    cross-encoder; `--no-rerank-rows` skips the reranked rows, which take most of the time.
     """
     settings = get_settings()
     model, dims = model or settings.embedding_model, dims or settings.embedding_dims
@@ -198,8 +199,8 @@ def recall(
     table.add_column("method")
     for metric in METRICS:
         table.add_column(metric, justify="right")
-    reranker = settings.rerank_model if rerank_rows else None
-    for method, results in rankings(labelled, vectors, model, depth, reranker).items():
+    cross = (reranker or settings.rerank_model) if rerank_rows else None
+    for method, results in rankings(labelled, vectors, model, depth, cross).items():
         scores = score(relevant, results, METRICS)
         table.add_row(method, *(f"{scores[m]:.3f}" for m in METRICS))
     show(table)
