@@ -1,4 +1,4 @@
--- The store, as of milestone 1. `rag-trend-radar db-reset` drops the public schema and runs
+-- The store, as of milestone 1. `rag-trend-radar db-reset` drops the configured schema and runs
 -- this file; every row is rebuilt from the Enron files, so there are no migrations.
 -- Topic, trend, watchlist and digest tables arrive with milestone 3.
 
@@ -107,7 +107,10 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 GRANT radar_reader TO CURRENT_USER;
-GRANT USAGE ON SCHEMA public TO radar_reader;
+-- The schema being built: public for the store, exp_<name> for an experiment.
+DO $$ BEGIN
+    EXECUTE format('GRANT USAGE ON SCHEMA %I TO radar_reader', current_schema());
+END $$;
 
 -- Readers get tables by name, never by default: a new table stays invisible until it's granted
 -- here with a policy. raw_files and quarantine hold every email whole, so they're never granted.

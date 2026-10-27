@@ -4,6 +4,7 @@ from pathlib import Path
 
 import psycopg
 from pgvector.psycopg import register_vector
+from psycopg import sql
 from psycopg.rows import TupleRow
 
 from rag_trend_radar.config import get_settings
@@ -39,10 +40,11 @@ def connect(person: str | None = None) -> psycopg.Connection[TupleRow]:
 
 
 def reset() -> None:
-    """Drop everything and recreate the tables from schema.sql."""
+    """Drop the configured schema (public, or an experiment's) and recreate its tables."""
+    schema = sql.Identifier(get_settings().db_schema)
     with _open() as conn:
-        conn.execute("DROP SCHEMA public CASCADE")
-        conn.execute("CREATE SCHEMA public")
+        conn.execute(sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(schema))
+        conn.execute(sql.SQL("CREATE SCHEMA {}").format(schema))
         conn.execute(SCHEMA_SQL.read_text())
 
 
@@ -54,4 +56,6 @@ def _open() -> psycopg.Connection[TupleRow]:
         dbname=settings.db_name,
         user=settings.db_user,
         password=settings.postgres_password.get_secret_value(),
+        ## Unqualified names resolve in the configured schema first; public keeps the extensions.
+        options=f"-c search_path={settings.db_schema},public",
     )

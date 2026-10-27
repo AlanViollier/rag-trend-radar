@@ -9,6 +9,8 @@ db_host: localhost
 db_port: 5432
 db_name: radar
 db_user: radar
+## Experiments override it with DB_SCHEMA=exp_<name>; the store lives in public.
+db_schema: public
 
 ## A simulated day starts and ends at midnight in Houston, where Enron was.
 timezone: America/Chicago

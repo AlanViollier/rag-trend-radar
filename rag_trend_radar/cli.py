@@ -21,7 +21,7 @@ from rag_trend_radar.embed import embed, token_counter
 from rag_trend_radar.evals.questions import sample, write
 from rag_trend_radar.evals.retrieval import rankings, score
 from rag_trend_radar.ingest.assemble import assemble
-from rag_trend_radar.ingest.chunk import pieces
+from rag_trend_radar.ingest.chunk import MAX_TOKENS, pieces
 from rag_trend_radar.schema import EvalQuestion
 from rag_trend_radar.search import hybrid
 from rag_trend_radar.search.ranking import last_day
@@ -45,8 +45,16 @@ def db_reset() -> None:
 
 
 @app.command()
-def load(since: str = "2001-09-01", until: str = "2001-09-30") -> None:
-    """Read the Enron emails sent from `since` to `until` into the store (default: the M1 slice)."""
+def load(
+    since: str = "2001-09-01",
+    until: str = "2001-09-30",
+    max_tokens: int = MAX_TOKENS,
+    header: bool = True,
+) -> None:
+    """Read the Enron emails sent from `since` to `until` into the store (default: the M1 slice).
+
+    `--max-tokens` and `--no-header` chunk another way, for an experiment's schema (DB_SCHEMA).
+    """
     settings = get_settings()
     first, last = date.fromisoformat(since), date.fromisoformat(until)
     assembled = assemble(
@@ -59,6 +67,8 @@ def load(since: str = "2001-09-01", until: str = "2001-09-30") -> None:
         pieces,
         count_tokens=token_counter(settings.embedding_model),
         boilerplate=assembled.boilerplate,
+        max_tokens=max_tokens,
+        with_header=header,
     )
     with db.connect() as conn:
         chunks = index.store(conn, assembled, chunker)

@@ -4,7 +4,7 @@ from functools import cache
 from pathlib import Path
 
 import yaml
-from pydantic import SecretStr, ValidationError
+from pydantic import Field, SecretStr, ValidationError
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
 from rag_trend_radar.exceptions import ConfigError
@@ -22,6 +22,9 @@ class AppSettings(BaseSettings):
     db_port: int = 5432
     db_name: str = "radar"
     db_user: str = "radar"
+    ## Experiments get their own schema (exp_bare): the whole app runs against it, the store in
+    ## public stays as it is. Interpolated into SQL, hence the pattern.
+    db_schema: str = Field("public", pattern=r"^[a-z_][a-z0-9_]*$")
     postgres_password: SecretStr = SecretStr("")
 
     timezone: str = "America/Chicago"

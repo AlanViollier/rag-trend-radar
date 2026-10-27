@@ -16,12 +16,21 @@ MAX_TOKENS = 512
 
 
 def pieces(
-    document: Document, count_tokens: Callable[[str], int], boilerplate: frozenset[str]
+    document: Document,
+    count_tokens: Callable[[str], int],
+    boilerplate: frozenset[str],
+    *,
+    max_tokens: int = MAX_TOKENS,
+    with_header: bool = True,
 ) -> list[str]:
-    """The chunks of a document: its own text minus trailing boilerplate, led by its header."""
+    """The chunks of a document: its own text minus trailing boilerplate, led by its header.
+
+    `max_tokens` and `with_header` are the recall table's rival rows (256 and 1,024; bare body).
+    """
     sent_at = document.sent_at if document.kind == "email" else None
-    lead = header(document.title, document.author, sent_at)
-    return chunk(strip_boilerplate(document.body, boilerplate), count_tokens, lead=lead)
+    lead = header(document.title, document.author, sent_at) if with_header else ""
+    body = strip_boilerplate(document.body, boilerplate)
+    return chunk(body, count_tokens, lead=lead, max_tokens=max_tokens)
 
 
 def header(subject: str, sender: str = "", sent_at: datetime | None = None) -> str:
