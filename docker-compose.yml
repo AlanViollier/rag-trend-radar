@@ -9,6 +9,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
     ports:
       - "127.0.0.1:5432:5432"
+    ## `docker compose up -d --wait` returns once Postgres accepts connections (CI relies on it).
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "radar", "-d", "radar"]
+      interval: 2s
+      retries: 30
     volumes:
       - radar-db:/var/lib/postgresql
 

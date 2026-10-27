@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 from pydantic import SecretStr, ValidationError
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
 from rag_trend_radar.exceptions import ConfigError
 
@@ -32,6 +32,21 @@ class AppSettings(BaseSettings):
 
     answer_model: str = "claude-sonnet-5-5"
     anthropic_api_key: SecretStr = SecretStr("")
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        """The environment beats config.yaml (passed in as init values).
+
+        Tests and CI point at another database with DB_NAME=radar_test, without editing the file.
+        """
+        return env_settings, dotenv_settings, init_settings, file_secret_settings
 
 
 @cache

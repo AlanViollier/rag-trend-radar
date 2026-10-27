@@ -11,8 +11,16 @@ jobs:
   ## requires a check called "check".
   check:
     runs-on: ubuntu-latest
+    ## Database tests (the permission canary among them) fail here instead of skipping.
+    env:
+      RADAR_REQUIRE_DB: "1"
     steps:
       - uses: actions/checkout@v7
+
+      ## The same Postgres image as on the laptop, with a throwaway password. --wait returns once
+      ## the healthcheck in docker-compose.yml passes.
+      - run: echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)" > .env
+      - run: docker compose up -d --wait
 
       ## setup-uv publishes no major tag; pin the release and the uv version.
       - uses: astral-sh/setup-uv@v10.2.0

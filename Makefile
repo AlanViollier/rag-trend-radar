@@ -51,7 +51,7 @@ typecheck:
 
 ## Exit code 5 is "no tests collected": a fresh skeleton is still green.
 test:
-	uv run pytest || test $$? -eq 5
+	uv run pytest -rs || test $$? -eq 5
 
 check:
 	uv run ruff format --check .
