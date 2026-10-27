@@ -89,7 +89,7 @@ def write(sources: list[Source], as_of: date, model: str) -> Iterator[EvalQuesti
     with ThreadPoolExecutor(max_workers=8) as pool:
         answers = list(pool.map(lambda s: _cached(s, model) or _ask(client, s, model), sources))
     for source, written in zip(sources, answers, strict=True):
-        if written.usable:
+        if written.usable and _one_question(written.question):
             yield EvalQuestion(
                 id=f"q-{source.external_id[:12]}",
                 question=written.question,
@@ -97,6 +97,13 @@ def write(sources: list[Source], as_of: date, model: str) -> Iterator[EvalQuesti
                 person=source.mailbox,
                 relevant=(source.external_id,),
             )
+
+
+def _one_question(text: str) -> bool:
+    ## 4 of the first 200 broke "one fact, one question": two questions in one, or a rewrite
+    ## after "Actually, simplified:". A spare source takes their place.
+    text = text.strip()
+    return text.endswith("?") and text.count("?") == 1 and "\n" not in text and "<" not in text
 
 
 def _ask(client: anthropic.Anthropic, source: Source, model: str) -> _Written:
