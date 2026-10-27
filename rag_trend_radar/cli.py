@@ -3,20 +3,26 @@
 from collections import Counter
 from datetime import date
 from functools import partial
+from itertools import islice
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import numpy as np
 import typer
 from rich import print as show
 from rich.progress import track
+from rich.table import Table
 
 from rag_trend_radar import index
 from rag_trend_radar.answer import answer
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.embed import embed, token_counter
+from rag_trend_radar.evals.questions import sample, write
+from rag_trend_radar.evals.retrieval import rankings, score
 from rag_trend_radar.ingest.assemble import assemble
 from rag_trend_radar.ingest.chunk import pieces
+from rag_trend_radar.schema import EvalQuestion
 from rag_trend_radar.search import hybrid
 from rag_trend_radar.search.ranking import last_day
 from rag_trend_radar.search.rerank import rerank
@@ -24,6 +30,10 @@ from rag_trend_radar.search.rerank import rerank
 ## How many reranked chunks Claude reads: enough for an answer spread over a thread, few enough
 ## that the bill stays at about a cent a question.
 ANSWER_HITS = 10
+QUESTIONS = Path("evals/questions.jsonl")
+## recall@1: the answer is first. @10: Claude gets to read it. @50: the reranker gets to see it.
+## MRR@10: 1 / the answer's rank, so second place counts half.
+METRICS = ("recall@1", "recall@10", "recall@50", "mrr@10")
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -108,3 +118,56 @@ def ask(question: str, person: str = "investigator", as_of: str = "") -> None:
     for n, document_id in enumerate(dict.fromkeys(c.document_id for c in result.citations), 1):
         show(f"[{n}] {titles[document_id]} (document {document_id})")
     show(f"\n${result.cost_usd:.4f}")
+
+
+@app.command()
+def questions(emails: int = 150, quoted: int = 50, out: Path = QUESTIONS, seed: int = 1) -> None:
+    """Have Claude write labelled questions from sampled emails and quoted messages (paid)."""
+    settings = get_settings()
+    with db.connect() as conn:
+        day = last_day(conn)
+        ## Half again as many sources as needed: Claude marks some unusable (automated notices).
+        sources = {
+            kind: sample(conn, kind, n * 3 // 2, seed)
+            for kind, n in (("email", emails), ("quoted", quoted))
+        }
+    written = [
+        q
+        for kind, n in (("email", emails), ("quoted", quoted))
+        for q in islice(write(sources[kind], day, settings.answer_model), n)
+    ]
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("".join(q.model_dump_json() + "\n" for q in written))
+    show(f"{len(written)} questions → {out}")
+
+
+@app.command()
+def recall(path: Path = QUESTIONS, depth: int = hybrid.DEPTH) -> None:
+    """recall@k and MRR for every search method over the labelled questions (free, local)."""
+    settings = get_settings()
+    labelled = [EvalQuestion.model_validate_json(line) for line in path.read_text().splitlines()]
+    with db.connect() as conn:
+        ids: dict[str, int] = dict(
+            conn.execute(
+                "SELECT external_id, id FROM documents WHERE external_id = ANY(%s)",
+                ([x for q in labelled for x in q.relevant],),
+            ).fetchall()
+        )
+    relevant = {q.id: {ids[x] for x in q.relevant} for q in labelled}
+    vectors = embed(
+        [q.question for q in labelled],
+        settings.embedding_model,
+        settings.embedding_dims,
+        query=True,
+    )
+    table = Table(
+        title=f"{len(labelled)} questions, {settings.embedding_model} @ "
+        f"{settings.embedding_dims}, depth {depth}"
+    )
+    table.add_column("method")
+    for metric in METRICS:
+        table.add_column(metric, justify="right")
+    for method, results in rankings(labelled, vectors, depth).items():
+        scores = score(relevant, results, METRICS)
+        table.add_row(method, *(f"{scores[m]:.3f}" for m in METRICS))
+    show(table)

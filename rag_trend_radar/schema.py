@@ -112,10 +112,14 @@ class Answer(Record):
 
 
 class EvalQuestion(Record):
-    """A labelled question: asked by someone on a day, answered by known documents."""
+    """A labelled question: asked by someone on a day, answered by known documents.
+
+    Documents are named by external id (the content hash), which survives rebuilding the store;
+    row ids don't.
+    """
 
     id: str
     question: str
     as_of: date
     person: str
-    relevant_document_ids: tuple[int, ...]
+    relevant: tuple[str, ...]

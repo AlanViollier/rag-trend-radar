@@ -73,9 +73,9 @@ explicit_package_bases = true
 ## The private context repo can hold scripts (chart refreshers, one-offs) that aren't the package.
 exclude = ["^llm_context/"]
 
-## The models extra isn't installed in CI; embed.py imports it lazily.
+## Untyped or optional: the models extra is absent in CI (imported lazily); ranx ships no types.
 [[tool.mypy.overrides]]
-module = ["transformers", "sentence_transformers"]
+module = ["transformers", "sentence_transformers", "ranx"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
