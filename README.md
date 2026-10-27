@@ -65,15 +65,24 @@ who can read the answer, scored by whether the right email comes back in the top
 | method | 200 questions, top 10 | first | 50 with no names, top 10 | first |
 |---|---|---|---|---|
 | keyword (BM25) | .955 | .800 | .880 | .720 |
-| vector (EmbeddingGemma 2, 768) | .845 | .690 | .840 | .660 |
-| hybrid | .880 | .705 | .900 | .660 |
-| **hybrid + rerank** (what `ask` uses) | **.995** | **.890** | **.980** | **.880** |
+| vector (EmbeddingGemma 2, 768) | .970 | .795 | .960 | .760 |
+| hybrid | .970 | .820 | .960 | .740 |
+| **hybrid + rerank** (what `ask` uses) | **.995** | **.890** | **1.000** | **.900** |
 
-The reranker is the largest gain. Merging keyword and vector search matters for coverage:
-they miss different emails, so the merged 50 hold the answer 99.5% of the time and the
-reranker sorts it up. The no-names set forbids naming people, companies and places, which
-costs keyword search and leaves vector search where it was. With 50 questions, differences
-under about ten points there are noise.
+The reranker is the largest gain: it lifts "first" from about 80% to about 90%. The no-names
+set forbids naming people, companies and places, which costs keyword search and leaves vector
+search where it was. With 50 questions, differences under about ten points there are noise.
+
+Two bugs surfaced on the way, both where the vector index meets row-level security. An HNSW
+scan fetches its nearest candidates first and the permission filter runs after, so an
+employee who can read 2% of the mail got no vector results at all; iterative scans fixed it
+(and the canary test now guards it). Then measuring each layer alone showed HNSW finding the
+right email in the top 50 for 87% of questions where exact search found it for 100%: most
+candidates it looked at were filtered out. Widening the search (`ef_search` 1,000) closed the
+gap at the same 38 ms a query. The final answers barely moved through either fix, because the
+merged list and the reranker covered for the broken layer, which is why each layer gets
+measured on its own. Halfvec storage costs one question in 200 against full precision
+(`scripts/precision.py`).
 
 ## Run it
 
