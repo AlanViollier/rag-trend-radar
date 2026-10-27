@@ -30,6 +30,10 @@ def connect(person: str | None = None) -> psycopg.Connection[TupleRow]:
         ## an employee who can read 2% of the mail got none back. Iterative scans keep walking
         ## the graph until enough rows pass, in exact distance order (pgvector 0.8).
         conn.execute("SET hnsw.iterative_scan = strict_order")
+        ## The graph walk keeps this many candidates (default 40). Most are filtered out by RLS,
+        ## so at 40 the right email was missing from the top 50 for 13% of questions; at 1,000
+        ## (the maximum) recall matches exact search, at the same ~40 ms (2026-10-27, Sep 2001).
+        conn.execute("SET hnsw.ef_search = 1000")
         conn.commit()
     return conn
 
