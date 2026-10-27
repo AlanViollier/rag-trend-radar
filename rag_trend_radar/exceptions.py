@@ -11,3 +11,11 @@ class ConfigError(AppError):
 
 class ParseError(AppError):
     """A dataset file can't become a record; the message is the quarantine reason."""
+
+
+class AnswerRefused(AppError):
+    """Claude declined to answer, fallbacks included; the message carries the stop details."""
+
+
+class NoDaysLoaded(AppError):
+    """A search needs a default day and the pipeline hasn't finished one."""

@@ -2,6 +2,7 @@
 
 import re
 from collections.abc import Callable, Sequence
+from datetime import date
 
 import numpy as np
 import psycopg
@@ -38,6 +39,18 @@ def store(
             [(m,) for m in assembled.mailboxes],
         )
     return upsert_documents(conn, assembled.documents, pieces)
+
+
+def record_days(conn: psycopg.Connection[TupleRow], since: date, until: date, tz: str) -> None:
+    """One finished `batches` row per day of a span, its email count recounted from documents."""
+    conn.execute(
+        "INSERT INTO batches (day, started_at, finished_at, emails_in)"
+        " SELECT d::date, now(), now(), (SELECT count(*) FROM documents WHERE kind = 'email'"
+        "  AND (sent_at AT TIME ZONE %(tz)s)::date = d::date)"
+        " FROM generate_series(%(since)s::date, %(until)s::date, interval '1 day') d"
+        " ON CONFLICT (day) DO UPDATE SET finished_at = now(), emails_in = EXCLUDED.emails_in",
+        {"since": since, "until": until, "tz": tz},
+    )
 
 
 def upsert_documents(
