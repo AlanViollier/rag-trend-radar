@@ -26,6 +26,10 @@ def connect(person: str | None = None) -> psycopg.Connection[TupleRow]:
     if person is not None:
         conn.execute("SET ROLE radar_reader")
         conn.execute("SELECT set_config('app.person', %s, false)", (person,))
+        ## An HNSW scan returns its ~40 nearest vectors, then row-level security filters them:
+        ## an employee who can read 2% of the mail got none back. Iterative scans keep walking
+        ## the graph until enough rows pass, in exact distance order (pgvector 0.8).
+        conn.execute("SET hnsw.iterative_scan = strict_order")
         conn.commit()
     return conn
 
