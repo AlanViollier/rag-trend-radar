@@ -25,7 +25,9 @@ dependencies = [
 ## Local models, kept out of CI: `uv sync --extra models`.
 [project.optional-dependencies]
 models = [
-    "sentence-transformers>=6.2",  # EmbeddingGemma 2, MiniLM baseline, cross-encoder rerankers
+    ## [image] brings torchvision: EmbeddingGemma 2 is multimodal and loads its video processor
+    ## even for text.
+    "sentence-transformers[image]>=6.2",  # EmbeddingGemma 2, MiniLM baseline, cross-encoder rerankers
 ]
 
 [project.scripts]

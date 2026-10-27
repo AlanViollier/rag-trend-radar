@@ -5,13 +5,15 @@ from datetime import date
 from functools import partial
 from zoneinfo import ZoneInfo
 
+import numpy as np
 import typer
 from rich import print as show
+from rich.progress import track
 
 from rag_trend_radar import index
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
-from rag_trend_radar.embed import token_counter
+from rag_trend_radar.embed import embed, token_counter
 from rag_trend_radar.ingest.assemble import assemble
 from rag_trend_radar.ingest.chunk import pieces
 
@@ -46,6 +48,26 @@ def load(since: str = "2001-09-01", until: str = "2001-09-30") -> None:
         f"{len(assembled.raw_files):,} files ({len(assembled.rejected):,} quarantined) → "
         f"{kinds['email']:,} emails + {kinds['quoted']:,} quoted messages → {chunks:,} chunks"
     )
+
+
+@app.command("embed")
+def embed_chunks(model: str = "", dims: int = 0, batch: int = 512) -> None:
+    """Embed every chunk with no vector yet (default: the configured model and size)."""
+    settings = get_settings()
+    model, dims = model or settings.embedding_model, dims or settings.embedding_dims
+    with db.connect() as conn:
+        todo = list(index.unembedded(conn, model, dims).items())
+        for start in track(range(0, len(todo), batch), description=f"{model} @ {dims}"):
+            texts, ids = zip(*todo[start : start + batch], strict=True)
+            vectors = embed(texts, model, dims)
+            index.write_vectors(
+                conn,
+                model,
+                [i for group in ids for i in group],
+                np.repeat(vectors, [len(group) for group in ids], axis=0),
+            )
+            conn.commit()
+    show(f"{sum(len(ids) for _, ids in todo):,} chunks embedded ({len(todo):,} distinct texts)")
 
 
 @app.command()

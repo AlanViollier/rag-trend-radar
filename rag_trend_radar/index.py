@@ -1,10 +1,13 @@
 """Write documents, chunks and vectors; carry deletes through to everything derived."""
 
+import re
 from collections.abc import Callable, Sequence
 
 import numpy as np
 import psycopg
 from numpy.typing import NDArray
+from pgvector import HalfVector
+from psycopg import sql
 from psycopg.rows import TupleRow
 
 from rag_trend_radar.ingest.dedup import text_hash
@@ -91,19 +94,63 @@ def upsert_documents(
     return written
 
 
+def vectors_table(model: str, dims: int) -> str:
+    """`vectors_embeddinggemma_2_768`: one table per model and size, so rivals sit side by side."""
+    return f"vectors_{re.sub(r'\W+', '_', model.rsplit('/', 1)[-1].lower())}_{dims}"
+
+
+def unembedded(conn: psycopg.Connection[TupleRow], model: str, dims: int) -> dict[str, list[int]]:
+    """Chunks with no vector yet in `model` at `dims`, grouped by text: equal texts embed once."""
+    table = _vectors(conn, model, dims)
+    rows = conn.execute(
+        sql.SQL(
+            "SELECT text, array_agg(id ORDER BY id) FROM chunks"
+            " WHERE NOT EXISTS (SELECT 1 FROM {} v WHERE v.chunk_id = chunks.id)"
+            " GROUP BY text ORDER BY min(id)"
+        ).format(table)
+    ).fetchall()
+    return dict(rows)
+
+
 def write_vectors(
     conn: psycopg.Connection[TupleRow],
     model: str,
     chunk_ids: Sequence[int],
     vectors: NDArray[np.float32],
 ) -> None:
-    """Store vectors in vectors_<model>, creating the table and its HNSW index on first use."""
-    raise NotImplementedError
+    """Store vectors in vectors_<model>_<dims>, creating the table on first use."""
+    table = _vectors(conn, model, vectors.shape[1])
+    with conn.cursor() as cur:
+        cur.executemany(
+            sql.SQL(
+                "INSERT INTO {} (chunk_id, embedding) VALUES (%s, %s)"
+                " ON CONFLICT (chunk_id) DO UPDATE SET embedding = EXCLUDED.embedding"
+            ).format(table),
+            [(i, HalfVector(v)) for i, v in zip(chunk_ids, vectors, strict=True)],
+        )
 
 
 def delete_document(conn: psycopg.Connection[TupleRow], document_id: int) -> None:
     """Mark a document deleted and remove its chunks and vectors."""
     raise NotImplementedError
+
+
+def _vectors(conn: psycopg.Connection[TupleRow], model: str, dims: int) -> sql.Identifier:
+    ## Readers see a vector only when they see its chunk; the grant is by name like every table.
+    name = vectors_table(model, dims)
+    table = sql.Identifier(name)
+    if conn.execute("SELECT to_regclass(%s)", (name,)).fetchall()[0][0] is None:
+        for statement in (
+            "CREATE TABLE {t} (chunk_id bigint PRIMARY KEY REFERENCES chunks (id)"
+            " ON DELETE CASCADE, embedding halfvec({dims}) NOT NULL)",
+            "CREATE INDEX ON {t} USING hnsw (embedding halfvec_cosine_ops)",
+            "GRANT SELECT ON {t} TO radar_reader",
+            "ALTER TABLE {t} ENABLE ROW LEVEL SECURITY",
+            "CREATE POLICY visible ON {t} FOR SELECT TO radar_reader"
+            " USING (EXISTS (SELECT 1 FROM chunks WHERE chunks.id = {t}.chunk_id))",
+        ):
+            conn.execute(sql.SQL(statement).format(t=table, dims=sql.Literal(dims)))
+    return table
 
 
 def _upsert_document(cur: psycopg.Cursor[TupleRow], doc: Document) -> int:
