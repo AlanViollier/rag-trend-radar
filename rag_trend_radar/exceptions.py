@@ -19,3 +19,7 @@ class AnswerRefused(AppError):
 
 class NoDaysLoaded(AppError):
     """A search needs a default day and the pipeline hasn't finished one."""
+
+
+class EmbeddingFailed(AppError):
+    """The model returned vectors that fail the sentinel check; nothing from that batch is kept."""

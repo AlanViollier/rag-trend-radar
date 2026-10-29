@@ -273,19 +273,31 @@ def _embed_missing(
     progress: bool = False,
 ) -> int:
     ## A text embedded before, by any run in any schema, is copied from the cache; the rest
-    ## embed once per distinct text. Commits per batch, so a stopped run resumes.
+    ## embed once per distinct text. Commits per batch, so a stopped run resumes; a text the
+    ## guard couldn't embed gets no vector and is tried again by the next run.
     index.from_cache(conn, model, dims)
     conn.commit()
-    todo = list(index.unembedded(conn, model, dims).items())
+    ## Shortest first, so each batch holds texts of about one length (less padding).
+    todo = sorted(index.unembedded(conn, model, dims).items(), key=lambda item: len(item[0]))
     starts = range(0, len(todo), batch_size)
+    embedded = skipped = 0
     for start in track(starts, description=f"{model} @ {dims}") if progress else starts:
         texts, ids = zip(*todo[start : start + batch_size], strict=True)
-        vectors = embed(texts, model, dims)
+        vectors = embed(texts, model, dims, skip_failed=True)
+        ok = ~np.isnan(vectors).any(axis=1)
+        kept = [group for group, good in zip(ids, ok, strict=True) if good]
         index.write_vectors(
             conn,
             model,
-            [i for group in ids for i in group],
-            np.repeat(vectors, [len(group) for group in ids], axis=0),
+            [i for group in kept for i in group],
+            np.repeat(vectors[ok], [len(group) for group in kept], axis=0),
         )
         conn.commit()
-    return sum(len(ids) for _, ids in todo)
+        embedded += sum(len(group) for group in kept)
+        skipped += int((~ok).sum())
+    if skipped:
+        show(
+            f"{skipped:,} texts failed the sentinel check alone: no vector, the next run retries them",
+            file=sys.stderr,
+        )
+    return embedded

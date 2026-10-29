@@ -1,4 +1,4 @@
-.PHONY: help hooks format lint lint-slop typecheck test check ci audit scan-history context-repo protect clean
+.PHONY: help hooks format lint lint-slop typecheck test check ci audit scan-history context-repo protect backup-cache restore-cache clean
 
 help:
 	@echo "Targets:"
@@ -14,6 +14,8 @@ help:
 	@echo "  scan-history  - Secrets, .keywords and once-committed ignored files across every commit"
 	@echo "  context-repo  - Make llm_context/ its own private GitHub repo that pushes on every commit"
 	@echo "  protect       - GitHub ruleset on main: CI must pass (serious tier only)"
+	@echo "  backup-cache  - Every computed vector to data/backups/ (hours of embedding, ~750 MB)"
+	@echo "  restore-cache - Load the newest backup into an empty cache (after losing the volume)"
 	@echo "  clean         - Remove caches and build output"
 
 hooks:
@@ -91,6 +93,16 @@ context-repo:
 
 protect:
 	@bash scripts/setup-branch-protection.sh
+
+## The embedding cache survives db-reset but not a deleted Docker volume. Everything else
+## rebuilds from the maildir in about an hour; the vectors took about eight.
+backup-cache:
+	@mkdir -p data/backups
+	docker compose exec -T db pg_dump -U radar -d radar -t cache.embeddings -Fc > data/backups/embeddings-$$(date +%Y-%m-%d).dump
+	@ls -lh data/backups/embeddings-$$(date +%Y-%m-%d).dump
+
+restore-cache:
+	docker compose exec -T db pg_restore -U radar -d radar --data-only -t embeddings < $$(ls -t data/backups/embeddings-*.dump | head -1)
 
 clean:
 	@rm -rf .mypy_cache .ruff_cache .pytest_cache .hypothesis dist build *.egg-info
