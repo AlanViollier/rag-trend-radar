@@ -131,8 +131,9 @@ def test_junk_dates_are_quarantined_and_kept(conn: Connection, tmp_path: Path) -
     _write(tmp_path, "kim-d/inbox/8.", "Mon, 31 Dec 1979 16:00:00 -0800", "old", "z")
     _run(conn, tmp_path)
     assert conn.execute("SELECT path FROM raw_files").fetchall() == [("kim-d/inbox/8.",)]
-    reason = conn.execute("SELECT reason FROM quarantine").fetchall()[0][0]
-    assert reason.startswith("date outside")
+    assert conn.execute("SELECT reason, detail FROM quarantine").fetchall() == [
+        ("date outside 1997–2002", "Mon, 31 Dec 1979 16:00:00 -0800")
+    ]
 
 
 def test_running_a_day_again_changes_nothing(conn: Connection, tmp_path: Path) -> None:
@@ -160,7 +161,7 @@ def test_running_a_day_again_changes_nothing(conn: Connection, tmp_path: Path) -
 
 def _snapshot(conn: Connection) -> dict[str, list[tuple[object, ...]]]:
     queries = {
-        "documents": "SELECT id, external_id, kind, sent_at, title, body_hash FROM documents"
+        "documents": "SELECT id, external_id, kind, sent_at, title, body FROM documents"
         " WHERE source = 'enron' ORDER BY id",
         "access": "SELECT document_id, mailbox FROM access ORDER BY 1, 2",
         "chunks": "SELECT id, document_id, position, text FROM chunks ORDER BY id",

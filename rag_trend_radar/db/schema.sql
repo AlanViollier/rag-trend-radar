@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS cache.embeddings (
 
 -- One row per searchable thing: an email, a quoted message no email of ours holds, later a
 -- digest or an arXiv paper.
--- (source, external_id) is the stable outside id; a changed body_hash on it is an edit.
+-- (source, external_id) is the stable outside id: the content hash for an email, the text
+-- hash for a quoted message.
 CREATE TABLE documents (
     id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     source      text NOT NULL,
@@ -31,7 +32,6 @@ CREATE TABLE documents (
     title       text NOT NULL,
     body        text NOT NULL,           -- the document's own text: what gets chunked
     quoted      text NOT NULL DEFAULT '', -- quoted replies, kept but never chunked
-    body_hash   text NOT NULL,
     public      boolean NOT NULL DEFAULT false,
     deleted_at  timestamptz,
     UNIQUE (source, external_id)
@@ -65,10 +65,13 @@ CREATE TABLE boilerplate (
     from_day date NOT NULL
 );
 
--- Files whose date is junk (1979, 2044) or that don't parse, set aside with the reason.
+-- Files set aside: a date outside 1997–2002 (522 on the 1979 placeholder, 70 stamped 2004 when
+-- CMU processed them, a few from 1986 to 2044), a date that doesn't parse, a bounce, or an
+-- address-book dump. `reason` is one of those four; `detail` holds the value at fault.
 CREATE TABLE quarantine (
     path   text PRIMARY KEY REFERENCES raw_files (path),
-    reason text NOT NULL
+    reason text NOT NULL,
+    detail text NOT NULL DEFAULT ''
 );
 
 -- The email-only details of a document.
@@ -79,7 +82,6 @@ CREATE TABLE emails (
     to_addrs    text[] NOT NULL DEFAULT '{}',
     cc_addrs    text[] NOT NULL DEFAULT '{}',
     bcc_addrs   text[] NOT NULL DEFAULT '{}',
-    thread_id   text,
     -- Copies disagreed on the date and none was stamped to the second: off by up to ~12 hours.
     date_uncertain boolean NOT NULL DEFAULT false
 );
@@ -138,9 +140,7 @@ CREATE TABLE batches (
     finished_at     timestamptz,
     emails_in       int NOT NULL DEFAULT 0,
     documents_new   int NOT NULL DEFAULT 0,
-    chunks_embedded int NOT NULL DEFAULT 0,
-    cost_usd        numeric(10, 4) NOT NULL DEFAULT 0,
-    errors          int NOT NULL DEFAULT 0
+    chunks_embedded int NOT NULL DEFAULT 0
 );
 
 -- Row-level security. The pipeline writes as the owner (radar), which bypasses it.

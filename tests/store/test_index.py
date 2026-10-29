@@ -26,7 +26,6 @@ def _document(body: str, readers: tuple[str, ...] = ("lee-p",)) -> Document:
         author="",
         body=body,
         quoted="",
-        body_hash=body,
         public=False,
         readers=readers,
     )
@@ -118,7 +117,7 @@ def test_a_change_outside_the_chunks_keeps_them_and_a_change_inside_rewrites_the
 ) -> None:
     index.upsert_documents(conn, [_document("a\n\nb")], _pieces)
     ids = _chunk_ids(conn)
-    quoted_only = _document("a\n\nb").model_copy(update={"quoted": "> older", "body_hash": "x"})
+    quoted_only = _document("a\n\nb").model_copy(update={"quoted": "> older"})
     assert index.upsert_documents(conn, [quoted_only], _pieces) == 0
     assert _chunk_ids(conn) == ids
     assert index.upsert_documents(conn, [quoted_only], lambda doc: [doc.body]) == 1

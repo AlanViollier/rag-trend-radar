@@ -30,15 +30,17 @@ def stage(conn: psycopg.Connection[TupleRow], root: Path, tz: ZoneInfo) -> Scan:
     scanned = assemble.scan(root)
     dates = assemble.resolve(scanned.copies)
     stored = {path for (path,) in conn.execute("SELECT path FROM raw_files").fetchall()}
-    new = sorted(({c.path for c in scanned.copies} | scanned.rejected.keys()) - stored)
+    paths = {c.path for c in scanned.copies} | {r.path for r in scanned.rejected}
+    new = sorted(paths - stored)
     with conn.cursor() as cur:
         with cur.copy("COPY raw_files (path, mailbox, folder, content) FROM STDIN") as copy:
             for path in new:
                 raw = enron.read_raw_file(root, root / path)
                 copy.write_row((raw.path, raw.mailbox, raw.folder, raw.content))
         cur.executemany(
-            "INSERT INTO quarantine (path, reason) VALUES (%s, %s) ON CONFLICT (path) DO NOTHING",
-            list(scanned.rejected.items()),
+            "INSERT INTO quarantine (path, reason, detail) VALUES (%s, %s, %s)"
+            " ON CONFLICT (path) DO UPDATE SET reason = EXCLUDED.reason, detail = EXCLUDED.detail",
+            [(r.path, r.reason, r.detail) for r in scanned.rejected],
         )
         cur.executemany(
             "INSERT INTO employees (mailbox) VALUES (%s) ON CONFLICT DO NOTHING",

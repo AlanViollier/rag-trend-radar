@@ -10,7 +10,13 @@ class ConfigError(AppError):
 
 
 class ParseError(AppError):
-    """A dataset file can't become a record; the message is the quarantine reason."""
+    """A dataset file can't become a record: `reason` is the quarantine category, `detail` the
+    value at fault (the date it gave), so quarantine groups by reason."""
+
+    def __init__(self, reason: str, detail: str = "") -> None:
+        super().__init__(f"{reason}: {detail}" if detail else reason)
+        self.reason = reason
+        self.detail = detail
 
 
 class AnswerRefused(AppError):

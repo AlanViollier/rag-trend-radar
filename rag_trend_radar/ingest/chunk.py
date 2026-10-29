@@ -36,9 +36,9 @@ def pieces(
 def header(subject: str, sender: str = "", sent_at: datetime | None = None) -> str:
     """The lines that lead every chunk: a bare "sounds good" is findable by its subject.
 
-    A field that isn't known is left out rather than guessed.
+    A field that isn't known is left out rather than guessed, an empty subject too (8,784 emails).
     """
-    lines = [f"Subject: {subject}"]
+    lines = [f"Subject: {subject}"] if subject.strip() else []
     if sender:
         lines.append(f"From: {sender}")
     if sent_at is not None:

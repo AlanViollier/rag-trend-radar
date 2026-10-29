@@ -34,7 +34,6 @@ def test_a_quoted_message_leads_without_the_date_it_was_first_quoted() -> None:
         author="Pat Rowe",
         body="Prices rose.\n\nPat Rowe\nEnron",
         quoted="",
-        body_hash="h",
         public=False,
         readers=("kim-d",),
     )

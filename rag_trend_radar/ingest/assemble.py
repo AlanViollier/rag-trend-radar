@@ -7,7 +7,6 @@ day's edges, so an email's date is only known once all its copies are seen.
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from concurrent.futures import ProcessPoolExecutor
-from dataclasses import dataclass
 from datetime import date, datetime
 from functools import partial
 from pathlib import Path
@@ -29,6 +28,7 @@ from rag_trend_radar.schema import (
     Document,
     EmailHeaders,
     QuotedBlock,
+    Rejected,
     Scan,
     SplitBody,
 )
@@ -40,18 +40,18 @@ SOURCE = "enron"
 def scan(root: Path) -> Scan:
     """Every file under `root`: the copies that parse, in path order, and the rejected ones."""
     copies: list[Copy] = []
-    rejected: dict[str, str] = {}
+    rejected: list[Rejected] = []
     with ProcessPoolExecutor() as pool:
         paths = sorted(p for p in root.rglob("*") if p.is_file())
         for scanned in pool.map(partial(_scan, root=root), paths, chunksize=500):
-            if isinstance(scanned, _Rejected):
-                rejected[scanned.path] = scanned.reason
+            if isinstance(scanned, Rejected):
+                rejected.append(scanned)
             else:
                 copies.append(scanned)
     return Scan(
         mailboxes=tuple(sorted(p.name for p in root.iterdir() if p.is_dir())),
         copies=tuple(copies),
-        rejected=rejected,
+        rejected=tuple(rejected),
     )
 
 
@@ -91,21 +91,14 @@ def documents(
 ## Scanning, one file per worker call.
 
 
-@dataclass(frozen=True)
-class _Rejected:
-    path: str
-    reason: str
-
-
-def _scan(path: Path, root: Path) -> Copy | _Rejected:
+def _scan(path: Path, root: Path) -> Copy | Rejected:
     raw = enron.read_raw_file(root, path)
     try:
         email = enron.parse(raw)
     except ParseError as error:
-        return _Rejected(raw.path, str(error))
+        return Rejected(path=raw.path, reason=error.reason, detail=error.detail)
     return Copy(
         path=raw.path,
-        mailbox=raw.mailbox,
         key=content_hash(email.subject, email.body),
         sent_at=email.sent_at,
         own=split_quoted(normalize(email.body)).own,
@@ -129,7 +122,6 @@ def _email(group: list[DayFile]) -> tuple[Document, SplitBody]:
         author=email.sender,
         body=split.own,
         quoted=quoted,
-        body_hash=text_hash(split.own + "\x00" + quoted),
         public=False,
         readers=tuple(sorted({f.raw.mailbox for f in group})),
         paths=tuple(sorted(f.raw.path for f in group)),
@@ -161,7 +153,6 @@ def _orphans(emails: list[tuple[Document, SplitBody]], held: set[str]) -> list[D
             author=block_author(block.header),
             body=block.text,
             quoted="",
-            body_hash=digest,
             public=False,
             readers=(),
             quoted_by=tuple(quoted_by[digest]),

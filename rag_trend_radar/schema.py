@@ -67,7 +67,6 @@ class Document(Record):
     author: str
     body: str
     quoted: str
-    body_hash: str
     public: bool
     readers: tuple[str, ...]
     paths: tuple[str, ...] = ()
@@ -81,10 +80,17 @@ class Copy(Record):
     """A file that parsed, as the scan saw it: the email it's a copy of, the date it claims."""
 
     path: str
-    mailbox: str
     key: str
     sent_at: datetime
     own: str
+
+
+class Rejected(Record):
+    """A file set aside: one of a few reasons, and the value at fault (the date it gave)."""
+
+    path: str
+    reason: str
+    detail: str
 
 
 class Scan(Record):
@@ -92,7 +98,7 @@ class Scan(Record):
 
     mailboxes: tuple[str, ...]
     copies: tuple[Copy, ...]
-    rejected: dict[str, str]
+    rejected: tuple[Rejected, ...]
 
 
 class DayFile(Record):

@@ -67,9 +67,9 @@ on two different days. `stage` reads all 517,401 files once (4 minutes), resolve
 date over its copies, and writes the schedule to a table. Each day then reads its own rows,
 about 3 seconds a day before embedding.
 
-→ **Re-running a day changes nothing.** Documents are keyed by a hash of their content and
-re-chunked only when it changes; a day's counts are recounted from the stored rows, never added
-to. Running all 30 days of September a second time wrote nothing. A day's row closes only once
+→ **Re-running a day changes nothing.** Documents are keyed by a hash of their content, and
+an email is re-chunked only when its chunks would read differently; a day's counts are
+recounted from the stored rows, never added to. Running all 30 days of September a second time wrote nothing. A day's row closes only once
 its vectors exist, so a crashed run leaves searches on the last finished day.
 
 → **As known that day.** A signature line counts as boilerplate only from the day its 200th

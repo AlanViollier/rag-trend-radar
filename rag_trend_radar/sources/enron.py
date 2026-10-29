@@ -51,7 +51,7 @@ def parse(raw: RawFile) -> ParsedEmail:
     msg = email.message_from_bytes(raw.content, policy=compat32)
     sent_at = _sent_at(msg)
     if not FIRST_YEAR <= sent_at.year <= LAST_YEAR:
-        raise ParseError(f"date outside {FIRST_YEAR}–{LAST_YEAR}: {msg['Date']}")
+        raise ParseError(f"date outside {FIRST_YEAR}–{LAST_YEAR}", msg["Date"])
     sender, subject, body = _sender(msg), _subject(msg), _body(msg)
     if sender.startswith(_BOUNCE_SENDERS) or _BOUNCE_SUBJECTS.match(subject):
         raise ParseError("bounce")
@@ -73,7 +73,7 @@ def _sent_at(msg: Message) -> datetime:
     try:
         return email.utils.parsedate_to_datetime(msg["Date"])
     except (TypeError, ValueError) as error:
-        raise ParseError(f"unparseable date: {msg['Date']}") from error
+        raise ParseError("unparseable date", str(msg["Date"])) from error
 
 
 def _sender(msg: Message) -> str:

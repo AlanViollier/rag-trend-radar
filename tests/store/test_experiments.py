@@ -73,10 +73,10 @@ def test_a_vector_outlives_a_reset_and_comes_back_for_the_same_text() -> None:
 def _chunk(conn: psycopg.Connection[TupleRow], schema: str, text: str) -> int:
     document = conn.execute(
         sql.SQL(
-            "INSERT INTO {} (source, external_id, kind, sent_at, title, body, body_hash)"
-            " VALUES ('test-reuse', %s, 'email', now(), '', %s, %s) RETURNING id"
+            "INSERT INTO {} (source, external_id, kind, sent_at, title, body)"
+            " VALUES ('test-reuse', %s, 'email', now(), '', %s) RETURNING id"
         ).format(sql.Identifier(schema, "documents")),
-        (f"{schema}-{text}", text, text),
+        (f"{schema}-{text}", text),
     ).fetchall()[0][0]
     return int(
         conn.execute(
