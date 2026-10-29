@@ -200,7 +200,7 @@ def test_normalize_strips_markup_and_mime() -> None:
 
 def test_normalize_drops_what_a_browser_hides() -> None:
     body = (
-        '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">\n'
+        '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN"\n  "http://www.w3.org/TR/html4/loose.dtd">\n'
         '<style type="text/css">\nA:link {color: gray}\n</style>\n'
         "<!--\nIf you are reading this, switch to the text version.\n-->\n"
         "<script>track();</SCRIPT>Deals closed: 4 <!-- VW --> new"
