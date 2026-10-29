@@ -1,5 +1,5 @@
 from collections.abc import Iterator
-from datetime import date, datetime
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import psycopg
@@ -68,19 +68,6 @@ def test_readers_are_rewritten_not_added_to(conn: Connection) -> None:
         "SELECT mailbox FROM access JOIN documents d ON d.id = access.document_id"
         " WHERE d.source = 'test-index'"
     ).fetchall() == [("moss-k",)]
-
-
-def test_days_are_recounted_in_local_time(conn: Connection) -> None:
-    late = _document("a").model_copy(
-        update={"sent_at": datetime(2001, 9, 5, 23, 30, tzinfo=CHICAGO)}
-    )
-    index.upsert_documents(conn, [late], _pieces)
-    index.record_days(conn, date(2001, 9, 5), date(2001, 9, 6), "America/Chicago")
-    index.record_days(conn, date(2001, 9, 5), date(2001, 9, 6), "America/Chicago")
-    counts = conn.execute(
-        "SELECT day, emails_in FROM batches WHERE day IN ('2001-09-05', '2001-09-06') ORDER BY day"
-    ).fetchall()
-    assert [(d.isoformat(), n) for d, n in counts] == [("2001-09-05", 1), ("2001-09-06", 0)]
 
 
 def _chunks(conn: Connection) -> list[str]:

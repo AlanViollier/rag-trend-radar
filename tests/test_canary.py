@@ -18,7 +18,7 @@ from psycopg.rows import TupleRow
 
 from rag_trend_radar import index
 from rag_trend_radar.db import connect as db
-from rag_trend_radar.schema import Assembled, Document
+from rag_trend_radar.schema import Document
 from rag_trend_radar.search import hybrid, keyword, vector
 from rag_trend_radar.search.ranking import cutoff
 
@@ -66,17 +66,11 @@ def world(store: None) -> None:
         },
     }
     with db.connect() as conn:
-        index.store(
-            conn,
-            Assembled(
-                mailboxes=("kim-d", "rowe-p"),
-                raw_files=(),
-                rejected={},
-                documents=tuple(documents),
-                boilerplate=frozenset(),
-            ),
-            lambda doc: [doc.body],
+        conn.cursor().executemany(
+            "INSERT INTO employees (mailbox) VALUES (%s) ON CONFLICT DO NOTHING",
+            [("kim-d",), ("rowe-p",)],
         )
+        index.upsert_documents(conn, documents, lambda doc: [doc.body])
         rows = conn.execute(
             "SELECT c.id, d.external_id FROM chunks c JOIN documents d ON d.id = c.document_id"
             " WHERE d.source = 'test'"

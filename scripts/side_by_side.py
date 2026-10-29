@@ -36,7 +36,7 @@ def main(root: Path) -> None:
                 key, rel, own, blocks = result
                 unique.setdefault(key, (rel, own, blocks))
     owns = [own for _rel, own, _blocks in unique.values()]
-    frequent = frequent_lines(owns, BOILERPLATE_MIN_EMAILS)
+    frequent = frozenset(frequent_lines(((date.min, own) for own in owns), BOILERPLATE_MIN_EMAILS))
     known = {_collapse(own) for own in owns if own}
 
     rng = random.Random(0)  # noqa: S311 (a reproducible sample, not a secret)

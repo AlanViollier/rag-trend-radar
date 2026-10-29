@@ -12,7 +12,9 @@ def content_hash(subject: str, body: str) -> str:
     (`walton@` vs `leann.walton@`) and shift dates by whole hours, while subject and body survive
     both up to whitespace.
     """
-    return text_hash(subject.strip().lower() + "\x00" + body)
+    ## The body is stripped before joining: one export starts it with a blank line, and a space
+    ## left after the separator would split the copies (756 emails, found 2026-10-29).
+    return text_hash(subject.strip().lower() + "\x00" + body.strip())
 
 
 def text_hash(text: str) -> str:

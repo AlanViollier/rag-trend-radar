@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
@@ -199,19 +201,28 @@ def test_normalize_strips_markup_and_mime() -> None:
 def test_boilerplate_trims_the_trailing_signature_only() -> None:
     signature = "Dana Kim\nEnron North America Corp.\nPhone 713-555-0100"
     own = f"Enron North America Corp. will file today.\n\nThanks,\n{signature}"
-    frequent = frequent_lines([signature] * 3 + ["Thanks,"] * 3, min_emails=3)
+    frequent = _frequent([signature] * 3 + ["Thanks,"] * 3, min_emails=3)
     assert strip_boilerplate(own, frequent) == "Enron North America Corp. will file today."
 
 
 def test_boilerplate_never_empties_a_form_letter() -> None:
     letter = "To Mr. Ken Lay,\nPlease protect our pensions."
-    frequent = frequent_lines([letter] * 5, min_emails=5)
+    frequent = _frequent([letter] * 5, min_emails=5)
     assert strip_boilerplate(letter, frequent) == letter
 
 
 def test_frequent_lines_counts_emails_not_occurrences() -> None:
-    assert frequent_lines(["a\na\na", "b"], min_emails=2) == frozenset()
-    assert frequent_lines(["a  b", "a b"], min_emails=2) == {"a b"}
+    assert _frequent(["a\na\na", "b"], min_emails=2) == frozenset()
+    assert _frequent(["a  b", "a b"], min_emails=2) == {"a b"}
+
+
+def test_a_line_is_frequent_from_the_day_its_last_needed_email_was_sent() -> None:
+    dated = [(date(2001, 9, 1), "Dana"), (date(2001, 9, 2), "x"), (date(2001, 9, 3), "Dana")]
+    assert frequent_lines(dated, min_emails=2) == {"Dana": date(2001, 9, 3)}
+
+
+def _frequent(texts: list[str], min_emails: int) -> frozenset[str]:
+    return frozenset(frequent_lines(((date(2001, 9, 1), t) for t in texts), min_emails))
 
 
 ## Property: build an email from known parts, split it, get the parts back.

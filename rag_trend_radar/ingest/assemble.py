@@ -1,13 +1,14 @@
-"""Read a span of days from the Enron files: raw files, quarantine, and the documents they make.
+"""Read the Enron files once for the replay's schedule, and turn one day's files into documents.
 
-Every file is scanned, not only the span's: copies of one email can sit hours apart across the
-span's edges, and boilerplate is counted over all mail sent up to its last day.
+Every file is scanned before any day runs: copies of one email can sit hours apart across a
+day's edges, so an email's date is only known once all its copies are seen.
 """
 
 from collections import defaultdict
+from collections.abc import Callable, Sequence
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime
 from functools import partial
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -23,71 +24,71 @@ from rag_trend_radar.ingest.clean import (
 )
 from rag_trend_radar.ingest.dedup import content_hash, resolve_sent_at, text_hash
 from rag_trend_radar.schema import (
-    Assembled,
+    Copy,
+    DayFile,
     Document,
     EmailHeaders,
-    ParsedEmail,
     QuotedBlock,
+    Scan,
     SplitBody,
 )
 from rag_trend_radar.sources import enron
 
 SOURCE = "enron"
-## Export damage shifts a copy's date by up to ~12 hours: copies within a day of the span are
-## kept whole, since one of them may be the copy whose date wins.
-_MARGIN = timedelta(days=1)
 
 
-def assemble(root: Path, since: date, until: date, tz: ZoneInfo) -> Assembled:
-    """The documents of every email sent from `since` to `until`, inclusive, in local days.
-
-    Emails come sorted by (sent_at, content hash), so runs reproduce exactly. A quoted message
-    whose text is no email's own text in the span becomes a document of its own.
-    """
-    start = datetime.combine(since, time(), tz)
-    end = datetime.combine(until + timedelta(days=1), time(), tz)
-    scan = partial(_scan, root=root, window=(start - _MARGIN, end + _MARGIN))
+def scan(root: Path) -> Scan:
+    """Every file under `root`: the copies that parse, in path order, and the rejected ones."""
+    copies: list[Copy] = []
     rejected: dict[str, str] = {}
-    copies: dict[str, list[_Copy]] = defaultdict(list)
     with ProcessPoolExecutor() as pool:
         paths = sorted(p for p in root.rglob("*") if p.is_file())
-        for scanned in pool.map(scan, paths, chunksize=500):
+        for scanned in pool.map(partial(_scan, root=root), paths, chunksize=500):
             if isinstance(scanned, _Rejected):
                 rejected[scanned.path] = scanned.reason
             else:
-                copies[scanned.key].append(scanned)
-
-    dates = {key: resolve_sent_at(c.sent_at for c in group) for key, group in copies.items()}
-    boilerplate = frequent_lines(
-        (group[0].own for key, group in copies.items() if dates[key][0] < end),
-        BOILERPLATE_MIN_EMAILS,
-    )
-    in_span = sorted(
-        (key for key in copies if start <= dates[key][0] < end), key=lambda k: (dates[k][0], k)
-    )
-    emails = [_email(key, copies[key], *dates[key]) for key in in_span]
-    paths_kept = sorted({c.path for key in in_span for c in copies[key]} | rejected.keys())
-    return Assembled(
+                copies.append(scanned)
+    return Scan(
         mailboxes=tuple(sorted(p.name for p in root.iterdir() if p.is_dir())),
-        raw_files=tuple(enron.read_raw_file(root, root / path) for path in paths_kept),
+        copies=tuple(copies),
         rejected=rejected,
-        documents=(*(doc for doc, _ in emails), *_orphans(emails)),
-        boilerplate=boilerplate,
     )
+
+
+def resolve(copies: Sequence[Copy]) -> dict[str, tuple[datetime, bool]]:
+    """Each email's date over all its copies, and whether it may be hours off (by email key)."""
+    dates: dict[str, list[datetime]] = defaultdict(list)
+    for copy in copies:
+        dates[copy.key].append(copy.sent_at)
+    return {key: resolve_sent_at(group) for key, group in dates.items()}
+
+
+def boilerplate(
+    copies: Sequence[Copy], dates: dict[str, tuple[datetime, bool]], tz: ZoneInfo
+) -> dict[str, date]:
+    """Each boilerplate line and the local day it became one, counted over distinct emails."""
+    own = {copy.key: copy.own for copy in reversed(copies)}  # the first copy by path wins
+    dated = sorted((dates[key][0].astimezone(tz).date(), key) for key in own)
+    return frequent_lines(((day, own[key]) for day, key in dated), BOILERPLATE_MIN_EMAILS)
+
+
+def documents(
+    files: Sequence[DayFile], held: Callable[[set[str]], set[str]]
+) -> tuple[Document, ...]:
+    """One day's documents: an email per distinct key, then each quoted message no email holds.
+
+    `files` come sorted by (sent_at, key, path), so runs reproduce exactly. `held` takes text
+    hashes and returns those that are some email's own text, in the whole dataset.
+    """
+    groups: dict[str, list[DayFile]] = defaultdict(list)
+    for file in files:
+        groups[file.key].append(file)
+    emails = [_email(group) for group in groups.values()]
+    quoted = {text_hash(b.text) for _, split in emails for b in split.quoted if b.text}
+    return (*(doc for doc, _ in emails), *_orphans(emails, held(quoted)))
 
 
 ## Scanning, one file per worker call.
-
-
-@dataclass(frozen=True)
-class _Copy:
-    path: str
-    mailbox: str
-    key: str
-    sent_at: datetime
-    own: str
-    ## Only copies near the span keep their parse: the rest are needed for dates and boilerplate.
-    parsed: tuple[ParsedEmail, SplitBody] | None
 
 
 @dataclass(frozen=True)
@@ -96,63 +97,60 @@ class _Rejected:
     reason: str
 
 
-def _scan(path: Path, root: Path, window: tuple[datetime, datetime]) -> _Copy | _Rejected:
+def _scan(path: Path, root: Path) -> Copy | _Rejected:
     raw = enron.read_raw_file(root, path)
     try:
         email = enron.parse(raw)
     except ParseError as error:
         return _Rejected(raw.path, str(error))
-    split = split_quoted(normalize(email.body))
-    near = window[0] <= email.sent_at < window[1]
-    return _Copy(
+    return Copy(
         path=raw.path,
         mailbox=raw.mailbox,
         key=content_hash(email.subject, email.body),
         sent_at=email.sent_at,
-        own=split.own,
-        parsed=(email, split) if near else None,
+        own=split_quoted(normalize(email.body)).own,
     )
 
 
 ## Building documents.
 
 
-def _email(
-    key: str, group: list[_Copy], sent_at: datetime, uncertain: bool
-) -> tuple[Document, SplitBody]:
-    email, split = next(c.parsed for c in group if c.parsed is not None)
+def _email(group: list[DayFile]) -> tuple[Document, SplitBody]:
+    first = group[0]
+    email = enron.parse(first.raw)
+    split = split_quoted(normalize(email.body))
     quoted = "\n\n".join(f"{b.header}\n\n{b.text}".strip() for b in split.quoted)
     document = Document(
         source=SOURCE,
-        external_id=key,
+        external_id=first.key,
         kind="email",
-        sent_at=sent_at,
+        sent_at=first.sent_at,
         title=email.subject,
         author=email.sender,
         body=split.own,
         quoted=quoted,
         body_hash=text_hash(split.own + "\x00" + quoted),
         public=False,
-        readers=tuple(sorted({c.mailbox for c in group})),
-        paths=tuple(sorted(c.path for c in group)),
+        readers=tuple(sorted({f.raw.mailbox for f in group})),
+        paths=tuple(sorted(f.raw.path for f in group)),
         email=EmailHeaders.model_validate(email.model_dump(include=set(EmailHeaders.model_fields))),
-        date_uncertain=uncertain,
+        date_uncertain=first.date_uncertain,
     )
     return document, split
 
 
-def _orphans(emails: list[tuple[Document, SplitBody]]) -> list[Document]:
-    ## Emails arrive in (sent_at, hash) order, so a quoted message is dated by its first quote.
-    own = {text_hash(doc.body) for doc, _ in emails if doc.body}
+def _orphans(emails: list[tuple[Document, SplitBody]], held: set[str]) -> list[Document]:
+    ## Emails arrive in (sent_at, key) order, so a quoted message is dated by its first quote.
     first: dict[str, tuple[Document, QuotedBlock]] = {}
-    readers: dict[str, set[str]] = defaultdict(set)
+    quoted_by: dict[str, list[str]] = defaultdict(list)
     for doc, split in emails:
         for block in split.quoted:
             digest = text_hash(block.text)
-            if not block.text or digest in own:
+            if not block.text or digest in held:
                 continue
             first.setdefault(digest, (doc, block))
-            readers[digest].update(doc.readers)
+            if doc.external_id not in quoted_by[digest]:
+                quoted_by[digest].append(doc.external_id)
     return [
         Document(
             source=SOURCE,
@@ -165,7 +163,8 @@ def _orphans(emails: list[tuple[Document, SplitBody]]) -> list[Document]:
             quoted="",
             body_hash=digest,
             public=False,
-            readers=tuple(sorted(readers[digest])),
+            readers=(),
+            quoted_by=tuple(quoted_by[digest]),
         )
         for digest, (doc, block) in first.items()
     ]

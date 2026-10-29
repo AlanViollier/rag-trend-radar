@@ -4,6 +4,7 @@ import html
 import re
 from collections import Counter
 from collections.abc import Iterable
+from datetime import date
 from itertools import pairwise
 
 from rag_trend_radar.schema import QuotedBlock, SplitBody
@@ -84,12 +85,19 @@ def split_quoted(body: str) -> SplitBody:
     return SplitBody(own="\n".join(own).strip(), quoted=tuple(blocks))
 
 
-def frequent_lines(texts: Iterable[str], min_emails: int) -> frozenset[str]:
-    """Lines (spaces collapsed) that appear in at least `min_emails` of `texts`."""
+def frequent_lines(dated: Iterable[tuple[date, str]], min_emails: int) -> dict[str, date]:
+    """Lines (spaces collapsed) found in at least `min_emails` texts, with the day they got there.
+
+    `dated` holds one (day, text) per distinct email, in day order. A line is frequent as of a
+    day from the day its `min_emails`th text was sent.
+    """
     counts: Counter[str] = Counter()
-    for text in texts:
-        counts.update({key for line in text.split("\n") if (key := _key(line))})
-    return frozenset(line for line, n in counts.items() if n >= min_emails)
+    since: dict[str, date] = {}
+    for day, text in dated:
+        keys = {key for line in text.split("\n") if (key := _key(line))}
+        counts.update(keys)
+        since.update({key: day for key in keys if counts[key] == min_emails})
+    return since
 
 
 def strip_boilerplate(own: str, frequent: frozenset[str]) -> str:

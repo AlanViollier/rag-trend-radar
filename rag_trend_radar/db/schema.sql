@@ -1,4 +1,4 @@
--- The store, as of milestone 1. `rag-trend-radar db-reset` drops the configured schema and runs
+-- The store, as of milestone 2. `rag-trend-radar db-reset` drops the configured schema and runs
 -- this file; every row is rebuilt from the Enron files, so there are no migrations.
 -- Topic, trend, watchlist and digest tables arrive with milestone 3.
 
@@ -29,8 +29,26 @@ CREATE TABLE raw_files (
     mailbox     text NOT NULL,
     folder      text NOT NULL,
     content     bytea NOT NULL,
-    read_on_day date,
     document_id bigint REFERENCES documents (id)
+);
+
+-- The replay's schedule, written once by `stage`: every file that parsed, the email it's a copy
+-- of, and that email's date resolved over all its copies. Day D's emails are the rows dated D.
+CREATE TABLE copies (
+    path           text PRIMARY KEY REFERENCES raw_files (path),
+    email_key      text NOT NULL,  -- content hash, shared by every copy of one email
+    sent_at        timestamptz NOT NULL,
+    date_uncertain boolean NOT NULL,
+    own_hash       text NOT NULL   -- its own text's hash: a quote matching any isn't an orphan
+);
+CREATE INDEX copies_sent_at ON copies (sent_at);
+CREATE INDEX copies_own_hash ON copies (own_hash);
+
+-- Boilerplate as known on each day: a trailing line counts from the day the 200th distinct
+-- email holding it was sent, so a day's chunks don't depend on mail that came after.
+CREATE TABLE boilerplate (
+    line     text PRIMARY KEY,
+    from_day date NOT NULL
 );
 
 -- Files whose date is junk (1979, 2044) or that don't parse, set aside with the reason.
@@ -67,6 +85,14 @@ CREATE TABLE access (
     PRIMARY KEY (document_id, mailbox)
 );
 
+-- Which emails quote which quoted message. A quoted message's readers are recounted from it,
+-- so they widen as later days quote it and shrink when a quoting email is deleted.
+CREATE TABLE quotes (
+    email_id  bigint REFERENCES documents (id) ON DELETE CASCADE,
+    quoted_id bigint REFERENCES documents (id) ON DELETE CASCADE,
+    PRIMARY KEY (email_id, quoted_id)
+);
+
 -- Pieces of a document small enough to embed well.
 CREATE TABLE chunks (
     id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -76,6 +102,9 @@ CREATE TABLE chunks (
     text_hash   text NOT NULL,
     UNIQUE (document_id, position)
 );
+
+-- A text embedded once is copied to every later chunk with the same text, found by its hash.
+CREATE INDEX chunks_text_hash ON chunks (text_hash);
 
 -- BM25 keyword index (pg_search).
 CREATE INDEX chunks_bm25 ON chunks USING bm25 (id, text) WITH (key_field = 'id');

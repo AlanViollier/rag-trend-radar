@@ -9,6 +9,10 @@ def test_copies_match_across_whitespace_and_subject_case() -> None:
     assert content_hash("RE: Plan", "see you\n at 3 ") == content_hash("re: plan ", "see you at 3")
 
 
+def test_a_body_opening_on_a_blank_line_is_the_same_email() -> None:
+    assert content_hash("plan", "\n\nat 3") == content_hash("plan", "at 3")
+
+
 def test_different_bodies_differ() -> None:
     assert content_hash("plan", "at 3") != content_hash("plan", "at 4")
 

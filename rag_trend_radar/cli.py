@@ -1,26 +1,26 @@
 """rag-trend-radar: thin commands over the modules."""
 
-from collections import Counter
-from datetime import date
-from functools import partial
+import sys
+from datetime import date, timedelta
 from itertools import islice
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import numpy as np
+import psycopg
 import typer
+from psycopg.rows import TupleRow
 from rich import print as show
 from rich.progress import track
 from rich.table import Table
 
-from rag_trend_radar import index
+from rag_trend_radar import batch, index
 from rag_trend_radar.answer import answer
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.embed import embed, token_counter
 from rag_trend_radar.evals.questions import sample, write
 from rag_trend_radar.evals.retrieval import rankings, score
-from rag_trend_radar.ingest.assemble import assemble
 from rag_trend_radar.ingest.chunk import MAX_TOKENS, pieces
 from rag_trend_radar.schema import EvalQuestion
 from rag_trend_radar.search import hybrid
@@ -45,44 +45,58 @@ def db_reset() -> None:
 
 
 @app.command()
-def load(
+def stage() -> None:
+    """Read every Enron file once: raw files, quarantine, and the schedule `replay` walks (~5 min)."""
+    settings = get_settings()
+    with db.connect() as conn:
+        scanned = batch.stage(
+            conn, settings.data_dir / "enron" / "maildir", ZoneInfo(settings.timezone)
+        )
+    emails = len({c.key for c in scanned.copies})
+    show(
+        f"{len(scanned.copies) + len(scanned.rejected):,} files "
+        f"({len(scanned.rejected):,} quarantined) → {emails:,} emails"
+    )
+
+
+@app.command()
+def replay(
     since: str = "2001-09-01",
     until: str = "2001-09-30",
     max_tokens: int = MAX_TOKENS,
     header: bool = True,
+    vectors: bool = True,
 ) -> None:
-    """Read the Enron emails sent from `since` to `until` into the store (default: the M1 slice).
+    """Run the daily loop for every day from `since` to `until` (default: the M1 slice).
 
-    `--max-tokens` and `--no-header` chunk another way, for an experiment's schema (DB_SCHEMA).
+    Days run in order, each one whole: documents, chunks, vectors, then its `batches` row.
+    Re-running a day changes nothing. `--max-tokens` and `--no-header` chunk another way, for an
+    experiment's schema (DB_SCHEMA); `--no-vectors` leaves embedding to `embed`.
     """
     settings = get_settings()
+    tz, model, dims = ZoneInfo(settings.timezone), settings.embedding_model, settings.embedding_dims
+    count_tokens = token_counter(model)
     first, last = date.fromisoformat(since), date.fromisoformat(until)
-    assembled = assemble(
-        settings.data_dir / "enron" / "maildir",
-        first,
-        last,
-        ZoneInfo(settings.timezone),
-    )
-    chunker = partial(
-        pieces,
-        count_tokens=token_counter(settings.embedding_model),
-        boilerplate=assembled.boilerplate,
-        max_tokens=max_tokens,
-        with_header=header,
-    )
     with db.connect() as conn:
-        chunks = index.store(conn, assembled, chunker)
-        index.record_days(conn, first, last, settings.timezone)
-    kinds = Counter(d.kind for d in assembled.documents)
-    show(
-        f"{len(assembled.raw_files):,} files ({len(assembled.rejected):,} quarantined) → "
-        f"{kinds['email']:,} emails + {kinds['quoted']:,} quoted messages → {chunks:,} chunks"
-    )
+        for day in (first + timedelta(days=n) for n in range((last - first).days + 1)):
+            chunks = batch.run_day(
+                conn,
+                day,
+                tz,
+                lambda doc, frequent: pieces(
+                    doc, count_tokens, frequent, max_tokens=max_tokens, with_header=header
+                ),
+            )
+            conn.commit()
+            embedded = _embed_missing(conn, model, dims) if vectors else 0
+            batch.finish_day(conn, day, model, dims)
+            conn.commit()
+            show(f"{day}  {chunks:>5,} chunks written  {embedded:>5,} embedded", file=sys.stderr)
 
 
 @app.command("embed")
 def embed_chunks(
-    model: str = "", dims: int = 0, batch: int = 512, from_dims: int = 0, reuse_from: str = ""
+    model: str = "", dims: int = 0, batch_size: int = 512, from_dims: int = 0, reuse_from: str = ""
 ) -> None:
     """Embed every chunk with no vector yet (default: the configured model and size).
 
@@ -99,18 +113,7 @@ def embed_chunks(
         if reuse_from:
             show(f"{index.reuse_vectors(conn, model, dims, reuse_from):,} vectors reused")
             conn.commit()
-        todo = list(index.unembedded(conn, model, dims).items())
-        for start in track(range(0, len(todo), batch), description=f"{model} @ {dims}"):
-            texts, ids = zip(*todo[start : start + batch], strict=True)
-            vectors = embed(texts, model, dims)
-            index.write_vectors(
-                conn,
-                model,
-                [i for group in ids for i in group],
-                np.repeat(vectors, [len(group) for group in ids], axis=0),
-            )
-            conn.commit()
-    show(f"{sum(len(ids) for _, ids in todo):,} chunks embedded ({len(todo):,} distinct texts)")
+        show(f"{_embed_missing(conn, model, dims, batch_size, progress=True):,} chunks embedded")
 
 
 @app.command()
@@ -210,3 +213,29 @@ def recall(
         scores = score(relevant, results, METRICS)
         table.add_row(method, *(f"{scores[m]:.3f}" for m in METRICS))
     show(table)
+
+
+def _embed_missing(
+    conn: psycopg.Connection[TupleRow],
+    model: str,
+    dims: int,
+    batch_size: int = 512,
+    *,
+    progress: bool = False,
+) -> int:
+    ## A text this schema already embedded under another chunk is copied, not embedded again;
+    ## the rest embed once per distinct text. Commits per batch, so a stopped run resumes.
+    index.reuse_vectors(conn, model, dims, get_settings().db_schema)
+    todo = list(index.unembedded(conn, model, dims).items())
+    starts = range(0, len(todo), batch_size)
+    for start in track(starts, description=f"{model} @ {dims}") if progress else starts:
+        texts, ids = zip(*todo[start : start + batch_size], strict=True)
+        vectors = embed(texts, model, dims)
+        index.write_vectors(
+            conn,
+            model,
+            [i for group in ids for i in group],
+            np.repeat(vectors, [len(group) for group in ids], axis=0),
+        )
+        conn.commit()
+    return sum(len(ids) for _, ids in todo)

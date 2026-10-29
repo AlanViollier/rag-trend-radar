@@ -41,7 +41,7 @@ An answer costs one to three cents.
 
 → **Ingest.** 517,401 files from the CMU Enron dataset are parsed, stripped of markup, split
 into each email's own text and the replies it quotes, and deduplicated across mailboxes into
-244,541 emails. A quoted message no mailbox holds as an email becomes a document of its own.
+244,534 emails. A quoted message no mailbox holds as an email becomes a document of its own.
 
 → **Index.** Each email is one chunk, or several past 512 tokens, led by its subject, sender
 and date, and embedded with EmbeddingGemma 2 into pgvector (halfvec, HNSW). The same chunks
@@ -98,8 +98,8 @@ cp .env.template .env              # set POSTGRES_PASSWORD and ANTHROPIC_API_KEY
 docker compose up -d --wait        # Postgres 18 + pgvector + pg_search
 uv sync --extra models             # local embedding and rerank models
 uv run rag-trend-radar db-reset
-uv run rag-trend-radar load        # September 2001, ~2 min
-uv run rag-trend-radar embed       # ~30 min on an M1 Pro
+uv run rag-trend-radar stage       # read all 517k files once, ~4 min
+uv run rag-trend-radar replay      # September 2001 day by day, embedding as it goes (~30 min on an M1 Pro)
 uv run rag-trend-radar ask "…"
 ```
 

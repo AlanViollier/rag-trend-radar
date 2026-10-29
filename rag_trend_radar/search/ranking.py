@@ -25,7 +25,7 @@ def last_day(conn: psycopg.Connection[TupleRow]) -> date:
         0
     ]
     if day is None:
-        raise NoDaysLoaded("no finished day in batches: run `rag-trend-radar load` first")
+        raise NoDaysLoaded("no finished day in batches: run `rag-trend-radar replay` first")
     return cast(date, day)
 
 

@@ -71,18 +71,37 @@ class Document(Record):
     public: bool
     readers: tuple[str, ...]
     paths: tuple[str, ...] = ()
+    ## A quoted message's readers are recounted from the emails quoting it (external ids).
+    quoted_by: tuple[str, ...] = ()
     email: EmailHeaders | None = None
     date_uncertain: bool = False
 
 
-class Assembled(Record):
-    """A span of days read from the dataset, ready for the store."""
+class Copy(Record):
+    """A file that parsed, as the scan saw it: the email it's a copy of, the date it claims."""
+
+    path: str
+    mailbox: str
+    key: str
+    sent_at: datetime
+    own: str
+
+
+class Scan(Record):
+    """Every file of the dataset read once: the copies that parsed and the ones set aside."""
 
     mailboxes: tuple[str, ...]
-    raw_files: tuple[RawFile, ...]
+    copies: tuple[Copy, ...]
     rejected: dict[str, str]
-    documents: tuple[Document, ...]
-    boilerplate: frozenset[str]
+
+
+class DayFile(Record):
+    """A file of one simulated day: as read, with its email's date resolved over all copies."""
+
+    raw: RawFile
+    key: str
+    sent_at: datetime
+    date_uncertain: bool
 
 
 class SearchHit(Record):
