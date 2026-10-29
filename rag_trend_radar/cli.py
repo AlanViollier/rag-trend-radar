@@ -131,6 +131,38 @@ def embed_chunks(
         show(f"{_embed_missing(conn, model, dims, batch_size, progress=True):,} chunks embedded")
 
 
+@app.command("vectors")
+def list_vectors() -> None:
+    """Each model's vectors table and how many of the chunks it covers.
+
+    A swap: `embed --model new --dims n` fills the new table while the old one serves, `recall
+    --model new --dims n` compares them, then config.yaml flips once the new one is full and
+    `drop-vectors` removes the old.
+    """
+    settings = get_settings()
+    configured = index.vectors_table(settings.embedding_model, settings.embedding_dims)
+    with db.connect() as conn:
+        chunks = conn.execute("SELECT count(*) FROM chunks").fetchall()[0][0]
+        covered = index.coverage(conn)
+    for table, n in covered.items():
+        state = "full" if n == chunks else f"{chunks - n:,} missing"
+        mark = "  ← config.yaml" if table == configured else ""
+        show(f"{table}  {n:,} of {chunks:,} chunks, {state}{mark}")
+
+
+@app.command()
+def drop_vectors(model: str, dims: int) -> None:
+    """Drop a model's vectors once a swap has moved off it; the configured model is refused."""
+    settings = get_settings()
+    if (model, dims) == (settings.embedding_model, settings.embedding_dims):
+        raise typer.BadParameter(
+            f"{model} @ {dims} is the configured model: flip config.yaml first"
+        )
+    with db.connect() as conn:
+        index.drop_vectors(conn, model, dims)
+    show(f"{index.vectors_table(model, dims)} dropped")
+
+
 @app.command()
 def ask(question: str, person: str = "investigator", as_of: str = "") -> None:
     """Answer a question as `person` on day `as_of` (default: the last finished day).

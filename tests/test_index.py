@@ -2,6 +2,7 @@ from collections.abc import Iterator
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+import numpy as np
 import psycopg
 import pytest
 from psycopg.rows import TupleRow
@@ -76,3 +77,18 @@ def _chunks(conn: Connection) -> list[str]:
         " WHERE d.source = 'test-index' ORDER BY c.position"
     ).fetchall()
     return [text for (text,) in rows]
+
+
+def test_a_new_model_fills_beside_the_old_and_drops_once_swapped(conn: Connection) -> None:
+    index.upsert_documents(conn, [_document("a\n\nb")], _pieces)
+    first, *_ = (
+        i
+        for (i,) in conn.execute(
+            "SELECT c.id FROM chunks c JOIN documents d ON d.id = c.document_id"
+            " WHERE d.source = 'test-index' ORDER BY c.id"
+        ).fetchall()
+    )
+    index.write_vectors(conn, "test/new", [first], np.ones((1, 4), dtype=np.float32))
+    assert index.coverage(conn)["vectors_new_4"] == 1
+    index.drop_vectors(conn, "test/new", 4)
+    assert "vectors_new_4" not in index.coverage(conn)

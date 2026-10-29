@@ -75,6 +75,32 @@ def vectors_identifier(model: str, dims: int) -> sql.Identifier:
     return sql.Identifier(get_settings().db_schema, vectors_table(model, dims))
 
 
+def coverage(conn: psycopg.Connection[TupleRow]) -> dict[str, int]:
+    """Every vectors table in the configured schema and how many chunks it holds a vector for.
+
+    A model swap flips config only once the new table covers every chunk: until then the old
+    table keeps serving searches and the new one fills beside it.
+    """
+    tables = conn.execute(
+        "SELECT tablename FROM pg_tables WHERE schemaname = %s AND tablename LIKE 'vectors\\_%%'"
+        " ORDER BY tablename",
+        (get_settings().db_schema,),
+    ).fetchall()
+    return {
+        name: conn.execute(
+            sql.SQL("SELECT count(*) FROM {}").format(
+                sql.Identifier(get_settings().db_schema, name)
+            )
+        ).fetchall()[0][0]
+        for (name,) in tables
+    }
+
+
+def drop_vectors(conn: psycopg.Connection[TupleRow], model: str, dims: int) -> None:
+    """Drop `model`'s vectors at `dims`, the last step of a swap away from it."""
+    conn.execute(sql.SQL("DROP TABLE {}").format(vectors_identifier(model, dims)))
+
+
 def unembedded(conn: psycopg.Connection[TupleRow], model: str, dims: int) -> dict[str, list[int]]:
     """Chunks with no vector yet in `model` at `dims`, grouped by text: equal texts embed once."""
     table = ensure_vectors(conn, model, dims)
