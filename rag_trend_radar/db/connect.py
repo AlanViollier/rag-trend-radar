@@ -40,11 +40,19 @@ def connect(person: str | None = None) -> psycopg.Connection[TupleRow]:
 
 
 def reset() -> None:
-    """Drop the configured schema (public, or an experiment's) and recreate its tables."""
-    schema = sql.Identifier(get_settings().db_schema)
+    """Drop the configured schema's tables (public, or an experiment's) and recreate them.
+
+    Tables, not the schema: dropping public would take pgvector with it, and with pgvector
+    every vectors table and the embedding cache, hours of embedding (2026-10-29).
+    """
+    schema = get_settings().db_schema
     with _open() as conn:
-        conn.execute(sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(schema))
-        conn.execute(sql.SQL("CREATE SCHEMA {}").format(schema))
+        conn.execute(sql.SQL("CREATE SCHEMA IF NOT EXISTS {}").format(sql.Identifier(schema)))
+        tables = conn.execute(
+            "SELECT tablename FROM pg_tables WHERE schemaname = %s", (schema,)
+        ).fetchall()
+        for (table,) in tables:
+            conn.execute(sql.SQL("DROP TABLE {} CASCADE").format(sql.Identifier(schema, table)))
         conn.execute(SCHEMA_SQL.read_text())
 
 

@@ -1,9 +1,23 @@
--- The store, as of milestone 2. `rag-trend-radar db-reset` drops the configured schema and runs
+-- The store, as of milestone 2. `rag-trend-radar db-reset` drops the configured schema's tables and runs
 -- this file; every row is rebuilt from the Enron files, so there are no migrations.
 -- Topic, trend, watchlist and digest tables arrive with milestone 3.
 
+-- A reset drops the store's tables, never the extensions (pg_search needs pgvector in public)
+-- or the embedding cache: a rebuild of the store or an experiment keeps every vector computed.
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS pg_search;
+CREATE SCHEMA IF NOT EXISTS cache;
+
+-- Every vector ever computed, by what it depends on: the model, its pinned revision, the size
+-- and the exact text. Embedding looks here first, so only text never embedded costs time.
+CREATE TABLE IF NOT EXISTS cache.embeddings (
+    model     text NOT NULL,
+    revision  text NOT NULL,
+    dims      int NOT NULL,
+    text_hash text NOT NULL,
+    embedding halfvec NOT NULL,
+    PRIMARY KEY (model, revision, dims, text_hash)
+);
 
 -- One row per searchable thing: an email, a quoted message no email of ours holds, later a
 -- digest or an arXiv paper.

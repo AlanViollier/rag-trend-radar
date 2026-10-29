@@ -18,6 +18,8 @@ timezone: America/Chicago
 ## Swappable by name: each model gets its own vectors_<model> table.
 embedding_model: google/embeddinggemma-2
 embedding_dims: 768
+## Pinned: vectors from two revisions must never share a table (2026-10-29).
+embedding_revision: f9972ac22e696a105c482202646979e33e4b5a1e
 rerank_model: BAAI/bge-reranker-v2-m3
 
 answer_model: claude-sonnet-5-5

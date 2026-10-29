@@ -21,3 +21,19 @@ def test_unknown_key_fails_at_startup(tmp_path: Path) -> None:
 
 def test_repo_config_validates() -> None:
     assert get_settings(Path("config.yaml")).embedding_model == "google/embeddinggemma-2"
+
+
+def test_only_the_configured_model_loads_at_its_pinned_revision(tmp_path: Path) -> None:
+    config = tmp_path / "config.yaml"
+    config.write_text(f"embedding_revision: {'a' * 40}\n")
+    settings = get_settings(config)
+    assert settings.revision("google/embeddinggemma-2") == "a" * 40
+    assert settings.revision("sentence-transformers/all-MiniLM-L6-v2") == "main"
+
+
+def test_the_cache_schema_cant_be_reset(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    config = tmp_path / "config.yaml"
+    config.write_text("")
+    monkeypatch.setenv("DB_SCHEMA", "cache")
+    with pytest.raises(ConfigError, match="cache"):
+        get_settings(config)

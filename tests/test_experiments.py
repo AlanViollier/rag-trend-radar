@@ -53,24 +53,21 @@ def test_vectors_go_to_the_experiment_even_when_the_store_has_the_table() -> Non
 
 
 @pytest.mark.usefixtures("experiment")
-def test_an_experiment_reuses_the_stores_vector_for_an_unchanged_text() -> None:
+def test_a_vector_outlives_a_reset_and_comes_back_for_the_same_text() -> None:
     with db.connect() as conn:
-        for schema in ("public", "exp_isolation"):
-            conn.execute(
-                sql.SQL("INSERT INTO {} VALUES ('lee-p') ON CONFLICT DO NOTHING").format(
-                    sql.Identifier(schema, "employees")
-                )
-            )
-        store = _chunk(conn, "public", "same text")
+        conn.execute("INSERT INTO employees VALUES ('lee-p') ON CONFLICT DO NOTHING")
+        before = _chunk(conn, "exp_isolation", "same text")
+        index.write_vectors(conn, "test/reuse", [before], np.eye(4, dtype=np.float32)[:1])
+        conn.commit()
+    db.reset()
+    with db.connect() as conn:
         _chunk(conn, "exp_isolation", "same text")
         new = _chunk(conn, "exp_isolation", "new text")
-        conn.execute(
-            "CREATE TABLE public.vectors_reuse_4 (chunk_id bigint PRIMARY KEY, embedding halfvec(4))"
-        )
-        conn.execute("INSERT INTO public.vectors_reuse_4 VALUES (%s, '[1,0,0,0]')", (store,))
-        assert index.reuse_vectors(conn, "test/reuse", 4, "public") == 1
+        assert index.from_cache(conn, "test/reuse", 4) == 1
         assert index.unembedded(conn, "test/reuse", 4) == {"new text": [new]}
         conn.rollback()
+        conn.execute("DELETE FROM cache.embeddings WHERE model = 'test/reuse'")
+        conn.commit()
 
 
 def _chunk(conn: psycopg.Connection[TupleRow], schema: str, text: str) -> int:

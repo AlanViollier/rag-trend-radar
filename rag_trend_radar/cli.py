@@ -110,14 +110,12 @@ def delete(document_id: int) -> None:
 
 
 @app.command("embed")
-def embed_chunks(
-    model: str = "", dims: int = 0, batch_size: int = 512, from_dims: int = 0, reuse_from: str = ""
-) -> None:
+def embed_chunks(model: str = "", dims: int = 0, batch_size: int = 512, from_dims: int = 0) -> None:
     """Embed every chunk with no vector yet (default: the configured model and size).
 
     `--from-dims 768` derives the vectors from the model's stored 768-dim ones instead (Matryoshka
-    models only, EmbeddingGemma among them). `--reuse-from public` first copies the store's vector
-    for every chunk whose text it already embedded, so an experiment embeds only what changed.
+    models only, EmbeddingGemma among them). Any text already embedded with this model, revision
+    and size, in this schema or another, comes from the cache instead. Stopped, it resumes.
     """
     settings = get_settings()
     model, dims = model or settings.embedding_model, dims or settings.embedding_dims
@@ -125,9 +123,6 @@ def embed_chunks(
         if from_dims:
             show(f"{index.derive_vectors(conn, model, dims, from_dims):,} vectors derived")
             return
-        if reuse_from:
-            show(f"{index.reuse_vectors(conn, model, dims, reuse_from):,} vectors reused")
-            conn.commit()
         show(f"{_embed_missing(conn, model, dims, batch_size, progress=True):,} chunks embedded")
 
 
@@ -277,9 +272,10 @@ def _embed_missing(
     *,
     progress: bool = False,
 ) -> int:
-    ## A text this schema already embedded under another chunk is copied, not embedded again;
-    ## the rest embed once per distinct text. Commits per batch, so a stopped run resumes.
-    index.reuse_vectors(conn, model, dims, get_settings().db_schema)
+    ## A text embedded before, by any run in any schema, is copied from the cache; the rest
+    ## embed once per distinct text. Commits per batch, so a stopped run resumes.
+    index.from_cache(conn, model, dims)
+    conn.commit()
     todo = list(index.unembedded(conn, model, dims).items())
     starts = range(0, len(todo), batch_size)
     for start in track(starts, description=f"{model} @ {dims}") if progress else starts:

@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 from numpy.typing import NDArray
 
+from rag_trend_radar.config import get_settings
+
 if TYPE_CHECKING:
     from sentence_transformers import SentenceTransformer
 
@@ -36,7 +38,7 @@ def token_counter(model: str) -> Callable[[str], int]:
     """
     from transformers import AutoTokenizer  # noqa: PLC0415  (models extra, absent in CI)
 
-    tokenizer = AutoTokenizer.from_pretrained(model)
+    tokenizer = AutoTokenizer.from_pretrained(model, revision=get_settings().revision(model))
     return lambda text: len(tokenizer.encode(text, add_special_tokens=False))
 
 
@@ -46,4 +48,4 @@ def _load(model: str) -> SentenceTransformer:
     ## native bfloat16.
     from sentence_transformers import SentenceTransformer  # noqa: PLC0415
 
-    return SentenceTransformer(model)
+    return SentenceTransformer(model, revision=get_settings().revision(model))

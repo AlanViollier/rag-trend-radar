@@ -111,3 +111,22 @@ def test_a_quoted_message_no_email_quotes_any_more_goes(conn: Connection) -> Non
     assert conn.execute(
         "SELECT external_id FROM documents WHERE source = 'test-index' AND kind = 'quoted'"
     ).fetchall() == [("Prices rose",)]
+
+
+def test_a_change_outside_the_chunks_keeps_them_and_a_change_inside_rewrites_them(
+    conn: Connection,
+) -> None:
+    index.upsert_documents(conn, [_document("a\n\nb")], _pieces)
+    ids = _chunk_ids(conn)
+    quoted_only = _document("a\n\nb").model_copy(update={"quoted": "> older", "body_hash": "x"})
+    assert index.upsert_documents(conn, [quoted_only], _pieces) == 0
+    assert _chunk_ids(conn) == ids
+    assert index.upsert_documents(conn, [quoted_only], lambda doc: [doc.body]) == 1
+
+
+def _chunk_ids(conn: Connection) -> list[int]:
+    rows = conn.execute(
+        "SELECT c.id FROM chunks c JOIN documents d ON d.id = c.document_id"
+        " WHERE d.source = 'test-index' ORDER BY c.position"
+    ).fetchall()
+    return [i for (i,) in rows]

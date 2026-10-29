@@ -21,22 +21,33 @@ def upsert_documents(
     documents: Sequence[Document],
     pieces: Callable[[Document], list[str]],
 ) -> int:
-    """Insert new documents and re-chunk changed ones; return how many chunks need embedding.
+    """Insert new documents and re-chunk any whose chunk texts changed; return chunks written.
 
-    Who may read an email is rewritten every time from `readers`, so a copy found in one more
-    mailbox widens access without touching the chunks. A quoted message's readers are recounted
-    from every stored email quoting it, whichever day quoted it (rule 5). A deleted document is
-    skipped: replaying its day doesn't bring it back.
+    Chunks are compared as texts, not by the body: a change to the quoted part alone keeps them
+    (and their vectors), a new boilerplate line or chunk size rewrites them. Who may read an
+    email is rewritten every time from `readers`, so a copy found in one more mailbox widens
+    access without touching the chunks. A quoted message's readers are recounted from every
+    stored email quoting it, whichever day quoted it (rule 5). A deleted document is skipped:
+    replaying its day doesn't bring it back.
     """
-    stored: dict[str, tuple[str, bool]] = {
-        external_id: (body_hash, deleted)
-        for external_id, body_hash, deleted in conn.execute(
-            "SELECT external_id, body_hash, deleted_at IS NOT NULL FROM documents"
-            " WHERE external_id = ANY(%s)",
-            ([d.external_id for d in documents],),
+    external_ids = [d.external_id for d in documents]
+    deleted = {
+        external_id
+        for (external_id,) in conn.execute(
+            "SELECT external_id FROM documents WHERE external_id = ANY(%s)"
+            " AND deleted_at IS NOT NULL",
+            (external_ids,),
         ).fetchall()
     }
-    live = [d for d in documents if not stored.get(d.external_id, ("", False))[1]]
+    chunked: dict[str, list[str]] = dict(
+        conn.execute(
+            "SELECT d.external_id, array_agg(c.text_hash ORDER BY c.position) FROM documents d"
+            " JOIN chunks c ON c.document_id = d.id WHERE d.external_id = ANY(%s)"
+            " GROUP BY d.external_id",
+            (external_ids,),
+        ).fetchall()
+    )
+    live = [d for d in documents if d.external_id not in deleted]
     ids: dict[str, int] = {}
     written = 0
     with conn.cursor() as cur:
@@ -55,8 +66,9 @@ def upsert_documents(
                     "UPDATE raw_files SET document_id = %s WHERE path = ANY(%s)",
                     (document_id, list(doc.paths)),
                 )
-            if stored.get(doc.external_id, ("", False))[0] != doc.body_hash:
-                written += _rechunk(cur, document_id, pieces(doc))
+            texts = pieces(doc)
+            if [text_hash(t) for t in texts] != chunked.get(doc.external_id, []):
+                written += _rechunk(cur, document_id, texts)
         _record_quotes(cur, live, ids)
     return written
 
@@ -114,26 +126,22 @@ def unembedded(conn: psycopg.Connection[TupleRow], model: str, dims: int) -> dic
     return dict(rows)
 
 
-def reuse_vectors(conn: psycopg.Connection[TupleRow], model: str, dims: int, source: str) -> int:
-    """Copy `source` schema's vector for every chunk here whose text it already embedded.
+def from_cache(conn: psycopg.Connection[TupleRow], model: str, dims: int) -> int:
+    """Give every chunk missing a vector the cached one for its exact text; return how many.
 
-    A vector depends only on the text, so an experiment that re-chunks only the long emails
-    re-embeds only those: the rest match the store's chunks by text hash. Returns how many.
+    The cache outlives resets and is shared by experiments, so a rebuild or a re-chunked
+    variant embeds only text no run has embedded with this model, revision and size.
     """
     table = ensure_vectors(conn, model, dims)
     cur = conn.execute(
         sql.SQL(
-            "INSERT INTO {} (chunk_id, embedding)"
-            " SELECT DISTINCT ON (c.id) c.id, v.embedding FROM chunks c"
-            " JOIN {} s ON s.text_hash = c.text_hash JOIN {} v ON v.chunk_id = s.id"
-            " WHERE NOT EXISTS (SELECT 1 FROM {} x WHERE x.chunk_id = c.id)"
-            " ORDER BY c.id ON CONFLICT (chunk_id) DO NOTHING"
-        ).format(
-            table,
-            sql.Identifier(source, "chunks"),
-            sql.Identifier(source, vectors_table(model, dims)),
-            table,
-        )
+            "INSERT INTO {t} (chunk_id, embedding)"
+            " SELECT c.id, e.embedding FROM chunks c JOIN cache.embeddings e"
+            " ON e.text_hash = c.text_hash AND e.model = %s AND e.revision = %s AND e.dims = %s"
+            " WHERE NOT EXISTS (SELECT 1 FROM {t} v WHERE v.chunk_id = c.id)"
+            " ON CONFLICT (chunk_id) DO NOTHING"
+        ).format(t=table),
+        (model, get_settings().revision(model), dims),
     )
     return cur.rowcount
 
@@ -164,7 +172,7 @@ def write_vectors(
     chunk_ids: Sequence[int],
     vectors: NDArray[np.float32],
 ) -> None:
-    """Store vectors in vectors_<model>_<dims>, creating the table on first use."""
+    """Store vectors in vectors_<model>_<dims> (created on first use) and in the cache."""
     table = ensure_vectors(conn, model, vectors.shape[1])
     with conn.cursor() as cur:
         cur.executemany(
@@ -173,6 +181,15 @@ def write_vectors(
                 " ON CONFLICT (chunk_id) DO UPDATE SET embedding = EXCLUDED.embedding"
             ).format(table),
             [(i, HalfVector(v)) for i, v in zip(chunk_ids, vectors, strict=True)],
+        )
+        cur.execute(
+            sql.SQL(
+                "INSERT INTO cache.embeddings (model, revision, dims, text_hash, embedding)"
+                " SELECT DISTINCT ON (c.text_hash) %s, %s, %s, c.text_hash, v.embedding"
+                " FROM chunks c JOIN {} v ON v.chunk_id = c.id WHERE c.id = ANY(%s)"
+                " ORDER BY c.text_hash ON CONFLICT DO NOTHING"
+            ).format(table),
+            (model, get_settings().revision(model), vectors.shape[1], list(chunk_ids)),
         )
 
 
