@@ -100,10 +100,16 @@ def run_day(
 
 def finish_day(conn: psycopg.Connection[TupleRow], day: date, model: str, dims: int) -> None:
     """Close `day`'s batches row with its counts recounted from the store."""
+    recount_day(conn, day, model, dims)
+    conn.execute("UPDATE batches SET finished_at = now() WHERE day = %s", (day,))
+
+
+def recount_day(conn: psycopg.Connection[TupleRow], day: date, model: str, dims: int) -> None:
+    """Recount `day`'s batches row from what's stored: after its run, or after a delete."""
     in_day = "d.deleted_at IS NULL AND d.sent_at >= %(start)s AND d.sent_at < %(end)s"
     conn.execute(
         sql.SQL(
-            "UPDATE batches SET finished_at = now(),"
+            "UPDATE batches SET"
             " emails_in = (SELECT count(*) FROM documents d WHERE d.kind = 'email' AND {in_day}),"
             " documents_new = (SELECT count(*) FROM documents d WHERE {in_day}),"
             " chunks_embedded = (SELECT count(*) FROM documents d JOIN chunks c"

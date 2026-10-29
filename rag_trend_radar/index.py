@@ -2,6 +2,7 @@
 
 import re
 from collections.abc import Callable, Sequence
+from datetime import datetime
 
 import numpy as np
 import psycopg
@@ -24,18 +25,22 @@ def upsert_documents(
 
     Who may read an email is rewritten every time from `readers`, so a copy found in one more
     mailbox widens access without touching the chunks. A quoted message's readers are recounted
-    from every stored email quoting it, whichever day quoted it (rule 5).
+    from every stored email quoting it, whichever day quoted it (rule 5). A deleted document is
+    skipped: replaying its day doesn't bring it back.
     """
-    stored: dict[str, str] = dict(
-        conn.execute(
-            "SELECT external_id, body_hash FROM documents WHERE external_id = ANY(%s)",
+    stored: dict[str, tuple[str, bool]] = {
+        external_id: (body_hash, deleted)
+        for external_id, body_hash, deleted in conn.execute(
+            "SELECT external_id, body_hash, deleted_at IS NOT NULL FROM documents"
+            " WHERE external_id = ANY(%s)",
             ([d.external_id for d in documents],),
         ).fetchall()
-    )
+    }
+    live = [d for d in documents if not stored.get(d.external_id, ("", False))[1]]
     ids: dict[str, int] = {}
     written = 0
     with conn.cursor() as cur:
-        for doc in documents:
+        for doc in live:
             document_id = ids[doc.external_id] = _upsert_document(cur, doc)
             if doc.email is not None:
                 _upsert_email(cur, document_id, doc.email, uncertain=doc.date_uncertain)
@@ -50,9 +55,9 @@ def upsert_documents(
                     "UPDATE raw_files SET document_id = %s WHERE path = ANY(%s)",
                     (document_id, list(doc.paths)),
                 )
-            if stored.get(doc.external_id) != doc.body_hash:
+            if stored.get(doc.external_id, ("", False))[0] != doc.body_hash:
                 written += _rechunk(cur, document_id, pieces(doc))
-        _recount_quoted(cur, documents, ids)
+        _record_quotes(cur, live, ids)
     return written
 
 
@@ -164,9 +169,43 @@ def ensure_vectors(conn: psycopg.Connection[TupleRow], model: str, dims: int) ->
     return table
 
 
-def delete_document(conn: psycopg.Connection[TupleRow], document_id: int) -> None:
-    """Mark a document deleted and remove its chunks and vectors."""
-    raise NotImplementedError
+def delete_document(conn: psycopg.Connection[TupleRow], document_id: int) -> list[datetime]:
+    """Take a document out of every search, for every day, and return the dates to recount.
+
+    Its chunks and vectors go, its text and headers are blanked, and the row stays as a
+    tombstone so a replay skips it. A quoted message that only this email quoted goes with it;
+    one that others quote too keeps the readers who still hold a quote. `raw_files` keeps the
+    file as read (rule 4). Returns the sent_at of every document deleted.
+    """
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM quotes WHERE email_id = %s RETURNING quoted_id", (document_id,))
+        quoted = [i for (i,) in cur.fetchall()]
+        cur.execute(
+            "SELECT id FROM documents WHERE id = ANY(%s)"
+            " AND NOT EXISTS (SELECT 1 FROM quotes q WHERE q.quoted_id = documents.id)",
+            (quoted,),
+        )
+        gone = [document_id, *(i for (i,) in cur.fetchall())]
+        for table, column in (
+            ("chunks", "document_id"),
+            ("emails", "document_id"),
+            ("access", "document_id"),
+            ("quotes", "quoted_id"),
+        ):
+            cur.execute(
+                sql.SQL("DELETE FROM {} WHERE {} = ANY(%s)").format(
+                    sql.Identifier(table), sql.Identifier(column)
+                ),
+                (gone,),
+            )
+        cur.execute(
+            "UPDATE documents SET deleted_at = now(), title = '', body = '', quoted = ''"
+            " WHERE id = ANY(%s) RETURNING sent_at",
+            (gone,),
+        )
+        sent = [sent_at for (sent_at,) in cur.fetchall()]
+        _recount_access(cur, [i for i in quoted if i not in gone])
+    return sent
 
 
 def _upsert_document(cur: psycopg.Cursor[TupleRow], doc: Document) -> int:
@@ -218,19 +257,23 @@ def _upsert_email(
     )
 
 
-def _recount_quoted(
+def _record_quotes(
     cur: psycopg.Cursor[TupleRow], documents: Sequence[Document], ids: dict[str, int]
 ) -> None:
-    ## The emails here quote exactly what they quote now; then each quoted message here is
-    ## readable by every mailbox holding any email that quotes it, from this day or another.
+    ## The emails here quote exactly what they quote now (a deleted one quotes nothing).
     emails = [ids[d.external_id] for d in documents if d.kind == "email"]
     quoted = [d for d in documents if d.kind == "quoted"]
     cur.execute("DELETE FROM quotes WHERE email_id = ANY(%s)", (emails,))
     cur.executemany(
         "INSERT INTO quotes (email_id, quoted_id) SELECT unnest(%s::bigint[]), %s",
-        [([ids[e] for e in d.quoted_by], ids[d.external_id]) for d in quoted],
+        [([ids[e] for e in d.quoted_by if e in ids], ids[d.external_id]) for d in quoted],
     )
-    quoted_ids = [ids[d.external_id] for d in quoted]
+    _recount_access(cur, [ids[d.external_id] for d in quoted])
+
+
+def _recount_access(cur: psycopg.Cursor[TupleRow], quoted_ids: list[int]) -> None:
+    ## A quoted message is readable by every mailbox holding an email that quotes it, from any
+    ## day: recounted from quotes, never added to.
     cur.execute("DELETE FROM access WHERE document_id = ANY(%s)", (quoted_ids,))
     cur.execute(
         "INSERT INTO access (document_id, mailbox) SELECT DISTINCT q.quoted_id, a.mailbox"

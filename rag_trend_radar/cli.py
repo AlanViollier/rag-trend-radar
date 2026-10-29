@@ -94,6 +94,21 @@ def replay(
             show(f"{day}  {chunks:>5,} chunks written  {embedded:>5,} embedded", file=sys.stderr)
 
 
+@app.command()
+def delete(document_id: int) -> None:
+    """Take a document out of every search on every day, then recount the days it touched.
+
+    The corpus never asks for this; it's the path a removal request would take.
+    """
+    settings = get_settings()
+    tz = ZoneInfo(settings.timezone)
+    with db.connect() as conn:
+        sent = index.delete_document(conn, document_id)
+        for day in sorted({sent_at.astimezone(tz).date() for sent_at in sent}):
+            batch.recount_day(conn, day, settings.embedding_model, settings.embedding_dims)
+    show(f"{len(sent)} documents deleted (document {document_id} and the quotes only it held)")
+
+
 @app.command("embed")
 def embed_chunks(
     model: str = "", dims: int = 0, batch_size: int = 512, from_dims: int = 0, reuse_from: str = ""

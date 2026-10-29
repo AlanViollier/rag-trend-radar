@@ -7,7 +7,7 @@ import psycopg
 import pytest
 from psycopg.rows import TupleRow
 
-from rag_trend_radar import batch
+from rag_trend_radar import batch, index
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.ingest.chunk import pieces
 from rag_trend_radar.schema import Document
@@ -169,3 +169,55 @@ def _snapshot(conn: Connection) -> dict[str, list[tuple[object, ...]]]:
         " WHERE finished_at IS NOT NULL ORDER BY day",
     }
     return {name: conn.execute(query).fetchall() for name, query in queries.items()}
+
+
+def test_a_deleted_email_stays_gone_and_takes_only_the_quotes_it_alone_held(
+    conn: Connection, tmp_path: Path
+) -> None:
+    oil = QUOTE.replace("Subject: Gas", "Subject: Oil")
+    _write(
+        tmp_path,
+        "kim-d/inbox/4.",
+        "Mon, 3 Sep 2001 10:00 -0500",
+        "RE: Gas",
+        "ok\n\n" + QUOTE + "Up.",
+    )
+    _write(
+        tmp_path,
+        "kim-d/inbox/5.",
+        "Mon, 3 Sep 2001 11:00 -0500",
+        "RE: Oil",
+        "no\n\n" + oil + "Down.",
+    )
+    _write(
+        tmp_path,
+        "park-l/inbox/6.",
+        "Tue, 4 Sep 2001 10:00 -0500",
+        "FW: Gas",
+        "fyi\n\n" + QUOTE + "Up.",
+    )
+    _run(conn, tmp_path, date(2001, 9, 3), date(2001, 9, 4))
+    ids: dict[str, int] = dict(
+        conn.execute("SELECT title, id FROM documents WHERE source = 'enron'").fetchall()
+    )
+
+    for title in ("RE: Gas", "RE: Oil"):
+        for sent_at in index.delete_document(conn, ids[title]):
+            batch.recount_day(conn, sent_at.astimezone(CHICAGO).date(), MODEL, DIMS)
+    batch.run_day(conn, date(2001, 9, 3), CHICAGO, _pieces)
+
+    deleted = conn.execute(
+        "SELECT id FROM documents WHERE deleted_at IS NOT NULL AND body = '' ORDER BY id"
+    ).fetchall()
+    assert deleted == sorted([(ids["RE: Gas"],), (ids["RE: Oil"],), (ids["Oil"],)])
+    assert conn.execute(
+        "SELECT count(*) FROM chunks WHERE document_id = ANY(%s)", ([i for (i,) in deleted],)
+    ).fetchall() == [(0,)]
+    assert _documents(conn)["Gas"][2] == ["park-l"]
+    assert conn.execute("SELECT emails_in FROM batches WHERE day = '2001-09-03'").fetchall() == [
+        (0,)
+    ]
+    conn.commit()  # the reader is another connection
+    with db.connect("investigator") as reader:
+        visible = reader.execute("SELECT count(*) FROM documents WHERE source = 'enron'").fetchall()
+    assert visible == [(2,)]  # FW: Gas and the Gas it quotes
