@@ -19,7 +19,7 @@ from rag_trend_radar.answer import answer
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.embed import embed, token_counter
-from rag_trend_radar.evals.questions import sample, write
+from rag_trend_radar.evals.questions import Style, sample, write
 from rag_trend_radar.evals.retrieval import rankings, score
 from rag_trend_radar.ingest.chunk import MAX_TOKENS, pieces
 from rag_trend_radar.schema import EvalQuestion
@@ -195,25 +195,32 @@ def ask(question: str, person: str = "investigator", as_of: str = "") -> None:
 
 @app.command()
 def questions(
-    emails: int = 150, quoted: int = 50, out: Path = QUESTIONS, seed: int = 1, names: bool = True
+    emails: int = 150,
+    quoted: int = 50,
+    out: Path = QUESTIONS,
+    seed: int = 1,
+    style: Style = Style.NAMES,
 ) -> None:
     """Have Claude write labelled questions from sampled emails and quoted messages (paid).
 
-    `--no-names` forbids naming people, companies, places or products, so keyword search can't
-    lean on exact terms. A different `--seed` samples different documents.
+    `--style no-names` forbids naming people, companies, places or products, so keyword search
+    can't lean on exact terms; `--style codes` quotes one deal or contract number as written,
+    the case keyword search is there for. A different `--seed` samples different documents.
     """
     settings = get_settings()
+    ## Spare sources: Claude marks some unusable (automated notices; for codes, mail whose only
+    ## long numbers are phone numbers or zip codes).
+    spare = 2 if style is Style.CODES else 3 / 2
     with db.connect() as conn:
         day = last_day(conn)
-        ## Half again as many sources as needed: Claude marks some unusable (automated notices).
         sources = {
-            kind: sample(conn, kind, n * 3 // 2, seed)
+            kind: sample(conn, kind, int(n * spare), seed, style=style)
             for kind, n in (("email", emails), ("quoted", quoted))
         }
     written = [
         q
         for kind, n in (("email", emails), ("quoted", quoted))
-        for q in islice(write(sources[kind], day, settings.answer_model, names=names), n)
+        for q in islice(write(sources[kind], day, settings.answer_model, style=style), n)
     ]
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("".join(q.model_dump_json() + "\n" for q in written))

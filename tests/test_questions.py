@@ -1,6 +1,6 @@
 import pytest
 
-from rag_trend_radar.evals.questions import _one_question
+from rag_trend_radar.evals.questions import WORDS_RULES, Style, _one_question
 
 
 @pytest.mark.parametrize(
@@ -15,3 +15,7 @@ from rag_trend_radar.evals.questions import _one_question
 )
 def test_one_question_means_one_line_ending_in_one_question_mark(text: str, ok: bool) -> None:
     assert _one_question(text) is ok
+
+
+def test_every_style_has_its_wording_rule() -> None:
+    assert set(WORDS_RULES) == set(Style)
