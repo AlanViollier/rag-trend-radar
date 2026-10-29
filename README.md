@@ -56,6 +56,39 @@ path, in CI.
 one SQL query, then a cross-encoder (bge-reranker-v2-m3) reorders them and the best 10 go to
 Claude Sonnet 5.5 as search-result blocks, so each claim comes back with its citation.
 
+## The daily replay
+
+The store is fed the way a compliance system would be: one day at a time, each day safe to run
+again.
+
+→ **Stage once.** An email's date is only known once all its copies are seen: the Lotus and
+Outlook exports shift the same email by whole hours, so copies of a late-evening email can fall
+on two different days. `stage` reads all 517,401 files once (4 minutes), resolves each email's
+date over its copies, and writes the schedule to a table. Each day then reads its own rows,
+about 3 seconds a day before embedding.
+
+→ **Re-running a day changes nothing.** Documents are keyed by a hash of their content and
+re-chunked only when it changes; a day's counts are recounted from the stored rows, never added
+to. Running all 30 days of September a second time wrote nothing. A day's row closes only once
+its vectors exist, so a crashed run leaves searches on the last finished day.
+
+→ **As known that day.** A signature line counts as boilerplate only from the day its 200th
+email was sent, so a day's chunks never depend on later mail. A quoted message keeps the date
+of its first quote, and its readers are recounted from every email that quotes it, whichever
+day that email came in. One caveat: dates, and the check for whether any email holds a quoted
+text, use the whole 2002 snapshot, so day D knows copies a live pipeline would see later.
+
+→ **Deletes and model swaps.** `delete` takes a document out of every search on every day: its
+chunks and vectors go, and the row stays as a tombstone so a replay doesn't bring it back. The
+corpus never asks for one; the path is tested. A new embedding model fills its own table
+beside the one serving searches, `vectors` shows how much of the corpus it covers, and the
+config flips once it's full. MiniLM filled September in under two minutes, found the right
+email in the top 10 for .910 of questions against EmbeddingGemma's .970, and was dropped.
+
+Rebuilding September through the replay found a dedup bug from a refactor: a copy whose body
+opened on a blank line counted as a second email (756 across the corpus). After the fix the
+rebuilt store scores what the old one did, within one question in 200.
+
 ## How well it finds things
 
 Questions written by Claude from 245 real emails and quoted messages, each asked as an employee
