@@ -52,7 +52,7 @@ def parse(raw: RawFile) -> ParsedEmail:
     sent_at = _sent_at(msg)
     if not FIRST_YEAR <= sent_at.year <= LAST_YEAR:
         raise ParseError(f"date outside {FIRST_YEAR}–{LAST_YEAR}: {msg['Date']}")
-    sender, subject, body = email.utils.parseaddr(msg["From"])[1].lower(), _subject(msg), _body(msg)
+    sender, subject, body = _sender(msg), _subject(msg), _body(msg)
     if sender.startswith(_BOUNCE_SENDERS) or _BOUNCE_SUBJECTS.match(subject):
         raise ParseError("bounce")
     if body.lstrip().startswith("<OMNI>"):
@@ -74,6 +74,17 @@ def _sent_at(msg: Message) -> datetime:
         return email.utils.parsedate_to_datetime(msg["Date"])
     except (TypeError, ValueError) as error:
         raise ParseError(f"unparseable date: {msg['Date']}") from error
+
+
+def _sender(msg: Message) -> str:
+    ## The export dropped the first name from some addresses (`.williams@enron.com` for
+    ## "Williams, Jason (Trading)", 1,352 emails), merging different people. X-From keeps the
+    ## name the mail client showed; the routing part after it (`</O=ENRON/...>`) goes.
+    address = email.utils.parseaddr(msg["From"])[1].lower()
+    if not address.startswith("."):
+        return address
+    name = _FOLD.sub(" ", msg["X-From"] or "").split(" <", 1)[0].strip()
+    return name or address
 
 
 def _addresses(msg: Message, header: str) -> tuple[str, ...]:

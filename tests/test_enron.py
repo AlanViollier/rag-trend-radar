@@ -77,3 +77,20 @@ def test_a_folded_subject_is_unfolded() -> None:
         (HEADERS + "Subject: Global Employment Law Alert for\r\n \tMid-September\r\n\r\nx").encode()
     )
     assert parse(raw).subject == "Global Employment Law Alert for Mid-September"
+
+
+def test_an_address_missing_its_first_name_falls_back_to_the_name_shown() -> None:
+    raw = _raw(
+        b"Message-ID: <3.4.JavaMail.evans@thyme>\r\n"
+        b"Date: Wed, 30 May 2001 08:19:41 -0700 (PDT)\r\n"
+        b"From: trading <.williams@enron.com>\r\n"
+        b"Subject: RE: Numbers\r\n"
+        b"X-From: Williams, Jason (Trading) </O=ENRON/OU=NA/CN=RECIPIENTS/CN=JWILLIA>\r\n\r\n"
+        b"Numbers attached.\r\n"
+    )
+    assert parse(raw).sender == "Williams, Jason (Trading)"
+
+
+def test_a_whole_address_stays_as_it_is() -> None:
+    raw = _raw((HEADERS + "Subject: x\r\nX-From: Kim, Dana\r\n\r\nbody\r\n").encode())
+    assert parse(raw).sender == "dana.kim@enron.com"

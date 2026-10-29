@@ -75,7 +75,7 @@ CREATE TABLE quarantine (
 CREATE TABLE emails (
     document_id bigint PRIMARY KEY REFERENCES documents (id) ON DELETE CASCADE,
     message_id  text NOT NULL,
-    sender      text NOT NULL,
+    sender      text NOT NULL,  -- the From address, or X-From's name when the export mangled it
     to_addrs    text[] NOT NULL DEFAULT '{}',
     cc_addrs    text[] NOT NULL DEFAULT '{}',
     bcc_addrs   text[] NOT NULL DEFAULT '{}',
