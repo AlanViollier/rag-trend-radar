@@ -38,7 +38,10 @@ _AUTHOR_END = re.compile(r"\s+on\s+\d|\s*\[mailto:|\s*<|/|\s+\d{1,2}/\d{1,2}/\d{
 _FORWARD_WRAP = re.compile(_Q + r"(?:[\d: ]*[AP]M )?-{3,}[ \t]*$")
 _QUOTE_PREFIX = re.compile(r"^>+ ?", re.MULTILINE)
 
-## Markup some mail clients left in the plain-text body.
+## Markup some mail clients left in the plain-text body. Style and script blocks go with their
+## contents, and comments too: a browser shows none of it, and newsletters hide "your client
+## doesn't support HTML" notes there.
+_HIDDEN = re.compile(r"(?is)<(style|script)\b[^>]*>.*?</\1\s*>|<!--.*?-->|<!doctype\b[^>\n]*>")
 _TAG_BREAK = re.compile(r"(?i)<(?:br|/p|/div|/tr|/li)\b[^>\n]*>")
 _TAG = re.compile(
     r"(?i)</?(?:html|head|body|div|p|font|table|tbody|tr|td|th|span|b|i|u|strong|em|ul|ol|li|a"
@@ -61,9 +64,10 @@ _LOTUS_TO_WITHIN = 5  # the memo layout leaves blank lines between From and To
 
 
 def normalize(body: str) -> str:
-    """Drop MIME parts, base64 runs and HTML tags, decode entities (`&amp;` → `&`)."""
+    """Drop MIME parts, base64 runs, hidden HTML and tags, decode entities (`&amp;` → `&`)."""
     body = _BASE64_RUN.sub("", body)
     body = _MIME.sub("", body)
+    body = _HIDDEN.sub("", body)
     body = _TAG_BREAK.sub("\n", body)
     return html.unescape(_TAG.sub("", body))
 

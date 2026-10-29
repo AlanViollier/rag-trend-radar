@@ -92,3 +92,22 @@ def test_a_new_model_fills_beside_the_old_and_drops_once_swapped(conn: Connectio
     assert index.coverage(conn)["vectors_new_4"] == 1
     index.drop_vectors(conn, "test/new", 4)
     assert "vectors_new_4" not in index.coverage(conn)
+
+
+def test_a_quoted_message_no_email_quotes_any_more_goes(conn: Connection) -> None:
+    def day(quoted_text: str) -> list[Document]:
+        quoted = _document(quoted_text).model_copy(
+            update={
+                "external_id": quoted_text,
+                "kind": "quoted",
+                "readers": (),
+                "quoted_by": ("memo",),
+            }
+        )
+        return [_document(f"ok\n\n{quoted_text}"), quoted]
+
+    index.upsert_documents(conn, day("Prices rose."), _pieces)
+    index.upsert_documents(conn, day("Prices rose"), _pieces)  # the cleaner now drops the dot
+    assert conn.execute(
+        "SELECT external_id FROM documents WHERE source = 'test-index' AND kind = 'quoted'"
+    ).fetchall() == [("Prices rose",)]

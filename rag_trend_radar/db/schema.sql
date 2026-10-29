@@ -92,6 +92,7 @@ CREATE TABLE quotes (
     quoted_id bigint REFERENCES documents (id) ON DELETE CASCADE,
     PRIMARY KEY (email_id, quoted_id)
 );
+CREATE INDEX quotes_quoted_id ON quotes (quoted_id);
 
 -- Pieces of a document small enough to embed well.
 CREATE TABLE chunks (

@@ -198,6 +198,20 @@ def test_normalize_strips_markup_and_mime() -> None:
     assert normalize(body).strip() == "R&D budget\nis final"
 
 
+def test_normalize_drops_what_a_browser_hides() -> None:
+    body = (
+        '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">\n'
+        '<style type="text/css">\nA:link {color: gray}\n</style>\n'
+        "<!--\nIf you are reading this, switch to the text version.\n-->\n"
+        "<script>track();</SCRIPT>Deals closed: 4 <!-- VW --> new"
+    )
+    assert normalize(body).strip() == "Deals closed: 4  new"
+
+
+def test_a_less_than_sign_in_prose_survives() -> None:
+    assert normalize("price < 3 and <style is fine") == "price < 3 and <style is fine"
+
+
 def test_boilerplate_trims_the_trailing_signature_only() -> None:
     signature = "Dana Kim\nEnron North America Corp.\nPhone 713-555-0100"
     own = f"Enron North America Corp. will file today.\n\nThanks,\n{signature}"

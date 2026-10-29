@@ -295,6 +295,12 @@ def _record_quotes(
         [([ids[e] for e in d.quoted_by if e in ids], ids[d.external_id]) for d in quoted],
     )
     _recount_access(cur, [ids[d.external_id] for d in quoted])
+    ## A quoted message no email quotes any more (a cleaner fix changed its text, so it came
+    ## back under a new id) goes: a replay after a code change leaves no stale copy behind.
+    cur.execute(
+        "DELETE FROM documents WHERE kind = 'quoted' AND deleted_at IS NULL"
+        " AND NOT EXISTS (SELECT 1 FROM quotes q WHERE q.quoted_id = documents.id)"
+    )
 
 
 def _recount_access(cur: psycopg.Cursor[TupleRow], quoted_ids: list[int]) -> None:
