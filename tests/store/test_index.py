@@ -129,3 +129,25 @@ def _chunk_ids(conn: Connection) -> list[int]:
         " WHERE d.source = 'test-index' ORDER BY c.position"
     ).fetchall()
     return [i for (i,) in rows]
+
+
+def test_a_quoted_message_keeps_the_chunks_of_its_first_quote(conn: Connection) -> None:
+    def quote(day: int, subject: str) -> Document:
+        return _document("Prices rose.").model_copy(
+            update={
+                "external_id": "prices",
+                "kind": "quoted",
+                "sent_at": datetime(2001, 9, day, 9, 0, tzinfo=CHICAGO),
+                "title": subject,
+                "readers": (),
+                "quoted_by": ("memo",),
+            }
+        )
+
+    def header(doc: Document) -> list[str]:
+        return [f"{doc.title}: {doc.body}"] if doc.kind == "quoted" else []
+
+    for _ in range(2):  # a replay, then the same days again
+        index.upsert_documents(conn, [_document("ok"), quote(5, "prices")], header)
+        assert index.upsert_documents(conn, [_document("ok"), quote(6, "Re: lunch")], header) == 0
+    assert _chunks(conn) == ["prices: Prices rose."]

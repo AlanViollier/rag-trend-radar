@@ -22,7 +22,8 @@ def upsert_documents(
     (and their vectors), a new boilerplate line or chunk size rewrites them. Who may read an
     email is rewritten every time from `readers`, so a copy found in one more mailbox widens
     access without touching the chunks. A quoted message's readers are recounted from every
-    stored email quoting it, whichever day quoted it (rule 5). A deleted document is skipped:
+    stored email quoting it, whichever day quoted it (rule 5), and its chunks are cut on the day
+    of its first quote, as its title is kept from it. A deleted document is skipped:
     replaying its day doesn't bring it back.
     """
     external_ids = [d.external_id for d in documents]
@@ -47,7 +48,8 @@ def upsert_documents(
     written = 0
     with conn.cursor() as cur:
         for doc in live:
-            document_id = ids[doc.external_id] = _upsert_document(cur, doc)
+            document_id, first_sent = _upsert_document(cur, doc)
+            ids[doc.external_id] = document_id
             if doc.email is not None:
                 _upsert_email(cur, document_id, doc.email, uncertain=doc.date_uncertain)
             if doc.kind != "quoted":
@@ -61,6 +63,10 @@ def upsert_documents(
                     "UPDATE raw_files SET document_id = %s WHERE path = ANY(%s)",
                     (document_id, list(doc.paths)),
                 )
+            ## Only the first quote cuts a quoted message's chunks: a later one's subject or
+            ## spelling of the sender would flip them on every replay.
+            if first_sent < doc.sent_at:
+                continue
             texts = pieces(doc)
             if [text_hash(t) for t in texts] != chunked.get(doc.external_id, []):
                 written += _rechunk(cur, document_id, texts)
@@ -107,7 +113,7 @@ def delete_document(conn: psycopg.Connection[TupleRow], document_id: int) -> lis
     return sent
 
 
-def _upsert_document(cur: psycopg.Cursor[TupleRow], doc: Document) -> int:
+def _upsert_document(cur: psycopg.Cursor[TupleRow], doc: Document) -> tuple[int, datetime]:
     ## A quoted message comes back each day someone quotes it: it keeps the date and subject of
     ## its first quote. An email's date is resolved once, so for it LEAST changes nothing.
     cur.execute(
@@ -118,7 +124,7 @@ def _upsert_document(cur: psycopg.Cursor[TupleRow], doc: Document) -> int:
         " WHEN EXCLUDED.sent_at < documents.sent_at THEN EXCLUDED.title ELSE documents.title END,"
         " body = EXCLUDED.body,"
         " quoted = EXCLUDED.quoted, public = EXCLUDED.public"
-        " RETURNING id",
+        " RETURNING id, sent_at",
         (
             doc.source,
             doc.external_id,
@@ -130,7 +136,8 @@ def _upsert_document(cur: psycopg.Cursor[TupleRow], doc: Document) -> int:
             doc.public,
         ),
     )
-    return int(cur.fetchall()[0][0])
+    document_id, sent_at = cur.fetchall()[0]
+    return int(document_id), sent_at
 
 
 def _upsert_email(
