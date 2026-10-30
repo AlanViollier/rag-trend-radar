@@ -48,6 +48,8 @@ CREATE TABLE documents (
     deleted_at  timestamptz,
     UNIQUE (source, external_id)
 );
+-- The few public documents, for the chunk policy's check (none in the Enron store).
+CREATE INDEX documents_public ON documents (id) WHERE public;
 
 -- Every file in the dataset exactly as read. Never edited: everything else rebuilds from it.
 CREATE TABLE raw_files (
@@ -112,6 +114,8 @@ CREATE TABLE access (
     mailbox     text REFERENCES employees (mailbox),
     PRIMARY KEY (document_id, mailbox)
 );
+-- A reader's rows, found without reading everyone's (row-level security asks this every search).
+CREATE INDEX access_mailbox ON access (mailbox, document_id);
 
 -- Which emails quote which quoted message. A quoted message's readers are recounted from it,
 -- so they widen as later days quote it and shrink when a quoting email is deleted.
@@ -194,12 +198,22 @@ CREATE POLICY access_visible ON access FOR SELECT TO radar_reader USING (
     OR current_setting('app.person', true) = 'investigator'
 );
 
--- A chunk or an email's details are visible when its document is; the subquery goes through
--- documents' policy.
+-- A chunk is visible when its document is, checked through access directly: through documents'
+-- policy, every search scanned all 328k documents to build the reader's visible set (213 ms of
+-- a 765 ms keyword search, 2026-10-30); from access_mailbox it takes 4 ms. Same rows: a deleted
+-- document has no chunks left, so documents' deleted_at check has nothing to add here.
 ALTER TABLE chunks ENABLE ROW LEVEL SECURITY;
 CREATE POLICY chunks_visible ON chunks FOR SELECT TO radar_reader USING (
-    EXISTS (SELECT 1 FROM documents WHERE documents.id = chunks.document_id)
+    current_setting('app.person', true) = 'investigator'
+    OR EXISTS (
+        SELECT 1 FROM access a
+        WHERE a.document_id = chunks.document_id
+          AND a.mailbox = current_setting('app.person', true)
+    )
+    OR EXISTS (SELECT 1 FROM documents d WHERE d.id = chunks.document_id AND d.public)
 );
+
+-- An email's details are visible when its document is; the subquery goes through documents' policy.
 
 ALTER TABLE emails ENABLE ROW LEVEL SECURITY;
 CREATE POLICY emails_visible ON emails FOR SELECT TO radar_reader USING (
