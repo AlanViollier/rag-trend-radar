@@ -2,6 +2,7 @@ from datetime import date
 
 from rag_trend_radar.evals.judge import POOL, pool, quoted
 from rag_trend_radar.evals.retrieval import relevant, score
+from rag_trend_radar.evals.review import review
 from rag_trend_radar.schema import EvalQuestion, Judgment, RecallRun, RunManifest, Verdict
 
 
@@ -71,3 +72,35 @@ def test_a_quote_counts_only_when_the_document_holds_it() -> None:
     assert quoted("From: anita.martin@enron.com", document)
     assert not quoted("Sales pays.", document)
     assert not quoted("", document)
+
+
+def test_the_review_lists_answers_found_elsewhere_and_dropped_questions() -> None:
+    run = RecallRun(
+        manifest=RunManifest(
+            questions="q.jsonl",
+            count=2,
+            model="m",
+            dims=8,
+            depth=50,
+            ef_search=40,
+            reranker="r",
+            retype="",
+            commit="c",
+            chunks=1,
+            started="2026-10-30T00:00:00Z",
+        ),  # fmt: skip
+        rankings={"hybrid + rerank": {"a": ["9", "1"], "b": ["2"]}},
+        latency_ms={},
+    )
+    judgments = [
+        _j("a", "1", Verdict.ANSWERS),
+        _j("a", "9", Verdict.ANSWERS),
+        _j("b", "2", Verdict.NO),
+    ]
+    texts = {"1": "Label text", "9": "Another answer", "2": "Off topic"}
+    page = review([_q("a", "1"), _q("b", "2")], run, judgments, texts)
+    found, dropped, missed = page.split("\n## ")[1:4]
+    assert "**Judged** `9`" in found
+    assert "**Judged** `1`" not in found
+    assert "**Judged** `2`" in dropped
+    assert "Ranked first** `9`" in missed

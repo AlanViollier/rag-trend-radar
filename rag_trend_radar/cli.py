@@ -24,6 +24,7 @@ from rag_trend_radar.evals import judge as judging
 from rag_trend_radar.evals.leaks import check as check_leaks
 from rag_trend_radar.evals.questions import Retype, Style, code_holds, retyped, sample, write
 from rag_trend_radar.evals.retrieval import rankings, relevant, report
+from rag_trend_radar.evals.review import review as write_review
 from rag_trend_radar.ingest.chunk import MAX_TOKENS, pieces
 from rag_trend_radar.schema import EvalQuestion, Judgment, RecallRun, RunManifest
 from rag_trend_radar.search import hybrid
@@ -338,6 +339,30 @@ def _scores(run: RecallRun, labelled: list[EvalQuestion]) -> None:
     for method, times in run.latency_ms.items():
         timing.add_row(method, *(f"{np.percentile(times, p):.0f}" for p in (50, 95)))
     show(timing)
+
+
+@app.command()
+def review(run: Path) -> None:
+    """Write the review page for a saved run and its judgments (free)."""
+    saved = RecallRun.model_validate_json(run.read_text())
+    stem = Path(saved.manifest.questions).stem
+    labelled = [
+        EvalQuestion.model_validate_json(x)
+        for x in (QUESTIONS.parent / saved.manifest.questions).read_text().splitlines()
+    ]
+    judgments = [
+        Judgment.model_validate_json(x)
+        for x in (JUDGMENTS / f"{stem}.jsonl").read_text().splitlines()
+    ]
+    wanted = {j.external_id for j in judgments} | {
+        docs[0] for docs in saved.rankings["hybrid + rerank"].values() if docs
+    }
+    with db.connect() as conn:
+        texts = judging.documents(conn, wanted)
+    out = get_settings().data_dir / "reports" / "review" / f"{stem}.md"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(write_review(labelled, saved, judgments, texts))
+    show(f"→ {out}")
 
 
 @app.command()
