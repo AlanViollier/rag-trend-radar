@@ -301,28 +301,43 @@ def recall(
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(run.model_dump_json())
 
-    judged_path = JUDGMENTS / f"{path.stem}.jsonl"
+    _scores(run, labelled)
+    show(f"saved → {out}", file=sys.stderr)
+
+
+@app.command()
+def scores(run: Path) -> None:
+    """Print a saved recall run's tables again, with the judgments as they are now (free)."""
+    saved = RecallRun.model_validate_json(run.read_text())
+    path = QUESTIONS.parent / saved.manifest.questions
+    labelled = [EvalQuestion.model_validate_json(x) for x in path.read_text().splitlines()]
+    asked = set(next(iter(saved.rankings.values())))
+    _scores(saved, [q for q in labelled if q.id in asked])
+
+
+def _scores(run: RecallRun, labelled: list[EvalQuestion]) -> None:
+    m = run.manifest
+    judged_path = JUDGMENTS / f"{Path(m.questions).stem}.jsonl"
     judgments = (
         [Judgment.model_validate_json(x) for x in judged_path.read_text().splitlines()]
         if judged_path.exists()
         else []
     )
     strict, judged = relevant(labelled, judgments)
-    title = f"{path.name}, {model} @ {dims}, depth {depth}, ef_search {ef_search}"
-    if retype is not None:
-        title += f", codes retyped ({retype})"
+    title = f"{m.questions}, {m.model} @ {m.dims}, depth {m.depth}, ef_search {m.ef_search}"
+    if m.retype:
+        title += f", codes retyped ({m.retype})"
     show(f"\n[bold]{title}[/bold]: {len(strict)} of {len(labelled)} questions, strict labels")
-    show(report(strict, ranked, METRICS))
+    show(report(strict, run.rankings, METRICS))
     if judgments:
         show("\n[bold]judged[/bold]: every document the judge found answering counts")
-        show(report(judged, ranked, METRICS))
+        show(report(judged, run.rankings, METRICS))
     timing = Table(title="milliseconds per question")
     for column in ("method", "median", "p95"):
         timing.add_column(column, justify="left" if column == "method" else "right")
-    for method, times in latency.items():
+    for method, times in run.latency_ms.items():
         timing.add_row(method, *(f"{np.percentile(times, p):.0f}" for p in (50, 95)))
     show(timing)
-    show(f"saved → {out}", file=sys.stderr)
 
 
 @app.command()
