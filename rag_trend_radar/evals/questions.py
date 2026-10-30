@@ -1,6 +1,7 @@
 """Labelled questions: a real email, and a question it answers asked in other words."""
 
 import hashlib
+import re
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
@@ -14,9 +15,10 @@ from pydantic import BaseModel
 
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.schema import EvalQuestion, Record
+from rag_trend_radar.search.ranking import cutoff
 
 ## Bump on any change to the prompt or the sample: cached questions are keyed by it.
-PROMPT_VERSION = 3
+PROMPT_VERSION = 4
 ## Too short and there's no fact to ask about; too long and many facts compete, so a question
 ## about one of them is answered as well by other emails in the same digest.
 MIN_CHARS, MAX_CHARS = 200, 4000
@@ -65,13 +67,27 @@ WORDS_RULES = {
     + 'name no person, company, place or product: describe them instead ("the Canadian '
     'pipeline company", "our head of research").',
     Style.CODES: "Quote exactly one identifier from the email as written (a deal number, contract, "
-    "ticket or invoice number) the way someone looking for that record would type it; put "
-    "everything else in your own words. Phone numbers, zip codes, dates and amounts aren't "
-    "identifiers: if the email holds none, set usable to false.",
+    "ticket or invoice number) the way someone looking for that record would type it, and copy "
+    "it into code exactly as it appears in your question; put everything else in your own "
+    "words. Phone numbers, zip codes, dates and amounts aren't identifiers: if the email holds "
+    "none, set usable to false.",
 }
 ## A code-style source must hold a run of five or more digits; Claude sorts out the phone
 ## numbers and zip codes.
 CODE_PATTERN = "[0-9]{5,}"
+## A code held by more documents than this has no single answer: a deal number repeated in
+## every daily report. Up to it, the other holders are fair candidates the judge reads.
+MAX_CODE_HOLDERS = 5
+
+
+class Retype(StrEnum):
+    """Ways to type a question's identifier other than as written."""
+
+    ## 617-161 and 617 161: the tokenizer splits them in two, so keyword search loses the match.
+    DASH = "dash"
+    SPACE = "space"
+    ## #617161: the tokenizer drops the #, so nothing should change. The control.
+    HASH = "hash"
 
 
 class Source(Record):
@@ -89,6 +105,7 @@ class Source(Record):
 class _Written(BaseModel):
     usable: bool
     question: str
+    code: str = ""
 
 
 def sample(
@@ -144,7 +161,43 @@ def write(
                 as_of=as_of,
                 person=source.mailbox,
                 relevant=(source.external_id,),
+                code=written.code if style is Style.CODES else "",
             )
+
+
+def code_holds(conn: psycopg.Connection[TupleRow], question: EvalQuestion) -> bool:
+    """A codes question is kept when its code is quoted as written and points at few documents.
+
+    The code must appear in the question and, as a whole token, in the labelled document; among
+    the documents the asker can see that day (`conn` is theirs), at most `MAX_CODE_HOLDERS` hold it.
+    """
+    if not question.code or question.code not in question.question:
+        return False
+    token = f"(^|[^[:alnum:]]){re.escape(question.code)}($|[^[:alnum:]])"
+    holders = {
+        x
+        for (x,) in conn.execute(
+            "SELECT external_id FROM documents WHERE sent_at < %s"
+            " AND strpos(body, %s) > 0 AND body ~ %s",
+            (cutoff(question.as_of), question.code, token),
+        ).fetchall()
+    }
+    return set(question.relevant) <= holders and len(holders) <= MAX_CODE_HOLDERS
+
+
+def retyped(question: EvalQuestion, how: Retype) -> EvalQuestion:
+    """The question with its code typed `how`: the first long digit run split in two, or #-led."""
+    if how is Retype.HASH:
+        code = f"#{question.code}"
+    else:
+        digits = re.search(CODE_PATTERN, question.code)
+        start, end = digits.span() if digits else (0, len(question.code))
+        middle = (start + end) // 2
+        separator = "-" if how is Retype.DASH else " "
+        code = question.code[:middle] + separator + question.code[middle:]
+    return question.model_copy(
+        update={"question": question.question.replace(question.code, code), "code": code}
+    )
 
 
 def _one_question(text: str) -> bool:

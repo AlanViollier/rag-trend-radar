@@ -1,6 +1,9 @@
+from datetime import date
+
 import pytest
 
-from rag_trend_radar.evals.questions import WORDS_RULES, Style, _one_question
+from rag_trend_radar.evals.questions import WORDS_RULES, Retype, Style, _one_question, retyped
+from rag_trend_radar.schema import EvalQuestion
 
 
 @pytest.mark.parametrize(
@@ -19,3 +22,23 @@ def test_one_question_means_one_line_ending_in_one_question_mark(text: str, ok: 
 
 def test_every_style_has_its_wording_rule() -> None:
     assert set(WORDS_RULES) == set(Style)
+
+
+@pytest.mark.parametrize(
+    ("how", "expected"),
+    [
+        (Retype.DASH, "What is deal NG-617-161 for?"),
+        (Retype.SPACE, "What is deal NG-617 161 for?"),
+        (Retype.HASH, "What is deal #NG-617161 for?"),
+    ],
+)
+def test_retyping_splits_the_digit_run_or_leads_with_a_hash(how: Retype, expected: str) -> None:
+    asked = EvalQuestion(
+        id="q",
+        question="What is deal NG-617161 for?",
+        as_of=date(2001, 9, 30),
+        person="lay-k",
+        relevant=("x",),
+        code="NG-617161",
+    )
+    assert retyped(asked, how).question == expected

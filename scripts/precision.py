@@ -20,7 +20,7 @@ from rich import print as show
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.embed import embed
-from rag_trend_radar.evals.retrieval import score
+from rag_trend_radar.evals.retrieval import documents, score
 from rag_trend_radar.index import vectors_identifier, vectors_table
 from rag_trend_radar.schema import EvalQuestion, SearchHit
 from rag_trend_radar.search import vector
@@ -86,7 +86,7 @@ def main(paths: list[Path]) -> None:
             "vector, halfvec, exact",
             "vector, halfvec, HNSW (the app)",
         ):
-            s = score(relevant, results[name], METRICS)
+            s = score(relevant, {q: documents(h) for q, h in results[name].items()}, METRICS)
             show(f"  {name:34} " + "  ".join(f"{m} {s[m]:.3f}" for m in METRICS))
 
 

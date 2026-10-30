@@ -35,6 +35,8 @@ class AppSettings(BaseSettings):
     ## update between two runs would mix two models in one vectors table.
     embedding_revision: str = Field("main", pattern=r"^(?:main|[0-9a-f]{40})$")
     rerank_model: str = "BAAI/bge-reranker-v2-m3"
+    ## Pinned for the same reason: cached rerank scores are keyed by it.
+    rerank_revision: str = Field("main", pattern=r"^(?:main|[0-9a-f]{40})$")
 
     answer_model: str = "claude-sonnet-5-5"
     anthropic_api_key: SecretStr = SecretStr("")
@@ -48,8 +50,12 @@ class AppSettings(BaseSettings):
         return schema
 
     def revision(self, model: str) -> str:
-        """The revision to load `model` at: the pinned one for the configured model, else main."""
-        return self.embedding_revision if model == self.embedding_model else "main"
+        """The revision to load `model` at: the pinned one for a configured model, else main."""
+        pinned = {
+            self.embedding_model: self.embedding_revision,
+            self.rerank_model: self.rerank_revision,
+        }
+        return pinned.get(model, "main")
 
     @classmethod
     def settings_customise_sources(

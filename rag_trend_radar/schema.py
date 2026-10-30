@@ -1,6 +1,7 @@
 """Every record that crosses a module boundary."""
 
 from datetime import date, datetime
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict
 
@@ -148,3 +149,60 @@ class EvalQuestion(Record):
     as_of: date
     person: str
     relevant: tuple[str, ...]
+    ## The identifier a codes-style question quotes, as written; empty for the other styles.
+    code: str = ""
+
+
+class Verdict(StrEnum):
+    """Whether a document answers a question, as the judge read it."""
+
+    ANSWERS = "answers"
+    PARTLY = "partly"
+    NO = "no"
+
+
+class Judgment(Record):
+    """One (question, document) pair read by the judge, with the sentence it rests on.
+
+    `quoted` is checked by code, not by the judge: the quote must appear in the document as
+    written (whitespace aside). An "answers" whose quote isn't there doesn't count.
+    """
+
+    question_id: str
+    external_id: str
+    verdict: Verdict
+    quote: str
+    quoted: bool
+
+    @property
+    def answers(self) -> bool:
+        """Counts as relevant: the judge said so and its quote is really in the document."""
+        return self.verdict is Verdict.ANSWERS and self.quoted
+
+
+class RunManifest(Record):
+    """What a recall run measured, so every number in the README traces back to a run."""
+
+    questions: str
+    count: int
+    model: str
+    dims: int
+    depth: int
+    ef_search: int
+    reranker: str
+    retype: str
+    commit: str
+    chunks: int
+    started: datetime
+
+
+class RecallRun(Record):
+    """A recall run saved whole: re-scoring or judging it never re-runs a search.
+
+    Rankings name documents by external id, best first, one entry per document (its best chunk);
+    latency is per question, in milliseconds.
+    """
+
+    manifest: RunManifest
+    rankings: dict[str, dict[str, list[str]]]
+    latency_ms: dict[str, list[float]]

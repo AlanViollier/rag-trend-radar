@@ -18,7 +18,8 @@ from psycopg.rows import TupleRow
 
 from rag_trend_radar import index
 from rag_trend_radar.db import connect as db
-from rag_trend_radar.schema import Document
+from rag_trend_radar.evals import leaks
+from rag_trend_radar.schema import Document, EvalQuestion
 from rag_trend_radar.search import hybrid, keyword, vector
 from rag_trend_radar.search.ranking import cutoff
 
@@ -144,3 +145,29 @@ def test_a_filtered_hnsw_scan_still_reaches_the_one_readable_vector() -> None:
     ## Without the HNSW index in the plan this test proves nothing: it would pass with the bug.
     assert any("embedding_idx" in line for (line,) in plan)
     assert [CANARY in hit.text for hit in hits] == [True]
+
+
+@pytest.mark.usefixtures("world")
+def test_the_leak_check_finds_none() -> None:
+    asked = EvalQuestion(
+        id="q-secret",
+        question="zephyr quokka",
+        as_of=date(2001, 9, 30),
+        person="kim-d",
+        relevant=("secret",),
+    )
+    assert leaks.check([asked], np.stack([QUERY]), MODEL, 10).leaks == ()
+
+
+@pytest.mark.usefixtures("world")
+def test_the_leak_checks_catch_a_planted_leak() -> None:
+    with db.connect() as owner:
+        ids: dict[str, int] = dict(
+            owner.execute(
+                "SELECT external_id, id FROM documents WHERE external_id IN ('secret', 'crowd-0')"
+            ).fetchall()
+        )
+        secret, crowd = ids["secret"], ids["crowd-0"]
+        assert leaks.unreadable(owner, "kim-d", [secret, crowd]) == [crowd]
+        assert leaks.too_late(owner, date(2001, 9, 9), [secret, crowd]) == [secret]
+        assert leaks.too_late(owner, date(2001, 9, 10), [secret, crowd]) == []

@@ -10,9 +10,13 @@ from psycopg.rows import TupleRow
 from rag_trend_radar.config import get_settings
 
 SCHEMA_SQL = Path(__file__).with_name("schema.sql")
+## The graph walk keeps this many candidates (default 40). Most are filtered out by RLS, so at 40
+## the right email was missing from the top 50 for 13% of questions; at 1,000 (the maximum)
+## recall matched exact search, at the same ~40 ms (2026-10-27, Sep 2001).
+EF_SEARCH = 1000
 
 
-def connect(person: str | None = None) -> psycopg.Connection[TupleRow]:
+def connect(person: str | None = None, ef_search: int = EF_SEARCH) -> psycopg.Connection[TupleRow]:
     """Open a connection; with `person`, every query sees only what that person may see.
 
     Parameters
@@ -21,6 +25,8 @@ def connect(person: str | None = None) -> psycopg.Connection[TupleRow]:
         None for the pipeline (owner, no row filtering). 'investigator' or an employee's
         mailbox (kean-s) for searches: the connection switches to radar_reader and sets
         app.person.
+    ef_search:
+        How many candidates a reader's HNSW scan keeps; recall varies it to re-measure.
     """
     conn = _open()
     register_vector(conn)
@@ -31,10 +37,7 @@ def connect(person: str | None = None) -> psycopg.Connection[TupleRow]:
         ## an employee who can read 2% of the mail got none back. Iterative scans keep walking
         ## the graph until enough rows pass, in exact distance order (pgvector 0.8).
         conn.execute("SET hnsw.iterative_scan = strict_order")
-        ## The graph walk keeps this many candidates (default 40). Most are filtered out by RLS,
-        ## so at 40 the right email was missing from the top 50 for 13% of questions; at 1,000
-        ## (the maximum) recall matches exact search, at the same ~40 ms (2026-10-27, Sep 2001).
-        conn.execute("SET hnsw.ef_search = 1000")
+        conn.execute(sql.SQL("SET hnsw.ef_search = {}").format(sql.Literal(ef_search)))
         conn.commit()
     return conn
 

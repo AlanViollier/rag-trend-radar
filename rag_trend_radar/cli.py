@@ -1,7 +1,8 @@
 """rag-trend-radar: thin commands over the modules."""
 
+import subprocess
 import sys
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from itertools import islice
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -19,10 +20,12 @@ from rag_trend_radar.answer import answer
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.embed import embed, token_counter
-from rag_trend_radar.evals.questions import Style, sample, write
-from rag_trend_radar.evals.retrieval import rankings, score
+from rag_trend_radar.evals import judge as judging
+from rag_trend_radar.evals.leaks import check as check_leaks
+from rag_trend_radar.evals.questions import Retype, Style, code_holds, retyped, sample, write
+from rag_trend_radar.evals.retrieval import rankings, relevant, report
 from rag_trend_radar.ingest.chunk import MAX_TOKENS, pieces
-from rag_trend_radar.schema import EvalQuestion
+from rag_trend_radar.schema import EvalQuestion, Judgment, RecallRun, RunManifest
 from rag_trend_radar.search import hybrid
 from rag_trend_radar.search.ranking import last_day
 from rag_trend_radar.search.rerank import rerank
@@ -31,9 +34,12 @@ from rag_trend_radar.search.rerank import rerank
 ## that the bill stays at about a cent a question.
 ANSWER_HITS = 10
 QUESTIONS = Path("evals/questions.jsonl")
-## recall@1: the answer is first. @10: Claude gets to read it. @50: the reranker gets to see it.
-## MRR@10: 1 / the answer's rank, so second place counts half.
-METRICS = ("recall@1", "recall@10", "recall@50", "mrr@10")
+## The judge's verdicts per question file, kept in git so a reader can check them.
+JUDGMENTS = Path("evals/judgments")
+## hit_rate@1: an answer is first. @10: Claude gets to read one. @50: the reranker gets to see
+## one. MRR@10: 1 / the first answer's rank, so second place counts half. Not recall@k: with
+## judged labels a question can have several answers, and recall would count the share found.
+METRICS = ("hit_rate@1", "hit_rate@10", "hit_rate@50", "mrr@10")
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -204,18 +210,27 @@ def questions(
     """
     settings = get_settings()
     ## Spare sources: Claude marks some unusable (automated notices; for codes, mail whose only
-    ## long numbers are phone numbers or zip codes).
-    spare = 2 if style is Style.CODES else 3 / 2
+    ## long numbers are phone numbers or zip codes, or codes too many documents hold).
+    spare = 3 if style is Style.CODES else 3 / 2
     with db.connect() as conn:
         day = last_day(conn)
         sources = {
             kind: sample(conn, kind, int(n * spare), seed, style=style)
             for kind, n in (("email", emails), ("quoted", quoted))
         }
+
+    def kept(question: EvalQuestion) -> bool:
+        if style is not Style.CODES:
+            return True
+        with db.connect(question.person) as conn:
+            return code_holds(conn, question)
+
     written = [
         q
         for kind, n in (("email", emails), ("quoted", quoted))
-        for q in islice(write(sources[kind], day, settings.answer_model, style=style), n)
+        for q in islice(
+            filter(kept, write(sources[kind], day, settings.answer_model, style=style)), n
+        )
     ]
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("".join(q.model_dump_json() + "\n" for q in written))
@@ -230,38 +245,154 @@ def recall(
     dims: int = 0,
     rerank_rows: bool = True,
     reranker: str = "",
+    ef_search: int = db.EF_SEARCH,
+    retype: Retype | None = None,
+    limit: int = 0,
 ) -> None:
     """recall@k and MRR for every search method over the labelled questions (free, local).
 
     `--model` and `--dims` score another embedding (embed it first), `--reranker` another
-    cross-encoder; `--no-rerank-rows` skips the reranked rows, which take most of the time.
+    cross-encoder; `--no-rerank-rows` skips the reranked rows. `--retype` asks the codes
+    questions with their identifier typed another way; `--limit` keeps the first n questions,
+    to time a run before committing to it. Every run is saved under data/reports/recall/; with
+    judgments in evals/judgments/, a second table counts every document the judge found
+    answering.
     """
     settings = get_settings()
     model, dims = model or settings.embedding_model, dims or settings.embedding_dims
     labelled = [EvalQuestion.model_validate_json(line) for line in path.read_text().splitlines()]
+    labelled = labelled[:limit] if limit else labelled
+    if retype is not None:
+        labelled = [retyped(q, retype) for q in labelled if q.code]
+    vectors = embed([q.question for q in labelled], model, dims, query=True)
+    started = datetime.now(UTC)
+    cross = (reranker or settings.rerank_model) if rerank_rows else None
+    by_id, latency = rankings(labelled, vectors, model, depth, cross, ef_search)
     with db.connect() as conn:
-        ids: dict[str, int] = dict(
+        names: dict[int, str] = dict(
             conn.execute(
-                "SELECT external_id, id FROM documents WHERE external_id = ANY(%s)",
-                ([x for q in labelled for x in q.relevant],),
+                "SELECT id, external_id FROM documents WHERE id = ANY(%s)",
+                (list({d for docs in by_id.values() for ids in docs.values() for d in ids}),),
             ).fetchall()
         )
-    relevant = {q.id: {ids[x] for x in q.relevant} for q in labelled}
-    vectors = embed(
-        [q.question for q in labelled],
-        model,
-        dims,
-        query=True,
+        chunks = conn.execute("SELECT count(*) FROM chunks").fetchall()[0][0]
+    ranked = {
+        method: {qid: [names[d] for d in ids] for qid, ids in docs.items()}
+        for method, docs in by_id.items()
+    }
+    run = RecallRun(
+        manifest=RunManifest(
+            questions=path.name,
+            count=len(labelled),
+            model=model,
+            dims=dims,
+            depth=depth,
+            ef_search=ef_search,
+            reranker=cross or "",
+            retype=retype or "",
+            commit=_commit(),
+            chunks=chunks,
+            started=started,
+        ),
+        rankings=ranked,
+        latency_ms=latency,
     )
-    table = Table(title=f"{path.name}: {len(labelled)} questions, {model} @ {dims}, depth {depth}")
-    table.add_column("method")
-    for metric in METRICS:
-        table.add_column(metric, justify="right")
-    cross = (reranker or settings.rerank_model) if rerank_rows else None
-    for method, results in rankings(labelled, vectors, model, depth, cross).items():
-        scores = score(relevant, results, METRICS)
-        table.add_row(method, *(f"{scores[m]:.3f}" for m in METRICS))
+    out = settings.data_dir / "reports" / "recall" / f"{path.stem}@{started:%Y%m%dT%H%M%S}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(run.model_dump_json())
+
+    judged_path = JUDGMENTS / f"{path.stem}.jsonl"
+    judgments = (
+        [Judgment.model_validate_json(x) for x in judged_path.read_text().splitlines()]
+        if judged_path.exists()
+        else []
+    )
+    strict, judged = relevant(labelled, judgments)
+    title = f"{path.name}, {model} @ {dims}, depth {depth}, ef_search {ef_search}"
+    if retype is not None:
+        title += f", codes retyped ({retype})"
+    show(f"\n[bold]{title}[/bold]: {len(strict)} of {len(labelled)} questions, strict labels")
+    show(report(strict, ranked, METRICS))
+    if judgments:
+        show("\n[bold]judged[/bold]: every document the judge found answering counts")
+        show(report(judged, ranked, METRICS))
+    timing = Table(title="milliseconds per question")
+    for column in ("method", "median", "p95"):
+        timing.add_column(column, justify="left" if column == "method" else "right")
+    for method, times in latency.items():
+        timing.add_row(method, *(f"{np.percentile(times, p):.0f}" for p in (50, 95)))
+    show(timing)
+    show(f"saved → {out}", file=sys.stderr)
+
+
+@app.command()
+def leaks(paths: list[Path]) -> None:
+    """Every result checked for permission and time leaks over the labelled questions (free).
+
+    Each question is asked by a mailbox that can't read its answer, then by its person on the
+    day before its answer was sent; every document returned is checked as the owner.
+    """
+    settings = get_settings()
+    model, dims = settings.embedding_model, settings.embedding_dims
+    questions = [
+        EvalQuestion.model_validate_json(line) for p in paths for line in p.read_text().splitlines()
+    ]
+    vectors = embed([q.question for q in questions], model, dims, query=True)
+    found = check_leaks(questions, vectors, model, hybrid.DEPTH)
+    table = Table(title=f"{len(questions)} questions, every result checked")
+    for column in ("check", "results", "leaks"):
+        table.add_column(column, justify="left" if column == "check" else "right")
+    for name, n in found.checked.items():
+        kind, method = name.split(", ")
+        bad = sum(1 for x in found.leaks if (x.kind, x.method) == (kind, method))
+        table.add_row(name, f"{n:,}", str(bad))
     show(table)
+    for leak in found.leaks[:20]:
+        show(leak)
+
+
+@app.command()
+def judge(path: Path, run: Path | None = None, dry_run: bool = False) -> None:
+    """Have Claude judge each question's own document, and with `--run`, every document a method
+    ranked above it in that saved run (paid, Batch API, cached).
+
+    Writes evals/judgments/<questions>.jsonl, which `recall` reads for its judged table.
+    `--dry-run` prints what would be sent and its cost, and sends nothing.
+    """
+    questions = [EvalQuestion.model_validate_json(x) for x in path.read_text().splitlines()]
+    saved = RecallRun.model_validate_json(run.read_text()) if run else None
+    with db.connect() as conn:
+        todo = judging.pairs(conn, questions, saved)
+    cost = judging.estimate(todo)
+    show(
+        f"{cost.pairs:,} pairs, {cost.cached:,} cached; to send: ~{cost.input_tokens:,} input"
+        f" tokens, ~${cost.dollars:.2f}"
+    )
+    if dry_run:
+        return
+    judged = judging.judge(todo, lambda line: show(line, file=sys.stderr))
+    if len(judged) < len(todo):
+        show(f"{len(todo) - len(judged)} pairs got no verdict: run again to retry them")
+    out = JUDGMENTS / f"{path.stem}.jsonl"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("".join(j.model_dump_json() + "\n" for j in judged))
+    labels = {(q.id, x) for q in questions for x in q.relevant}
+    own = [j for j in judged if (j.question_id, j.external_id) in labels]
+    others = [j for j in judged if (j.question_id, j.external_id) not in labels]
+    show(
+        f"own document answers: {sum(j.answers for j in own)} of {len(own)};"
+        f" other documents answering too: {sum(j.answers for j in others)} of {len(others)};"
+        f" quotes not found: {sum(not j.quoted for j in judged if j.verdict != 'no')}"
+    )
+    show(f"→ {out}")
+
+
+def _commit() -> str:
+    ## The code a run measured; "-dirty" when uncommitted changes took part.
+    done = subprocess.run(
+        ["git", "describe", "--always", "--dirty"], capture_output=True, text=True, check=True
+    )
+    return done.stdout.strip()
 
 
 def _embed_missing(

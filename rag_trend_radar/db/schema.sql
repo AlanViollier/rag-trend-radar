@@ -19,6 +19,18 @@ CREATE TABLE IF NOT EXISTS cache.embeddings (
     PRIMARY KEY (model, revision, dims, text_hash)
 );
 
+-- Every rerank score ever computed. A cross-encoder reads the question and the chunk together,
+-- so a score depends on both texts and the model, nothing else: a re-run scores only new pairs.
+-- Readers get no grant on it: a question must not be able to plant scores for another.
+CREATE TABLE IF NOT EXISTS cache.rerank_scores (
+    model      text NOT NULL,
+    revision   text NOT NULL,
+    query_hash text NOT NULL,
+    text_hash  text NOT NULL,
+    score      double precision NOT NULL,
+    PRIMARY KEY (model, revision, query_hash, text_hash)
+);
+
 -- One row per searchable thing: an email, a quoted message no email of ours holds, later a
 -- digest or an arXiv paper.
 -- (source, external_id) is the stable outside id: the content hash for an email, the text

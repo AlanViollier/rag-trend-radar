@@ -25,9 +25,10 @@ def test_repo_config_validates() -> None:
 
 def test_only_the_configured_model_loads_at_its_pinned_revision(tmp_path: Path) -> None:
     config = tmp_path / "config.yaml"
-    config.write_text(f"embedding_revision: {'a' * 40}\n")
+    config.write_text(f"embedding_revision: {'a' * 40}\nrerank_revision: {'b' * 40}\n")
     settings = get_settings(config)
     assert settings.revision("google/embeddinggemma-2") == "a" * 40
+    assert settings.revision("BAAI/bge-reranker-v2-m3") == "b" * 40
     assert settings.revision("sentence-transformers/all-MiniLM-L6-v2") == "main"
 
 
