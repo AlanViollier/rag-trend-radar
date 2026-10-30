@@ -28,6 +28,10 @@ MODEL = "claude-opus-5-5"
 ## The labelled document must rank inside this for recall@10 to count it; a document ranked
 ## above it there can take its place, so those are the ones the judge reads.
 POOL = 10
+## The rows the judged table covers: what `ask` runs and its rival. Pooling every method cost
+## $19 on the five sets (3,138 pairs, long newsletters among them), these two $5.50 (890).
+## The other rows keep their strict scores.
+JUDGED = ("vector + rerank", "hybrid + rerank")
 ## Batch API prices for MODEL, per million tokens (half the standard $4 / $20).
 INPUT_PER_M, OUTPUT_PER_M = 2.0, 10.0
 SYSTEM = """You check answers for a search engine over Enron's email from 2001. Given a question \
@@ -96,13 +100,13 @@ def pairs(
 
 
 def pool(questions: Sequence[EvalQuestion], run: RecallRun | None) -> dict[str, set[str]]:
-    """Each question's own documents, and every document a method of `run` ranked above them.
+    """Each question's own documents, and every document a `JUDGED` method ranked above them.
 
-    Within the top `POOL`; when the label isn't there, the whole top `POOL`. Pooled over every
-    method, so no method is judged more kindly than another.
+    Within the top `POOL`; when the label isn't there, the whole top `POOL`. Pooled over both
+    methods, so neither is judged more kindly than the other.
     """
     wanted: dict[str, set[str]] = {q.id: set(q.relevant) for q in questions}
-    for ranked in (run.rankings if run else {}).values():
+    for ranked in (run.rankings[m] for m in JUDGED) if run else ():
         for q in questions:
             top = ranked.get(q.id, [])[:POOL]
             label = min((top.index(x) for x in q.relevant if x in top), default=POOL)

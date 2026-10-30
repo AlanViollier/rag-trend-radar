@@ -41,7 +41,7 @@ def test_any_answering_document_first_is_a_hit_where_recall_would_count_half() -
     assert score({"a": {"1", "9"}}, ranked, ["recall@1"]) == {"recall@1": 0.5}
 
 
-def test_the_pool_takes_what_ranked_above_the_label_in_any_method() -> None:
+def test_the_pool_takes_what_a_judged_method_ranked_above_the_label() -> None:
     run = RecallRun(
         manifest=RunManifest(
             questions="q.jsonl",
@@ -57,8 +57,9 @@ def test_the_pool_takes_what_ranked_above_the_label_in_any_method() -> None:
             started="2026-10-30T00:00:00Z",
         ),  # fmt: skip
         rankings={
-            "keyword": {"a": ["5", "1", "6"]},
-            "vector": {"a": [str(n) for n in range(10, 10 + POOL + 5)]},
+            "hybrid + rerank": {"a": ["5", "1", "6"]},
+            "vector + rerank": {"a": [str(n) for n in range(10, 10 + POOL + 5)]},
+            "keyword": {"a": ["7", "1"]},
         },
         latency_ms={},
     )

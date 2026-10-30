@@ -332,7 +332,7 @@ def _scores(run: RecallRun, labelled: list[EvalQuestion]) -> None:
     show(report(strict, run.rankings, METRICS))
     if judgments:
         show("\n[bold]judged[/bold]: every document the judge found answering counts")
-        show(report(judged, run.rankings, METRICS))
+        show(report(judged, {m: run.rankings[m] for m in judging.JUDGED}, METRICS))
     timing = Table(title="milliseconds per question")
     for column in ("method", "median", "p95"):
         timing.add_column(column, justify="left" if column == "method" else "right")
