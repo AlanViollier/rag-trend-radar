@@ -10,11 +10,14 @@
 {"question_id":"q-7c67dc43f602","external_id":"7c67dc43f60223044feda231e879052f","verdict":"answers","quote":"The price on deal 511820 should be $4.7012 not $4.8041, just corrected in \nSitara.","quoted":true}
 {"question_id":"q-1076b9eae40e","external_id":"1076b9eae40ee75f492ea7525f6b5953","verdict":"answers","quote":"MDQ:\t\t\t100,000 Dth/d","quoted":true}
 {"question_id":"q-748991754849","external_id":"748991754849ff509b7a5651391f7e51","verdict":"answers","quote":"The third deal - 531910 - I'm checking on with Les right now.","quoted":true}
+{"question_id":"q-cab152a6d47e","external_id":"4ea9c77a6f313b9f7dca469723f9009b","verdict":"answers","quote":"Volume:          15,000 Dth/d","quoted":true}
+{"question_id":"q-cab152a6d47e","external_id":"83eb5f4c7078d44198dc773f2833efc3","verdict":"answers","quote":"Volume:          20,000 Dth/d","quoted":true}
 {"question_id":"q-cab152a6d47e","external_id":"cab152a6d47e08902c82aafb7c9ab795","verdict":"answers","quote":"Volume:          10,000 Dth/d","quoted":true}
 {"question_id":"q-0e58cd4d3f1e","external_id":"0e58cd4d3f1e33cc629c68568e9bc1c8","verdict":"answers","quote":"Total Amt :       38.43","quoted":true}
 {"question_id":"q-254cc649b5ce","external_id":"254cc649b5ce3d322128be6d672ba5c7","verdict":"answers","quote":"Holiday Inn - Covington, LA","quoted":true}
 {"question_id":"q-9dd8eb17e30a","external_id":"9dd8eb17e30a56ff2904046529589ece","verdict":"answers","quote":"#1 of Purchases Global Contract 96016597, is a contract between Altrade \nTransaction, LLC and Enron North America Corp and not Houston Pipe Line \nCompany.","quoted":true}
 {"question_id":"q-021403121f58","external_id":"021403121f58ac06a4d49478d893013c","verdict":"answers","quote":"DETAILS:PAYMENT TO ENRON FOR SETTLEMENT\n            OF STORAGE FEES DUE POST BANKRUPTCY.","quoted":true}
+{"question_id":"q-021403121f58","external_id":"ead8bf29f0a8f8a354f3a670f8ef1b35","verdict":"answers","quote":"DETAILS:PAYMENT TO ENRON FOR SETTLEMENT\n            OF STORAGE FEES DUE POST BANKRUPTCY.","quoted":true}
 {"question_id":"q-0c9822249762","external_id":"0c98222497623b6a9de318c035ed53d9","verdict":"answers","quote":"Amount: $1,082,503","quoted":true}
 {"question_id":"q-3bd121d460f9","external_id":"3bd121d460f9d57d6966bbe8f31ba698","verdict":"answers","quote":"Total Order Amount: $74.90","quoted":true}
 {"question_id":"q-b8cbec818838","external_id":"b8cbec818838b0919ebc354769851121","verdict":"answers","quote":"Room Rate: 129.00  per night. Plus tax when applicable","quoted":true}
@@ -27,10 +30,21 @@
 {"question_id":"q-1159a591b8b8","external_id":"1159a591b8b8b0c953467973b6c498ec","verdict":"answers","quote":"The previous deals were done under contract # 96029815 ( assigned over from Columbia Energy Services), we would like this new deal and all subsequent deals to be done under the Enfolio Gas Purchase Agreement (the one you emailed to me on 10/9).","quoted":true}
 {"question_id":"q-7582da16e518","external_id":"7582da16e518f7b493b5c1af589c597b","verdict":"answers","quote":"DETAILS:PREPAY FOR JANUARY POWER","quoted":true}
 {"question_id":"q-1048243ad017","external_id":"1048243ad01717aba35aec2c929b3e2b","verdict":"answers","quote":"Parking 96016654:  I spoke with  Sandra Grimes at Oasis Pipe Line Company and \nshe indicated that this contract did not exist in their system.","quoted":true}
+{"question_id":"q-76331599a2d1","external_id":"095e56039d9e3416a1d20897cf04bfaa","verdict":"no","quote":"","quoted":false}
+{"question_id":"q-76331599a2d1","external_id":"27349b6ef9a85ef4abdf8f9af5e38e2a","verdict":"partly","quote":"Mike advised the storage charge for the transformers would be:  $1,500 prep & $500/week for each transformer.","quoted":true}
+{"question_id":"q-76331599a2d1","external_id":"2796b930f6f30bceb69ac81a9a5f365f","verdict":"partly","quote":"We will promptly initiate a change order to the original contract with ABB that included the purchase of these two units in the amount of $99,000 (two units at $49,500 each).","quoted":true}
+{"question_id":"q-76331599a2d1","external_id":"4617c1401b2e48a201605a04d3d08f22","verdict":"no","quote":"","quoted":false}
+{"question_id":"q-76331599a2d1","external_id":"69314cc44cf11abda75317006da9f7c7","verdict":"no","quote":"","quoted":false}
+{"question_id":"q-76331599a2d1","external_id":"6f80f76a26eea44ebee0237043045158","verdict":"no","quote":"","quoted":false}
 {"question_id":"q-76331599a2d1","external_id":"76331599a2d116dad7e5c1d116fdfcad","verdict":"answers","quote":"she was \nchecking on the status of ABB Invoice #  TS 00365 in the amount of $105,104.","quoted":true}
+{"question_id":"q-76331599a2d1","external_id":"97e0148b5b7299adf1ca3b428ce9cf8c","verdict":"partly","quote":"1)   Hauling and Installation of City of Austin Transformers (LNL9521-1 & -2)\n$93,200.00.","quoted":true}
+{"question_id":"q-76331599a2d1","external_id":"bb164e4327063e368bcc0d4cd5d58f0a","verdict":"no","quote":"","quoted":false}
+{"question_id":"q-76331599a2d1","external_id":"c58c99764a1c8c509a93f978f6ba6e6b","verdict":"no","quote":"","quoted":false}
+{"question_id":"q-76331599a2d1","external_id":"d6f3db22fc06de24b3d61756959591ed","verdict":"partly","quote":"The [transformer] Purchase Amount in Exhibit(s) 2b reflect the fact that Intergen will be responsible for paying the final $78,600 due to ABB.","quoted":true}
 {"question_id":"q-5b77c4f9b3d8","external_id":"5b77c4f9b3d89dae1f5badba5b34e424","verdict":"answers","quote":"This deal is currently entered in Sitara under deal 142034 as CPR Storage on \nCGAS.","quoted":true}
 {"question_id":"q-36d6686d400f","external_id":"36d6686d400f5252f4909d0a2f8e5d74","verdict":"answers","quote":"Delivery: Federal Express Overnight","quoted":true}
 {"question_id":"q-98ce22b917c0","external_id":"98ce22b917c027456362b71c48d57ff7","verdict":"answers","quote":"We stopped serving MCV 2 effective 4/1/2002.","quoted":true}
+{"question_id":"q-fe1f018037eb","external_id":"2ba1f20c9db46410bb2cbc7e7a2ee551","verdict":"answers","quote":"Prizes are accommodations for two for two nights at any one of the following locations:","quoted":true}
 {"question_id":"q-fe1f018037eb","external_id":"fe1f018037eb51768bc1330a38ca4245","verdict":"answers","quote":"Prizes are accommodations for two for two nights at any one of the following locations:","quoted":true}
 {"question_id":"q-4ae198d4f35c","external_id":"4ae198d4f35c3d6b2cf7b137970ad779","verdict":"answers","quote":"The PG&E Texas VGM, L.P. transport contract 24809 has benn assigned over to\nEl Paso Merchant Energy, L.P. effective January 1, 2001.","quoted":true}
 {"question_id":"q-542db17d71dd","external_id":"542db17d71dd55473781ecc80cb28d29","verdict":"answers","quote":"We will monitor your order and send you a notification email when\nyour order has shipped.","quoted":true}
@@ -54,11 +68,22 @@
 {"question_id":"q-bbc076fd929a","external_id":"bbc076fd929a3d072bf0aedbdf6a152f","verdict":"answers","quote":"30208746128 SAME DAY DR TRANSFER                1,731,460.00","quoted":true}
 {"question_id":"q-16fbd54921e7","external_id":"16fbd54921e7194754326863b5b2d887","verdict":"answers","quote":"Time: 1:00pm Central Time","quoted":true}
 {"question_id":"q-50dbc28295f4","external_id":"50dbc28295f4bc97416b9c8d2822c07d","verdict":"answers","quote":"Deal 1184587 MidAmerican Energy Company","quoted":true}
+{"question_id":"q-50719ae298b6","external_id":"4e6e0cd5d6628e62f7cf4860fa4bfe73","verdict":"partly","quote":"Prebon was right on this.","quoted":true}
 {"question_id":"q-50719ae298b6","external_id":"50719ae298b6454077a9bb09cac28fd9","verdict":"answers","quote":"error: Prebon shows price as $93........enpower has $95","quoted":true}
+{"question_id":"q-50719ae298b6","external_id":"50a050b0551af7c1459733ccdfec8589","verdict":"no","quote":"","quoted":false}
+{"question_id":"q-50719ae298b6","external_id":"5f2766238efd1dacaa8d0618c5105093","verdict":"no","quote":"","quoted":false}
+{"question_id":"q-50719ae298b6","external_id":"8f67f3628c91e0cbfba69afa1367eddb","verdict":"no","quote":"","quoted":false}
+{"question_id":"q-50719ae298b6","external_id":"9c58455f06d588c976cd05c7d3802839","verdict":"no","quote":"","quoted":false}
+{"question_id":"q-50719ae298b6","external_id":"a9b7f52db16c731a58670eade1ce016f","verdict":"no","quote":"","quoted":false}
+{"question_id":"q-50719ae298b6","external_id":"b3368fb96f0f243f48a9d61826cd1b34","verdict":"no","quote":"","quoted":false}
+{"question_id":"q-50719ae298b6","external_id":"e3108f23ece283938aae8274bb69030d","verdict":"no","quote":"","quoted":false}
+{"question_id":"q-50719ae298b6","external_id":"e7287d1f1db741d4da457c874a5681f2","verdict":"no","quote":"","quoted":false}
+{"question_id":"q-50719ae298b6","external_id":"fa958e4992f18a8fca96f8a0fe0b4875","verdict":"no","quote":"","quoted":false}
 {"question_id":"q-682b6d42bd94","external_id":"682b6d42bd94c24d781d66c6b8e8de2e","verdict":"answers","quote":"From: susan.bailey@enron.com","quoted":true}
 {"question_id":"q-3273353fc31e","external_id":"3273353fc31e56d0a152e99c5b4c3470","verdict":"answers","quote":"Meredith, please path deal 209359 with 209371 for Jan 31.","quoted":true}
 {"question_id":"q-a135986f2c47","external_id":"a135986f2c47517811b8c01dab279701","verdict":"answers","quote":"Total for the order:   $10.81 was charged to your","quoted":true}
 {"question_id":"q-19ecc7dae8cf","external_id":"19ecc7dae8cfc12f4a6adf219fff47e5","verdict":"answers","quote":"6.  Put Option Agreement (535217);","quoted":true}
+{"question_id":"q-19ecc7dae8cf","external_id":"aedcbb3af43f919b1fb76d80ccced787","verdict":"answers","quote":"6.  Put Option Agreement (535217);","quoted":true}
 {"question_id":"q-ec7ac25e9e02","external_id":"ec7ac25e9e021e5bc1a49f11297190da","verdict":"answers","quote":"Deal #133219 \nwas at this meter for only 2 days (December 1 & 2, 1999).","quoted":true}
 {"question_id":"q-ffd41d471e4f","external_id":"ffd41d471e4f252130654fc946e2242a","verdict":"answers","quote":"Anthony/Bridgette will populate the EOL matrix \ntoday to reflect that Cargill Energy, a division of Cargill, Incorporated \nwill be covered by the ISDA with Cargill, Incorporated (contract 96043502).","quoted":true}
 {"question_id":"q-d3df0533664e","external_id":"d3df0533664e15d5f3fb1a48aa0332e7","verdict":"answers","quote":"Supply deal 372088 gets booked out with sale deals 229344 and 229357.","quoted":true}
@@ -67,6 +92,7 @@
 {"question_id":"q-53860af8acc5","external_id":"53860af8acc585143cbc9b4c75d6bfda","verdict":"partly","quote":"I need   confirmation that the gas from this meter should be nominated on contract # (96006681) and that this agreement should  have been reassigned to HPLC. (It is currently still under HPLR).","quoted":true}
 {"question_id":"q-a42c865d2373","external_id":"a42c865d2373b911d409768939e694bc","verdict":"answers","quote":"I made the following adjustments to deal 473190, \n took daily withdrawal volumes to 0 effective 12/16 - 12/31\n extended the deal to Jan 2001\n changed 1/1/2001 to 2444\n changed 1/2/2001 - 1/31/2001 to 2414","quoted":true}
 {"question_id":"q-a4a815e10261","external_id":"a4a815e10261c1c77e48093a0ceafd7a","verdict":"answers","quote":"When accounting did their initial draft for June production, we had a volume of 1,089,120 on deal ticket 268094.  Today, this same deal ticket has a volume of 497,015.","quoted":true}
+{"question_id":"q-9dd095f0e234","external_id":"5a22611eef8344806b80f98fae8b710b","verdict":"answers","quote":"Room Rate: 62.10  per night. Plus tax when applicable","quoted":true}
 {"question_id":"q-9dd095f0e234","external_id":"9dd095f0e234175b0da457bccb3311f2","verdict":"answers","quote":"Room Rate: 62.10  per night. Plus tax when applicable","quoted":true}
 {"question_id":"q-776d46fb440a","external_id":"776d46fb440aaa0eabf408bcd2de13fa","verdict":"answers","quote":"The subject of the conference call will be Quantitative Investing.","quoted":true}
 {"question_id":"q-0a6138c8d844","external_id":"0a6138c8d844129a937bbe13f11c2d26","verdict":"answers","quote":"Okay, I don't know where Jeff's head was today, but he just checked with \nPrebon and found he had done this deal without even knowing it! So he entered \nit - Deal #461171.","quoted":true}
@@ -84,7 +110,9 @@
 {"question_id":"q-776f789734f6","external_id":"776f789734f65b26a7e84bb24536b37a","verdict":"answers","quote":"INVOICE TOTAL USD       \n1870.50","quoted":true}
 {"question_id":"q-30d33e2f9200","external_id":"30d33e2f9200577257ec081049c7d6ba","verdict":"answers","quote":"Chairperson:\tMike Small","quoted":true}
 {"question_id":"q-4ca23ab7ea9d","external_id":"4ca23ab7ea9db8ee3b714e371621d995","verdict":"answers","quote":"Victor, can you extend the deal 422516 for days 6 and 9 please?","quoted":true}
+{"question_id":"q-e1599ea7b19a","external_id":"12212cd1a5090ea57614a327e1580ec5","verdict":"answers","quote":"We paid them $4.18 and they said that their price should be $5.18.","quoted":true}
 {"question_id":"q-e1599ea7b19a","external_id":"e1599ea7b19a64f4030867fa29764349","verdict":"answers","quote":"We paid them $4.18 and they said that their price should be $5.18.","quoted":true}
+{"question_id":"q-f5fa0d31a972","external_id":"32d2ee5a474c4cc01c3d5fc16e26b6fb","verdict":"answers","quote":"What are our choices to do with trade v34062, a trade not yet confirmed with this customer.  I don't see this as a credit issue, but more of a legal issue.  From a credit standpoint, I am ok with the trade.","quoted":true}
 {"question_id":"q-f5fa0d31a972","external_id":"f5fa0d31a97295bdffafa348a8d7de89","verdict":"answers","quote":"What are our choices to do with trade v34062, a trade not yet confirmed with this customer.  I don't see this as a credit issue, but more of a legal issue.  From a credit standpoint, I am ok with the trade.","quoted":true}
 {"question_id":"q-0b6830eb9c08","external_id":"0b6830eb9c08f4dd077b97048e148bc2","verdict":"answers","quote":"CONTINENTAL AIRLINES  11NOV HOUSTON TX     WEST PALM B FL 125P    453P","quoted":true}
 {"question_id":"q-970fc3c2735d","external_id":"970fc3c2735d4c87f4d43f08f29f12b8","verdict":"answers","quote":"Use GTCs on both those deals until he can review the Single Transaction \nPurchase Firm contract (96005067).","quoted":true}
@@ -95,6 +123,7 @@
 {"question_id":"q-85b6f30a97a8","external_id":"85b6f30a97a8f0e67d6b6d674f69d294","verdict":"answers","quote":"upon trying to contact KN for valid contact names/phone #s I was told that KN Gas was purchased by Oneok.","quoted":true}
 {"question_id":"q-facc0ce3bf2d","external_id":"facc0ce3bf2d3f4b7cb9086e2d1fb785","verdict":"answers","quote":"Can Risk review the deals that are demand charges/triggers and either verify their validity or zero them out?","quoted":true}
 {"question_id":"q-e6af40995909","external_id":"e6af40995909a3aa526695a3d856ac2a","verdict":"answers","quote":"Also, the 77,500 MMBtu for Dec. 01 looks totally random and doesn't match with the volumes for the remainder of the months for #328974.","quoted":true}
+{"question_id":"q-e6af40995909","external_id":"eb829fabadab85a6879ea2ef2a6171a4","verdict":"answers","quote":"For your second question, I agree that the 77,500 for Dec 01 of #328974 does look random.","quoted":true}
 {"question_id":"q-54cbe830b277","external_id":"54cbe830b2770feaee86a93ada1040eb","verdict":"answers","quote":"As you know we have a  SST \ncontract{k66965} primary for Hopewell of 20,000dth which I have no volumes on \nas of now.","quoted":true}
 {"question_id":"q-97917569818e","external_id":"97917569818eb309180b0979022217e4","verdict":"answers","quote":"Suzanne Vann","quoted":true}
 {"question_id":"q-5035e8df7e18","external_id":"5035e8df7e1876b3a0857b410ca8f607","verdict":"answers","quote":"Some of the concession I am seeking include:  The same discounted rate to\nmake alternate deliveries into EPNG as TW at Blanco on agreement 25597.","quoted":true}
