@@ -14,6 +14,9 @@ from rag_trend_radar.schema import EvalQuestion
         ("Why did it shift, and what role did the traders play", False),
         ("Where should I send it?\nActually, simplified: where?", False),
         ("Where should I send it? It went missing.</br>", False),
+        ("What correction is needed on Deal #697589.1, and what was the day total?", False),
+        ("Who approved it or when was it sent?", False),
+        ("What did the West desk and the East desk agree on?", True),
     ],
 )
 def test_one_question_means_one_line_ending_in_one_question_mark(text: str, ok: bool) -> None:

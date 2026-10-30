@@ -127,9 +127,9 @@ def estimate(todo: Sequence[Pair]) -> Estimate:
         len(SYSTEM) + len(INSTRUCTIONS) + len(p.question.question) + len(p.document) for p in fresh
     )
     tokens = int(chars / 3.5)
-    ## Thinking at medium effort plus the short JSON: ~600 output tokens a pair, measured on
-    ## the smoke run.
-    dollars = tokens / 1e6 * INPUT_PER_M + len(fresh) * 600 / 1e6 * OUTPUT_PER_M
+    ## The verdict JSON plus a little thinking: 81 output tokens a pair on the smoke batch
+    ## (2026-10-30); 100 leaves room.
+    dollars = tokens / 1e6 * INPUT_PER_M + len(fresh) * 100 / 1e6 * OUTPUT_PER_M
     return Estimate(
         pairs=len(todo), cached=len(todo) - len(fresh), input_tokens=tokens, dollars=dollars
     )

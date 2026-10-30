@@ -72,9 +72,16 @@ WORDS_RULES = {
     "words. Phone numbers, zip codes, dates and amounts aren't identifiers: if the email holds "
     "none, set usable to false.",
 }
-## A code-style source must hold a run of five or more digits; Claude sorts out the phone
-## numbers and zip codes.
-CODE_PATTERN = "[0-9]{5,}"
+## A code-style source must name an identifier: a record word, then a run of five or more
+## digits close after it ("deal #143709", "contract 96003435"). Five digits alone drew zip codes,
+## phone numbers and URL fragments: Claude found 1 usable code in 12 (2026-10-30). Matched
+## without regard to case.
+CODE_PATTERN = (
+    r"\m(deals?|contracts?|tickets?|invoices?|confirmation|orders?|trades?|agreement|tracking"
+    r"|account)\M[^0-9\n]{0,12}[A-Za-z]{0,4}-?[0-9]{5,}"
+)
+DIGITS = "[0-9]{5,}"
+SECOND_ASK = re.compile(r"\b(and|or) (what|how|who|when|where|why|which)\b", re.IGNORECASE)
 ## A code held by more documents than this has no single answer: a deal number repeated in
 ## every daily report. Up to it, the other holders are fair candidates the judge reads.
 MAX_CODE_HOLDERS = 5
@@ -113,7 +120,7 @@ def sample(
 ) -> list[Source]:
     """`n` documents of `kind` with chunks and a body of usable length, in a seeded random order.
 
-    For the codes style, only documents holding a long digit run are drawn.
+    For the codes style, only documents naming an identifier (`CODE_PATTERN`) are drawn.
 
     The mailbox asking is one that can read the document, picked by the same hash, so the
     question is asked as someone row-level security lets see the answer.
@@ -125,7 +132,7 @@ def sample(
         " LEFT JOIN emails e ON e.document_id = d.id"
         " WHERE d.kind = %(kind)s AND length(d.body) BETWEEN %(lo)s AND %(hi)s"
         " AND EXISTS (SELECT 1 FROM chunks c WHERE c.document_id = d.id)"
-        " AND (%(pattern)s::text IS NULL OR d.body ~ %(pattern)s)"
+        " AND (%(pattern)s::text IS NULL OR d.body ~* %(pattern)s)"
         " GROUP BY d.id, e.sender ORDER BY md5(d.external_id || %(seed)s) LIMIT %(n)s",
         {
             "kind": kind,
@@ -190,7 +197,7 @@ def retyped(question: EvalQuestion, how: Retype) -> EvalQuestion:
     if how is Retype.HASH:
         code = f"#{question.code}"
     else:
-        digits = re.search(CODE_PATTERN, question.code)
+        digits = re.search(DIGITS, question.code)
         start, end = digits.span() if digits else (0, len(question.code))
         middle = (start + end) // 2
         separator = "-" if how is Retype.DASH else " "
@@ -203,8 +210,15 @@ def retyped(question: EvalQuestion, how: Retype) -> EvalQuestion:
 def _one_question(text: str) -> bool:
     ## 4 of the first 200 broke "one fact, one question": two questions in one, or a rewrite
     ## after "Actually, simplified:". A spare source takes their place.
+    ## "..., and what was the day total?" asks two facts behind one question mark.
     text = text.strip()
-    return text.endswith("?") and text.count("?") == 1 and "\n" not in text and "<" not in text
+    return (
+        text.endswith("?")
+        and text.count("?") == 1
+        and "\n" not in text
+        and "<" not in text
+        and not SECOND_ASK.search(text)
+    )
 
 
 def _ask(client: anthropic.Anthropic, source: Source, model: str, style: Style) -> _Written:
