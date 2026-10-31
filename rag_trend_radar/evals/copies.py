@@ -30,7 +30,7 @@ def copies(
 
     `ranked` is any number of {question id: external ids} rankings; every document they hold is
     checked. A copy holds a label's own text (quoted or as its own), or shares `SHARED` of its
-    words and every one of its numbers; for a codes question, it holds the code as a whole token.
+    words and every one of its numbers.
     """
     wanted: dict[str, set[str]] = {q.id: set() for q in questions}
     for ranking in ranked:
@@ -43,19 +43,18 @@ def copies(
         found[q.id] = set(q.relevant) | {
             x
             for x in wanted[q.id] - set(q.relevant)
-            if any(is_copy(label, texts[x], q.code) for label in labels)
+            if any(is_copy(label, texts[x]) for label in labels)
         }
     return found
 
 
-def is_copy(label: tuple[str, str], other: tuple[str, str], code: str = "") -> bool:
-    """Whether `other` (own text, quoted text) carries `label`'s message, or its `code`."""
+def is_copy(label: tuple[str, str], other: tuple[str, str]) -> bool:
+    """Whether `other` (own text, quoted text) carries `label`'s message.
+
+    A codes question gets no rule of its own: another email naming the same deal needn't hold
+    the fact asked about (counting them added 123 "answers" and lifted codes from .909 to .990).
+    """
     own, _ = label
-    if code:
-        return (
-            re.search(rf"(?<![0-9A-Za-z]){re.escape(code)}(?![0-9A-Za-z])", " ".join(other))
-            is not None
-        )
     flat = _flat(own)
     if len(flat) >= MIN_CONTAINED and flat in _flat(" ".join(other)):
         return True

@@ -43,14 +43,7 @@ def test_a_copy_carries_the_label_or_its_words_and_every_number(
     assert is_copy(LABEL, other) is copy
 
 
-@pytest.mark.parametrize(
-    ("other", "copy"),
-    [
-        (("Deal #798411.1 was entered at $1.", ""), True),
-        (("Deal 7984110 is another one.", ""), False),
-        (("Re: the annuity", "> Deal 798411 for 9/13"), True),
-    ],
-    ids=["holds-it", "inside-a-longer-number", "in-a-quoted-reply"],
-)
-def test_for_a_code_question_the_code_decides(other: tuple[str, str], copy: bool) -> None:
-    assert is_copy(("Deal 798411 annuity", ""), other, code="798411") is copy
+def test_naming_the_same_deal_isnt_being_a_copy() -> None:
+    label = ("Deal 798411.1: I entered an annuity of $2,450 for the 30 mw flow on 9/13.", "")
+    other = ("Deal 798411 flows again on 9/14; volumes attached.", "")
+    assert not is_copy(label, other)
