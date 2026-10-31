@@ -4,7 +4,6 @@ import time
 from collections import defaultdict
 from collections.abc import Collection, Hashable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
-from pathlib import Path
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,7 +11,7 @@ from ranx import Qrels, Run, compare, evaluate
 from ranx.data_structures.report import Report
 
 from rag_trend_radar.db import connect as db
-from rag_trend_radar.schema import EvalQuestion, Judgment, RecallRun, SearchHit
+from rag_trend_radar.schema import EvalQuestion, SearchHit
 from rag_trend_radar.search import hybrid, keyword, vector
 from rag_trend_radar.search.rerank import rerank
 
@@ -82,36 +81,6 @@ def rankings(
         for method, hits in lists.items():
             ranked[method][q.id] = documents(hits)
     return dict(ranked), dict(latency)
-
-
-def relevant(
-    questions: Sequence[EvalQuestion], judgments: Sequence[Judgment] = ()
-) -> tuple[dict[str, set[str]], dict[str, set[str]]]:
-    """The strict labels and the judged ones, over the questions whose own label holds.
-
-    Strict: each question's original document only. Judged: plus every document the judge found
-    answering it, quote checked. A question whose own document the judge didn't find answering
-    it (cleaned away, or a bad question) is left out of both. With no judgments, both are the
-    original labels over every question.
-    """
-    if not judgments:
-        strict = {q.id: set(q.relevant) for q in questions}
-        return strict, strict
-    answering: dict[str, set[str]] = defaultdict(set)
-    for j in judgments:
-        if j.answers:
-            answering[j.question_id].add(j.external_id)
-    kept = [q for q in questions if set(q.relevant) <= answering[q.id]]
-    return (
-        {q.id: set(q.relevant) for q in kept},
-        {q.id: answering[q.id] for q in kept},
-    )
-
-
-def latest(directory: Path, questions: Path) -> RecallRun | None:
-    """The last run saved for a question file, or None."""
-    runs = sorted(directory.glob(f"{questions.stem}_*.json"))
-    return RecallRun.model_validate_json(runs[-1].read_text()) if runs else None
 
 
 @contextmanager
