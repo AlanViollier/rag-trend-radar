@@ -246,13 +246,15 @@ def recall(
     ef_search: int = db.EF_SEARCH,
     retype: Retype | None = None,
     limit: int = 0,
+    person: str = "",
 ) -> None:
     """recall@k and MRR for every search method over the labelled questions (free, local).
 
     `--model` and `--dims` score another embedding (embed it first), `--reranker` another
     cross-encoder; `--no-rerank-rows` skips the reranked rows. `--retype` asks the codes
     questions with their identifier typed another way; `--limit` keeps the first n questions,
-    to time a run before committing to it. Every run is saved under data/reports/recall/; a
+    to time a run before committing to it; `--person` asks every question as one person
+    (investigator: the whole store) instead of a mailbox that can read the answer. Every run is saved under data/reports/recall/; a
     second table also counts copies of a label (forwards, re-sends) as right answers.
     """
     settings = get_settings()
@@ -264,7 +266,7 @@ def recall(
     vectors = embed([q.question for q in labelled], model, dims, query=True)
     started = datetime.now(UTC)
     cross = (reranker or settings.rerank_model) if rerank_rows else None
-    by_id, latency = rankings(labelled, vectors, model, depth, cross, ef_search)
+    by_id, latency = rankings(labelled, vectors, model, depth, cross, ef_search, person or None)
     with db.connect() as conn:
         names: dict[int, str] = dict(
             conn.execute(
@@ -287,6 +289,7 @@ def recall(
             ef_search=ef_search,
             reranker=cross or "",
             retype=retype or "",
+            person=person,
             commit=_commit(),
             chunks=chunks,
             started=started,
@@ -320,6 +323,8 @@ def _scores(run: RecallRun, labelled: list[EvalQuestion]) -> None:
     title = f"{m.questions}, {m.model} @ {m.dims}, depth {m.depth}, ef_search {m.ef_search}"
     if m.retype:
         title += f", codes retyped ({m.retype})"
+    if m.person:
+        title += f", asked as {m.person}"
     show(f"\n[bold]{title}[/bold]: {len(labelled)} questions, strict labels")
     show(report(strict, run.rankings, METRICS))
     extra = sum(len(found[q]) - len(strict[q]) for q in strict)

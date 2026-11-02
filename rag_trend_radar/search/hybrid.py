@@ -36,7 +36,7 @@ def search(
         " UNION ALL"
         " SELECT id, row_number() OVER (ORDER BY score DESC) AS rank FROM ({vector}) vec"
         ") ranks GROUP BY id ORDER BY score DESC LIMIT %(k)s"
-    ).format(keyword=keyword.RANKED, vector=vector.ranked(model, len(query_vector)))
+    ).format(keyword=keyword.RANKED, vector=vector.ranked(conn, model, len(query_vector)))
     params = {
         "query": query,
         "vector": HalfVector(query_vector),

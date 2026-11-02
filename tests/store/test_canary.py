@@ -1,8 +1,8 @@
 """The canary: an employee's search never returns mail they can't read, by any path.
 
-A secret sits in kim-d's mailbox only. 300 crowd emails in rowe-p's mailbox have vectors nearer
-the query than the secret's, so an HNSW scan that filters after fetching its ~40 nearest would
-hand kim-d nothing (the bug of 2026-10-27).
+A secret sits in kim-d's mailbox only. 300 crowd emails in rowe-p's mailbox, sent after it, have
+vectors nearer the query than the secret's: an HNSW scan that filters after fetching its ~40
+nearest would hand nothing to anyone asking as of the secret's day (the bug of 2026-10-27).
 """
 
 from datetime import date, datetime
@@ -19,6 +19,7 @@ from psycopg.rows import TupleRow
 from rag_trend_radar import index
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.evals import leaks
+from rag_trend_radar.evals.retrieval import rankings
 from rag_trend_radar.schema import Document, EvalQuestion
 from rag_trend_radar.search import hybrid, keyword, vector
 from rag_trend_radar.search.ranking import cutoff
@@ -53,10 +54,10 @@ def _unit(v: NDArray[np.float32]) -> NDArray[np.float32]:
 @pytest.fixture(scope="module")
 def world(store: None) -> None:
     rng = np.random.default_rng(0)
-    early = datetime(2001, 9, 3, 9, 0, tzinfo=CHICAGO)
+    later = datetime(2001, 10, 3, 9, 0, tzinfo=CHICAGO)
     documents = [
         _document("secret", CANARY, "kim-d", CANARY_SENT),
-        *(_document(f"crowd-{n}", f"Gas schedule note {n}.", "rowe-p", early) for n in range(300)),
+        *(_document(f"crowd-{n}", f"Gas schedule note {n}.", "rowe-p", later) for n in range(300)),
     ]
     vectors = {
         "secret": _unit(np.array([0.8, 0.6, 0, 0, 0, 0, 0, 0], dtype=np.float32)),
@@ -133,18 +134,47 @@ def test_the_secret_exists_from_its_local_day_on() -> None:
 
 
 @pytest.mark.usefixtures("world")
-def test_a_filtered_hnsw_scan_still_reaches_the_one_readable_vector() -> None:
-    ## 300 nearer vectors kim-d can't read sit between the query and the secret.
-    with db.connect("kim-d") as conn:
+def test_a_filtered_hnsw_scan_still_reaches_the_one_vector_of_its_day() -> None:
+    ## 300 nearer vectors, all sent later, sit between the query and the secret.
+    with db.connect(db.INVESTIGATOR) as conn:
         _force_hnsw(conn)
         hits = vector.search(conn, QUERY, MODEL, date(2001, 9, 30), 5)
         plan = conn.execute(
-            sql.SQL("EXPLAIN {}").format(vector.ranked(MODEL, DIMS)),
+            sql.SQL("EXPLAIN {}").format(vector.ranked(conn, MODEL, DIMS)),
             {"vector": HalfVector(QUERY), "cutoff": cutoff(date(2001, 9, 30)), "depth": 5},
         ).fetchall()
     ## Without the HNSW index in the plan this test proves nothing: it would pass with the bug.
     assert any("embedding_idx" in line for (line,) in plan)
     assert [CANARY in hit.text for hit in hits] == [True]
+
+
+@pytest.mark.usefixtures("world")
+def test_an_employee_gets_all_their_vectors_and_only_theirs_without_the_index() -> None:
+    with db.connect("kim-d") as conn:
+        hits = vector.search(conn, QUERY, MODEL, date(2001, 9, 30), 5)
+        plan = conn.execute(
+            sql.SQL("EXPLAIN {}").format(vector.ranked(conn, MODEL, DIMS)),
+            {"vector": HalfVector(QUERY), "cutoff": cutoff(date(2001, 9, 30)), "depth": 5},
+        ).fetchall()
+    assert not any("embedding_idx" in line for (line,) in plan)
+    assert [CANARY in hit.text for hit in hits] == [True]
+    with db.connect("rowe-p") as conn:
+        assert len(vector.search(conn, QUERY, MODEL, date(2001, 12, 30), 301)) == 300
+
+
+@pytest.mark.usefixtures("world")
+def test_recall_asks_as_the_questions_own_person_unless_told_otherwise() -> None:
+    asked = EvalQuestion(
+        id="q-secret",
+        question="zephyr quokka",
+        as_of=date(2001, 9, 30),
+        person="kim-d",
+        relevant=("secret",),
+    )
+    own, _ = rankings([asked], np.stack([QUERY]), MODEL, 5, None)
+    other, _ = rankings([asked], np.stack([QUERY]), MODEL, 5, None, person="rowe-p")
+    assert own["vector"]["q-secret"]
+    assert not other["vector"]["q-secret"]
 
 
 @pytest.mark.usefixtures("world")
@@ -169,5 +199,6 @@ def test_the_leak_checks_catch_a_planted_leak() -> None:
         )
         secret, crowd = ids["secret"], ids["crowd-0"]
         assert leaks.unreadable(owner, "kim-d", [secret, crowd]) == [crowd]
-        assert leaks.too_late(owner, date(2001, 9, 9), [secret, crowd]) == [secret]
-        assert leaks.too_late(owner, date(2001, 9, 10), [secret, crowd]) == []
+        assert leaks.too_late(owner, date(2001, 9, 9), [secret]) == [secret]
+        assert leaks.too_late(owner, date(2001, 9, 10), [secret, crowd]) == [crowd]
+        assert leaks.too_late(owner, date(2001, 10, 3), [secret, crowd]) == []

@@ -163,6 +163,7 @@ class RunManifest(Record):
     ef_search: int
     reranker: str
     retype: str
+    person: str = ""
     commit: str
     chunks: int
     started: datetime

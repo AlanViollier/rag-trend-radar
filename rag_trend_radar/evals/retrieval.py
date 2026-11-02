@@ -55,8 +55,9 @@ def rankings(
     depth: int,
     reranker: str | None,
     ef_search: int = db.EF_SEARCH,
+    person: str | None = None,
 ) -> tuple[dict[str, dict[str, list[int]]], dict[str, list[float]]]:
-    """Every method's ranked documents per question, each question asked as its person.
+    """Every method's ranked documents per question, asked as `person` or else the question's own.
 
     Returns ({method: {question id: document ids}}, {method: milliseconds per question}). The
     reranker reorders the same `depth` candidates the method under it found, so its row shows
@@ -67,7 +68,7 @@ def rankings(
     latency: dict[str, list[float]] = defaultdict(list)
     for q, vector_ in zip(questions, vectors, strict=True):
         lists: dict[str, list[SearchHit]] = {}
-        with db.connect(q.person, ef_search=ef_search) as conn:
+        with db.connect(person or q.person, ef_search=ef_search) as conn:
             with _clock(latency["keyword"]):
                 lists["keyword"] = keyword.search(conn, q.question, q.as_of, depth)
             with _clock(latency["vector"]):
