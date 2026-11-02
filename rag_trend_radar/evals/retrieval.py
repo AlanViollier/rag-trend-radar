@@ -14,6 +14,7 @@ from rag_trend_radar.db import connect as db
 from rag_trend_radar.schema import EvalQuestion, SearchHit
 from rag_trend_radar.search import hybrid, keyword, vector
 from rag_trend_radar.search.collapse import collapse
+from rag_trend_radar.search.mix import RESULTS, mix
 from rag_trend_radar.search.rerank import rerank
 
 
@@ -82,6 +83,10 @@ def rankings(
                     lists[f"{under} + rerank"] = rerank(q.question, lists[under], reranker, depth)
             with _clock(latency["hybrid + rerank + collapse"]):
                 lists["hybrid + rerank + collapse"] = collapse(lists["hybrid + rerank"], depth)
+            with _clock(latency["what ask uses (+ press cap)"]):
+                lists["what ask uses (+ press cap)"] = mix(
+                    lists["hybrid + rerank + collapse"], RESULTS
+                )
         for method, hits in lists.items():
             ranked[method][q.id] = documents(hits)
     return dict(ranked), dict(latency)
