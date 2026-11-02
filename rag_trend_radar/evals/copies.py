@@ -6,12 +6,12 @@ another header, a deal number repeated in the next email about that deal. A stri
 those as misses.
 """
 
-import re
 from collections.abc import Iterable, Mapping, Sequence
 
 import psycopg
 from psycopg.rows import TupleRow
 
+from rag_trend_radar.ingest.dedup import numbers, words
 from rag_trend_radar.schema import EvalQuestion
 
 ## Shared words over all words (Jaccard) from which two texts are the same message re-sent.
@@ -61,9 +61,9 @@ def is_copy(label: tuple[str, str], other: tuple[str, str]) -> bool:
     ## Shared words alone take templates for copies (NYISO notices, calendar entries, one
     ## disclaimer under different notes); the part that differs is the numbers, so a re-send
     ## must carry every number the label does.
-    a, b = _words(own), _words(other[0])
+    a, b = words(own), words(other[0])
     shared = bool(a and b) and len(a & b) / len(a | b) >= SHARED
-    return shared and _numbers(own) <= _numbers(other[0])
+    return shared and numbers(own) <= numbers(other[0])
 
 
 def _texts(
@@ -82,11 +82,3 @@ def _labels(questions: Sequence[EvalQuestion]) -> set[str]:
 
 def _flat(text: str) -> str:
     return " ".join(text.split()).casefold()
-
-
-def _numbers(text: str) -> set[str]:
-    return set(re.findall(r"[0-9]+", text))
-
-
-def _words(text: str) -> set[str]:
-    return set(re.findall(r"[a-z0-9]+", text.lower()))

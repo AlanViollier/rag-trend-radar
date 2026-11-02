@@ -13,6 +13,7 @@ from ranx.data_structures.report import Report
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.schema import EvalQuestion, SearchHit
 from rag_trend_radar.search import hybrid, keyword, vector
+from rag_trend_radar.search.collapse import collapse
 from rag_trend_radar.search.rerank import rerank
 
 
@@ -79,6 +80,8 @@ def rankings(
             for under in ("vector", "hybrid"):
                 with _clock(latency[f"{under} + rerank"]):
                     lists[f"{under} + rerank"] = rerank(q.question, lists[under], reranker, depth)
+            with _clock(latency["hybrid + rerank + collapse"]):
+                lists["hybrid + rerank + collapse"] = collapse(lists["hybrid + rerank"], depth)
         for method, hits in lists.items():
             ranked[method][q.id] = documents(hits)
     return dict(ranked), dict(latency)

@@ -1,6 +1,7 @@
 """One document per distinct email, however many mailboxes hold a copy."""
 
 import hashlib
+import re
 from collections.abc import Iterable
 from datetime import datetime
 
@@ -20,6 +21,16 @@ def content_hash(subject: str, body: str) -> str:
 def text_hash(text: str) -> str:
     """Fingerprint of `text` up to whitespace: a quoted copy of a message matches the original."""
     return hashlib.blake2b(" ".join(text.split()).encode(), digest_size=16).hexdigest()
+
+
+def words(text: str) -> set[str]:
+    """The distinct lowercase words of `text`, digits included: two texts compared as sets."""
+    return set(re.findall(r"[a-z0-9]+", text.lower()))
+
+
+def numbers(text: str) -> set[str]:
+    """The distinct runs of digits in `text`: where a template's copies differ."""
+    return set(re.findall(r"[0-9]+", text))
 
 
 def resolve_sent_at(dates: Iterable[datetime]) -> tuple[datetime, bool]:
