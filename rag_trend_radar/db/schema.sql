@@ -139,8 +139,12 @@ CREATE TABLE chunks (
 -- A text embedded once is copied to every later chunk with the same text, found by its hash.
 CREATE INDEX chunks_text_hash ON chunks (text_hash);
 
--- BM25 keyword index (pg_search).
-CREATE INDEX chunks_bm25 ON chunks USING bm25 (id, text) WITH (key_field = 'id');
+-- BM25 keyword index (pg_search). Common words out and word endings folded: "the" matched 318k
+-- chunks a question, and "employee" missed "employees". Same scores on 295 questions, hybrid
+-- search 10-35% faster, index 132 -> 109 MB (2026-11-02). The same options apply to queries.
+CREATE INDEX chunks_bm25 ON chunks USING bm25
+    (id, (text::pdb.unicode_words('stemmer=english', 'stopwords_language=english')))
+    WITH (key_field = 'id');
 
 -- One vectors table per embedding model, created by index.py when a model is first used:
 --   CREATE TABLE vectors_<model> (
