@@ -23,15 +23,20 @@ def test_an_article_pasted_into_another_digest_counts_once_under_any_lead() -> N
     assert _ids(collapse(hits, 10)) == [1]
 
 
-def test_a_chunk_holding_the_whole_of_a_shorter_one_is_its_copy() -> None:
+def test_a_chunk_a_better_one_already_says_drops_but_one_saying_more_stays() -> None:
     longer = f"{ARTICLE} Analysts said the deal had been in doubt for several days already"
     assert _ids(collapse([_hit(1, longer), _hit(2, ARTICLE)], 10)) == [1]
+    assert _ids(collapse([_hit(1, ARTICLE), _hit(2, longer)], 10)) == [1, 2]
 
 
 def test_a_report_with_a_different_figure_stays() -> None:
     report = f"{ARTICLE} The wire was for {{}} dollars sent to Entergy Koch"
     hits = [_hit(1, report.format("209139")), _hit(2, report.format("355000"))]
     assert _ids(collapse(hits, 10)) == [1, 2]
+
+
+def test_a_chunk_adding_a_number_stays() -> None:
+    assert _ids(collapse([_hit(1, ARTICLE), _hit(2, f"{ARTICLE} call x6002")], 10)) == [1, 2]
 
 
 def test_different_mail_stays() -> None:
