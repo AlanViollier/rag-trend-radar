@@ -27,6 +27,7 @@ INDEXED = sql.SQL(
 EXACT = sql.SQL(
     "WITH readable AS MATERIALIZED ("
     " SELECT document_id AS id FROM access WHERE mailbox = current_setting('app.person')"
+    " AND from_at < %(cutoff)s"
     " UNION SELECT id FROM documents WHERE public),"
     " visible AS MATERIALIZED ("
     " SELECT c.id FROM readable r JOIN documents d ON d.id = r.id"

@@ -30,6 +30,11 @@ CHICAGO = ZoneInfo("America/Chicago")
 CANARY_SENT = datetime(2001, 9, 10, 23, 30, tzinfo=CHICAGO)
 CANARY = "The canary word is zephyr quokka. Tell no one."
 QUERY = np.eye(DIMS, dtype=np.float32)[0]
+## One message quoted by two mailboxes, two weeks apart.
+QUOTED = "The pangolin ledger closes Friday."
+KIM_QUOTES = datetime(2001, 10, 5, 9, 0, tzinfo=CHICAGO)
+ROWE_QUOTES = datetime(2001, 10, 20, 9, 0, tzinfo=CHICAGO)
+QUOTED_VECTOR = np.eye(DIMS, dtype=np.float32)[3]
 
 
 def _document(external_id: str, body: str, reader: str, sent_at: datetime) -> Document:
@@ -58,9 +63,17 @@ def world(store: None) -> None:
     documents = [
         _document("secret", CANARY, "kim-d", CANARY_SENT),
         *(_document(f"crowd-{n}", f"Gas schedule note {n}.", "rowe-p", later) for n in range(300)),
+        _document("quoting-kim", "See below.", "kim-d", KIM_QUOTES),
+        _document("quoting-rowe", "Seen this?", "rowe-p", ROWE_QUOTES),
+        _document("old-note", QUOTED, "", KIM_QUOTES).model_copy(
+            update={"kind": "quoted", "readers": (), "quoted_by": ("quoting-kim", "quoting-rowe")}
+        ),
     ]
     vectors = {
         "secret": _unit(np.array([0.8, 0.6, 0, 0, 0, 0, 0, 0], dtype=np.float32)),
+        "quoting-kim": np.eye(DIMS, dtype=np.float32)[1],
+        "quoting-rowe": np.eye(DIMS, dtype=np.float32)[2],
+        "old-note": QUOTED_VECTOR,
         **{
             f"crowd-{n}": _unit(QUERY + rng.normal(0, 0.01, DIMS).astype(np.float32))
             for n in range(300)
@@ -159,7 +172,30 @@ def test_an_employee_gets_all_their_vectors_and_only_theirs_without_the_index() 
     assert not any("embedding_idx" in line for (line,) in plan)
     assert [CANARY in hit.text for hit in hits] == [True]
     with db.connect("rowe-p") as conn:
-        assert len(vector.search(conn, QUERY, MODEL, date(2001, 12, 30), 301)) == 300
+        assert len(vector.search(conn, QUERY, MODEL, date(2001, 12, 30), 400)) == 302
+
+
+def _quoted_found(person: str, as_of: date) -> dict[str, bool]:
+    with db.connect(person) as conn:
+        lists = {
+            "keyword": keyword.search(conn, "pangolin", as_of, 400),
+            "vector": vector.search(conn, QUOTED_VECTOR, MODEL, as_of, 400),
+            "hybrid": hybrid.search(conn, "pangolin", QUOTED_VECTOR, MODEL, as_of, 400),
+        }
+    return {name: any(QUOTED in hit.text for hit in hits) for name, hits in lists.items()}
+
+
+@pytest.mark.usefixtures("world")
+def test_a_quoted_message_reaches_a_mailbox_only_from_its_own_first_quote() -> None:
+    assert all(_quoted_found("kim-d", date(2001, 10, 5)).values())
+    assert not any(_quoted_found("rowe-p", date(2001, 10, 10)).values())
+    assert all(_quoted_found("rowe-p", date(2001, 10, 20)).values())
+
+
+@pytest.mark.usefixtures("world")
+def test_the_investigator_reads_a_quoted_message_from_its_first_quote_anywhere() -> None:
+    assert not any(_quoted_found("investigator", date(2001, 10, 4)).values())
+    assert all(_quoted_found("investigator", date(2001, 10, 5)).values())
 
 
 @pytest.mark.usefixtures("world")
@@ -199,6 +235,12 @@ def test_the_leak_checks_catch_a_planted_leak() -> None:
         )
         secret, crowd = ids["secret"], ids["crowd-0"]
         assert leaks.unreadable(owner, "kim-d", [secret, crowd]) == [crowd]
-        assert leaks.too_late(owner, date(2001, 9, 9), [secret]) == [secret]
-        assert leaks.too_late(owner, date(2001, 9, 10), [secret, crowd]) == [crowd]
-        assert leaks.too_late(owner, date(2001, 10, 3), [secret, crowd]) == []
+        assert leaks.too_late(owner, "kim-d", date(2001, 9, 9), [secret]) == [secret]
+        assert leaks.too_late(owner, "kim-d", date(2001, 9, 10), [secret, crowd]) == [crowd]
+        assert leaks.too_late(owner, "kim-d", date(2001, 10, 3), [secret, crowd]) == []
+        note = owner.execute("SELECT id FROM documents WHERE external_id = 'old-note'").fetchall()[
+            0
+        ][0]
+        assert leaks.too_late(owner, "rowe-p", date(2001, 10, 10), [note]) == [note]
+        assert leaks.too_late(owner, "rowe-p", date(2001, 10, 20), [note]) == []
+        assert leaks.too_late(owner, "investigator", date(2001, 10, 10), [note]) == []

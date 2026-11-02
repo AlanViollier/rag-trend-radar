@@ -41,7 +41,8 @@ def check(
     Permission: asked as a mailbox that can't read the labelled document, every result must be
     in that mailbox's `access` rows (the policy and the table agree). Time: asked as the question's
     person on the day before the labelled document was sent, every result must be sent before
-    that day ended (each search applies the cutoff itself; nothing in the database enforces it).
+    that day ended, and every quoted message in that person's mailbox by then (each search applies
+    the cutoff itself; nothing in the database enforces it).
     """
     checked: dict[str, int] = defaultdict(int)
     leaks: list[Leak] = []
@@ -68,7 +69,7 @@ def check(
                     bad = (
                         unreadable(owner, person, ids)
                         if kind == "permission"
-                        else too_late(owner, day, ids)
+                        else too_late(owner, person, day, ids)
                     )
                     leaks += [
                         Leak(
@@ -92,12 +93,18 @@ def unreadable(
 
 
 def too_late(
-    owner: psycopg.Connection[TupleRow], day: date, document_ids: Sequence[int]
+    owner: psycopg.Connection[TupleRow], person: str, day: date, document_ids: Sequence[int]
 ) -> list[int]:
-    """The documents sent after `day` ended, read as the owner."""
+    """Documents `person` couldn't have read when `day` ended, read as the owner.
+
+    Sent after it, or a quoted message whose first quote in that mailbox came after it.
+    """
     rows = owner.execute(
-        "SELECT id FROM documents WHERE id = ANY(%s) AND sent_at >= %s ORDER BY id",
-        (list(document_ids), cutoff(day)),
+        "SELECT d.id FROM documents d WHERE d.id = ANY(%(ids)s) AND (d.sent_at >= %(cutoff)s"
+        " OR (d.kind = 'quoted' AND %(person)s <> 'investigator' AND NOT EXISTS ("
+        " SELECT 1 FROM access a WHERE a.document_id = d.id AND a.mailbox = %(person)s"
+        " AND a.from_at < %(cutoff)s))) ORDER BY d.id",
+        {"ids": list(document_ids), "cutoff": cutoff(day), "person": person},
     ).fetchall()
     return [d for (d,) in rows]
 

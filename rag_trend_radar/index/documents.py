@@ -55,8 +55,9 @@ def upsert_documents(
             if doc.kind != "quoted":
                 cur.execute("DELETE FROM access WHERE document_id = %s", (document_id,))
                 cur.execute(
-                    "INSERT INTO access (document_id, mailbox) SELECT %s, unnest(%s::text[])",
-                    (document_id, list(doc.readers)),
+                    "INSERT INTO access (document_id, mailbox, from_at)"
+                    " SELECT %s, unnest(%s::text[]), %s",
+                    (document_id, list(doc.readers), doc.sent_at),
                 )
             if doc.paths:
                 cur.execute(
@@ -183,12 +184,14 @@ def _record_quotes(
 
 
 def _recount_access(cur: psycopg.Cursor[TupleRow], quoted_ids: list[int]) -> None:
-    ## A quoted message is readable by every mailbox holding an email that quotes it, from any
-    ## day: recounted from quotes, never added to.
+    ## A quoted message is readable by every mailbox holding an email that quotes it, from the
+    ## first of those emails on: recounted from quotes, never added to.
     cur.execute("DELETE FROM access WHERE document_id = ANY(%s)", (quoted_ids,))
     cur.execute(
-        "INSERT INTO access (document_id, mailbox) SELECT DISTINCT q.quoted_id, a.mailbox"
-        " FROM quotes q JOIN access a ON a.document_id = q.email_id WHERE q.quoted_id = ANY(%s)",
+        "INSERT INTO access (document_id, mailbox, from_at)"
+        " SELECT q.quoted_id, a.mailbox, min(a.from_at)"
+        " FROM quotes q JOIN access a ON a.document_id = q.email_id WHERE q.quoted_id = ANY(%s)"
+        " GROUP BY q.quoted_id, a.mailbox",
         (quoted_ids,),
     )
 

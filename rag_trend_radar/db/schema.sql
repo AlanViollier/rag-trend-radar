@@ -108,10 +108,13 @@ CREATE TABLE employees (
 );
 
 -- Who may see which document: every mailbox a copy sat in; for a quoted message, every mailbox
--- holding an email that quotes it. Row-level security below reads it.
+-- holding an email that quotes it. Row-level security below reads it. `from_at` is when that
+-- mailbox could first read it: an email's date, or the mailbox's first quote of a quoted message,
+-- so a search as of an earlier day doesn't show a mailbox what it hadn't received yet.
 CREATE TABLE access (
     document_id bigint REFERENCES documents (id) ON DELETE CASCADE,
     mailbox     text REFERENCES employees (mailbox),
+    from_at     timestamptz NOT NULL,
     PRIMARY KEY (document_id, mailbox)
 );
 -- A reader's rows, found without reading everyone's (row-level security asks this every search).
