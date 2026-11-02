@@ -117,6 +117,7 @@ class SearchHit(Record):
     document_id: int
     text: str
     score: float
+    context: str = ""  # what a short reply quotes, for the answer; never searched or scored
 
 
 class Citation(Record):

@@ -29,6 +29,7 @@ from rag_trend_radar.ingest.chunk import MAX_TOKENS, pieces
 from rag_trend_radar.schema import EvalQuestion, FactQuestion, RecallRun, RunManifest
 from rag_trend_radar.search import hybrid
 from rag_trend_radar.search.collapse import collapse
+from rag_trend_radar.search.context import with_quotes
 from rag_trend_radar.search.mix import RESULTS, mix
 from rag_trend_radar.search.ranking import last_day
 from rag_trend_radar.search.rerank import rerank
@@ -179,7 +180,7 @@ def ask(question: str, person: str = "investigator", as_of: str = "") -> None:
         day = date.fromisoformat(as_of) if as_of else last_day(conn)
         candidates = hybrid.search(conn, question, query_vector, model, day, hybrid.DEPTH)
         reranked = rerank(question, candidates, settings.rerank_model, top=hybrid.DEPTH)
-        hits = mix(collapse(reranked, hybrid.DEPTH), RESULTS)
+        hits = with_quotes(conn, mix(collapse(reranked, hybrid.DEPTH), RESULTS))
         if not hits:
             show(f"Nothing in {person}'s mail up to {day} matches.")
             return
@@ -343,7 +344,7 @@ def _scores(run: RecallRun, labelled: list[EvalQuestion]) -> None:
 
 
 @app.command()
-def facts(path: Path = HARD_QUESTIONS) -> None:
+def facts(path: Path = HARD_QUESTIONS, depth: int = hybrid.DEPTH) -> None:
     """Whether the results hold each hard question's facts, before and after collapse and caps (free).
 
     No answer is written and no API is called: code looks for the facts in the 10 chunks an
@@ -366,10 +367,10 @@ def facts(path: Path = HARD_QUESTIONS) -> None:
     passed = {"raw": 0, "ask": 0}
     for q, vector_ in zip(questions, vectors, strict=True):
         with db.connect(q.person) as conn:
-            candidates = hybrid.search(conn, q.question, vector_, model, q.as_of, hybrid.DEPTH)
-        reranked = rerank(q.question, candidates, settings.rerank_model, top=hybrid.DEPTH)
+            candidates = hybrid.search(conn, q.question, vector_, model, q.as_of, depth)
+        reranked = rerank(q.question, candidates, settings.rerank_model, top=depth)
         raw = check_facts(q, reranked[:RESULTS])
-        ask_ = check_facts(q, mix(collapse(reranked, hybrid.DEPTH), RESULTS))
+        ask_ = check_facts(q, mix(collapse(reranked, depth), RESULTS))
         for name, result in (("raw", raw), ("ask", ask_)):
             passed[name] += not (q.absent or result.missing or result.leaked)
         table.add_row(
