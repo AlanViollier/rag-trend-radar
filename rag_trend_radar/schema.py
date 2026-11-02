@@ -152,6 +152,29 @@ class EvalQuestion(Record):
     code: str = ""
 
 
+class FactQuestion(Record):
+    """A hard question: what its results must hold, must not hold, or that nothing should match."""
+
+    id: str
+    question: str
+    as_of: date
+    person: str = "investigator"
+    facts: tuple[str, ...] = ()
+    needs_mail: bool = False
+    forbid: tuple[str, ...] = ()
+    absent: bool = False
+
+
+class FactResult(Record):
+    """One hard question checked against one list of results."""
+
+    id: str
+    missing: tuple[str, ...]
+    leaked: tuple[str, ...]
+    top_score: float
+    mail: int
+
+
 class RunManifest(Record):
     """What a recall run measured, so every number in the README traces back to a run."""
 

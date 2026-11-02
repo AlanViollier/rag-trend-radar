@@ -1,0 +1,32 @@
+{"id":"h-kaminski-valuations","question":"Why did the head of research refuse to stand behind his group's numbers on the LJM deals in October 2001?","as_of":"2002-12-31","facts":["cannot support","legal documents"],"needs_mail":true}
+{"id":"h-kaminski-mailbox","question":"Did anyone notice messages about the Raptor valuations going missing from their Enron account, and where was a copy kept?","as_of":"2002-12-31","facts":["disappeared from my mailbox","PC at home"],"needs_mail":true}
+{"id":"h-chewco-share","question":"After Chewco bought into JEDI I, how much of JEDI I did Enron entities hold in total?","as_of":"2002-12-31","facts":["96\\.12"],"needs_mail":true}
+{"id":"h-doc-hold","question":"On what date did the company tell staff to stop destroying records because of the partnership lawsuits?","as_of":"2002-12-31","facts":["destruction policies are suspended","2001-10-2[56]"],"needs_mail":true}
+{"id":"h-skilling-official","question":"What explanation did the chairman give staff when the CEO left in August 2001?","as_of":"2002-12-31","facts":["personal reasons","Organizational Announcement"],"needs_mail":true}
+{"id":"h-who-complained","question":"Which senior people objected to the LJM conflicts, according to the anonymous letter to the chairman?","as_of":"2002-12-31","facts":["McMahon","Baxter"],"needs_mail":true}
+{"id":"h-crooked","question":"What did a manager in the principal investments group say about wishing the firm would be found out?","as_of":"2002-12-31","facts":["crooked company"],"needs_mail":true}
+{"id":"h-freeze-notice","question":"What dates did the internal notice give for employees losing access to their retirement plan during the change of administrator?","as_of":"2002-12-31","facts":["October 26","November 20"],"needs_mail":true}
+{"id":"h-freeze-end","question":"When did employees actually get retirement account access back after the administrator change?","as_of":"2002-12-31","facts":["November 13"],"needs_mail":true}
+{"id":"h-blockbuster-term","question":"How long was the movie-on-demand contract the broadband unit signed in July 2000?","as_of":"2002-12-31","facts":["20-year"],"needs_mail":true}
+{"id":"h-dabhol-share","question":"What stake did the company say it had in the Indian power plant when rights groups accused it of abuses?","as_of":"2002-12-31","facts":["50 percent"],"needs_mail":true}
+{"id":"h-dabhol-response","question":"How did the two top executives respond to staff about the human rights report on the India project?","as_of":"2002-12-31","facts":["without basis"],"needs_mail":true}
+{"id":"h-barge","question":"How was the barge deal in Nigeria going in the middle of 2000?","as_of":"2002-12-31","facts":["back on course"],"needs_mail":true}
+{"id":"h-clean-sweep","question":"Were staff told to get rid of papers before moving buildings in the fall of 2001, and how?","as_of":"2002-12-31","facts":["clean sweep|shredco","shred"],"needs_mail":true}
+{"id":"h-bonus-list","question":"Who was trying to find out which people shared the big payout just before the bankruptcy?","as_of":"2002-12-31","facts":["55MM"],"needs_mail":true}
+{"id":"h-retention-plan","question":"What is the most the 2002 plan to keep staff during the asset sales could cost?","as_of":"2002-12-31","facts":["130 million"],"needs_mail":true}
+{"id":"h-under-a-dollar","question":"How did someone inside react with delight to the share price dropping under a dollar with huge volume?","as_of":"2002-12-31","facts":["gone to heaven"],"needs_mail":true}
+{"id":"h-espeak","question":"When was the chairman's open online session with staff in September 2001?","as_of":"2002-12-31","facts":["espeak","September 26"],"needs_mail":true}
+{"id":"h-memo-words","question":"What was the most quoted warning in the letter a vice president wrote to the chairman after the CEO left?","as_of":"2002-12-31","facts":["implode in a wave"]}
+{"id":"h-dynegy-value","question":"What was the takeover by its smaller rival worth when it was announced in November 2001?","as_of":"2002-12-31","facts":["\\$25 billion|\\$23 billion|\\$9 billion|\\$8bn|\\$7\\.8 billion"]}
+{"id":"h-bonus-amount","question":"How much was paid out in bonuses just before the bankruptcy, and to about how many people?","as_of":"2002-12-31","facts":["\\$55 million","500"]}
+{"id":"h-andersen-people","question":"Which people at the auditor were tied to the destruction of records and the instruction behind it?","as_of":"2002-12-31","facts":["Duncan","Temple"]}
+{"id":"h-chewco-who","question":"Which Enron employee ran the partnership named after a Star Wars character?","as_of":"2002-12-31","facts":["Kopper"]}
+{"id":"h-lockdown-press","question":"What date did news reports give for the start of the retirement plan freeze?","as_of":"2002-12-31","facts":["Oct\\. 28|Oct\\. 17"]}
+{"id":"h-layoffs","question":"How many people lost their jobs right after the bankruptcy filing?","as_of":"2002-12-31","facts":["4,000|4,500"]}
+{"id":"h-severance-cap","question":"What was the limit on what each laid-off worker could get as severance without the judge's approval?","as_of":"2002-12-31","facts":["\\$4,500"]}
+{"id":"h-skilling-real","question":"What did the former CEO tell the Wall Street Journal was the main reason he quit?","as_of":"2002-12-31","facts":["stock-price plunge|plummeting stock price"]}
+{"id":"h-absent-strategies","question":"Explain how the Death Star and Get Shorty trading strategies worked in California.","as_of":"2002-12-31","absent":true}
+{"id":"h-absent-made-up","question":"What did the board decide about buying a majority of the Chicago Cubs in 2001?","as_of":"2002-12-31","absent":true}
+{"id":"h-time-memo","question":"Has anyone warned the chairman the company could implode in a wave of accounting scandals?","as_of":"2001-08-01","forbid":["implode in a wave"]}
+{"id":"h-time-skilling","question":"Why did Jeff Skilling resign as CEO?","as_of":"2001-08-13","forbid":["is leaving Enron","resignation"]}
+{"id":"h-time-bankruptcy","question":"How many people were laid off after Enron filed for bankruptcy?","as_of":"2001-11-15","forbid":["filed for bankruptcy protection on"]}

@@ -21,11 +21,12 @@ from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.embed import embed, token_counter
 from rag_trend_radar.evals.copies import copies
+from rag_trend_radar.evals.facts import check as check_facts
 from rag_trend_radar.evals.leaks import check as check_leaks
 from rag_trend_radar.evals.questions import Retype, Style, code_holds, retyped, sample, write
 from rag_trend_radar.evals.retrieval import rankings, report
 from rag_trend_radar.ingest.chunk import MAX_TOKENS, pieces
-from rag_trend_radar.schema import EvalQuestion, RecallRun, RunManifest
+from rag_trend_radar.schema import EvalQuestion, FactQuestion, RecallRun, RunManifest
 from rag_trend_radar.search import hybrid
 from rag_trend_radar.search.collapse import collapse
 from rag_trend_radar.search.mix import RESULTS, mix
@@ -35,6 +36,7 @@ from rag_trend_radar.search.rerank import rerank
 ## How many reranked chunks Claude reads: enough for an answer spread over a thread, few enough
 ## that the bill stays at about a cent a question.
 QUESTIONS = Path("evals/questions.jsonl")
+HARD_QUESTIONS = Path("evals/questions_hard.jsonl")
 ## hit_rate@1: an answer is first. @10: Claude gets to read one. @50: the reranker gets to see
 ## one. MRR@10: 1 / the first answer's rank, so second place counts half. Not recall@k: with
 ## judged labels a question can have several answers, and recall would count the share found.
@@ -338,6 +340,49 @@ def _scores(run: RecallRun, labelled: list[EvalQuestion]) -> None:
     for method, times in run.latency_ms.items():
         timing.add_row(method, *(f"{np.percentile(times, p):.0f}" for p in (50, 95)))
     show(timing)
+
+
+@app.command()
+def facts(path: Path = HARD_QUESTIONS) -> None:
+    """Whether the results hold each hard question's facts, before and after collapse and caps (free).
+
+    No answer is written and no API is called: code looks for the facts in the 10 chunks an
+    answer would be written from.
+    """
+    settings = get_settings()
+    model, dims = settings.embedding_model, settings.embedding_dims
+    questions = [FactQuestion.model_validate_json(x) for x in path.read_text().splitlines()]
+    vectors = embed([q.question for q in questions], model, dims, query=True)
+    table = Table(title=f"{len(questions)} hard questions, 10 chunks each")
+    for column in (
+        "question",
+        "raw",
+        "ask",
+        "mail raw → ask",
+        "top score",
+        "what's missing in ask",
+    ):
+        table.add_column(column, justify="right" if column == "top score" else "left")
+    passed = {"raw": 0, "ask": 0}
+    for q, vector_ in zip(questions, vectors, strict=True):
+        with db.connect(q.person) as conn:
+            candidates = hybrid.search(conn, q.question, vector_, model, q.as_of, hybrid.DEPTH)
+        reranked = rerank(q.question, candidates, settings.rerank_model, top=hybrid.DEPTH)
+        raw = check_facts(q, reranked[:RESULTS])
+        ask_ = check_facts(q, mix(collapse(reranked, hybrid.DEPTH), RESULTS))
+        for name, result in (("raw", raw), ("ask", ask_)):
+            passed[name] += not (q.absent or result.missing or result.leaked)
+        table.add_row(
+            q.id,
+            "-" if q.absent else "ok" if not (raw.missing or raw.leaked) else "no",
+            "-" if q.absent else "ok" if not (ask_.missing or ask_.leaked) else "no",
+            f"{raw.mail} → {ask_.mail}",
+            f"{raw.top_score:.2f}",
+            ", ".join((*ask_.missing, *ask_.leaked)),
+        )
+    show(table)
+    checkable = sum(not q.absent for q in questions)
+    show(f"passed: raw {passed['raw']}, ask {passed['ask']} of {checkable}")
 
 
 @app.command()
