@@ -28,7 +28,8 @@ _PRESS_BODY = re.compile(
     r"\(Dow Jones\)|\(AP\)|\(Bloomberg\)|\(Reuters\)|Associated Press|Copyright (\(c\)|\?|©)"
 )
 _BULK_SUBJECT = re.compile(
-    r"commissioner\.com|e-reports|real deals|net saaver|news alert|schedule crawler",
+    r"commissioner\.com|e-reports|real deals|net saaver|news alert|schedule crawler"
+    r"|demand ken lay donate",
     re.IGNORECASE,
 )
 _BULK_SENDER = re.compile(

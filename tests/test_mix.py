@@ -22,8 +22,21 @@ def _hit(chunk_id: int, text: str, score: float) -> SearchHit:
         ("Subject: Hi\nFrom: noreply@ccomad3.uu.commissioner.com\n\nWeek 8 scores.", Source.BULK),
         ("Subject: prices\n\nCheck Bloomberg for the close.", Source.MAIL),
         ("Mary: can someone else handle this?", Source.MAIL),
+        (
+            "Subject: Demand Ken Lay Donate Proceeds from Enron Stock Sales\n\nDear Mr. Lay,",
+            Source.BULK,
+        ),
     ],
-    ids=["digest", "person", "deals", "forwarded-wire", "sender", "terminal", "no-lead"],
+    ids=[
+        "digest",
+        "person",
+        "deals",
+        "forwarded-wire",
+        "sender",
+        "terminal",
+        "no-lead",
+        "form-letter",
+    ],
 )
 def test_a_chunks_source_comes_from_its_own_text(text: str, kind: Source) -> None:
     assert source(text) is kind
