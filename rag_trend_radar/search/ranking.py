@@ -35,9 +35,13 @@ def hits(
     """Run a query yielding (id, score) and attach each chunk's document and text, best first."""
     rows = conn.execute(
         sql.SQL(
-            "SELECT r.id, c.document_id, c.text, r.score FROM ({}) r"
+            "SELECT r.id, c.document_id, left(c.text, length(c.text) - c.quote_chars),"
+            " right(c.text, greatest(c.quote_chars - 2, 0)), r.score FROM ({}) r"
             " JOIN chunks c ON c.id = r.id ORDER BY r.score DESC, r.id"
         ).format(ranked),
         params,
     ).fetchall()
-    return [SearchHit(chunk_id=i, document_id=d, text=t, score=float(s)) for i, d, t, s in rows]
+    return [
+        SearchHit(chunk_id=i, document_id=d, text=t, context=q, score=float(s))
+        for i, d, t, q, s in rows
+    ]

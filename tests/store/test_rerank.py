@@ -47,6 +47,12 @@ def test_another_question_scores_the_same_chunks_afresh(encoder: _Counting) -> N
     assert encoder.pairs == 4
 
 
+def test_the_reranker_reads_a_short_replys_quote(encoder: _Counting) -> None:
+    short = SearchHit(chunk_id=1, document_id=1, text="ok", context="a long quote", score=0.0)
+    longer = SearchHit(chunk_id=2, document_id=2, text="a longer body", score=0.0)
+    assert [h.chunk_id for h in rerank("q", [longer, short], "m", top=2)] == [1, 2]
+
+
 @pytest.mark.usefixtures("store")
 def test_readers_cant_touch_the_score_cache() -> None:
     with db.connect("investigator") as conn, pytest.raises(psycopg.errors.InsufficientPrivilege):

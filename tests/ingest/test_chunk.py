@@ -3,7 +3,14 @@ from datetime import datetime
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from rag_trend_radar.ingest.chunk import chunk, header, pieces
+from rag_trend_radar.ingest.chunk import (
+    QUOTE_CHARS,
+    SHORT_REPLY,
+    chunk,
+    header,
+    pieces,
+    reply_quote,
+)
 from rag_trend_radar.schema import Document
 
 
@@ -73,3 +80,55 @@ def test_pieces_fit_and_lose_nothing(text: str, max_tokens: int) -> None:
     pieces = chunk(text, _words, lead=lead, max_tokens=max_tokens)
     assert all(piece.startswith(lead + "\n\n") and _words(piece) <= max_tokens for piece in pieces)
     assert [w for piece in pieces for w in piece.removeprefix(lead).split()] == text.split()
+
+
+def _reply(body: str, quoted: str, kind: str = "email") -> Document:
+    return Document(
+        source="test",
+        external_id="r",
+        kind=kind,
+        sent_at=datetime(2001, 9, 3),
+        title="Re: Budget",
+        author="",
+        body=body,
+        quoted=quoted,
+        public=False,
+        readers=(),
+    )
+
+
+ABOVE = "-----Original Message-----\nFrom: Rowe, Pat\nSubject: Budget\n\nDo we approve the budget?"
+
+
+def test_a_short_reply_carries_what_it_answered_without_the_quote_header() -> None:
+    assert reply_quote(_reply("Yes, approved.", ABOVE)) == "Do we approve the budget?"
+    assert pieces(_reply("Yes, approved.", ABOVE), len, frozenset())[0].endswith(
+        "Yes, approved.\n\nDo we approve the budget?"
+    )
+
+
+def test_longer_mail_a_quoted_document_and_mail_quoting_nothing_stay_as_they_are() -> None:
+    assert reply_quote(_reply("x" * SHORT_REPLY, ABOVE)) == ""
+    assert reply_quote(_reply("Yes.", ABOVE, kind="quoted")) == ""
+    assert reply_quote(_reply("Yes.", "")) == ""
+
+
+def test_a_long_quote_is_cut() -> None:
+    assert (
+        len(
+            reply_quote(
+                _reply("Yes.", f"-----Original Message-----\n\n{'y' * (QUOTE_CHARS + 500)}")
+            )
+        )
+        == QUOTE_CHARS
+    )
+
+
+def test_a_quote_that_wont_fit_the_budget_is_left_out() -> None:
+    assert pieces(_reply("Yes.", ABOVE), len, frozenset(), max_tokens=60) == [
+        "Subject: Re: Budget\nDate: 2001-09-03\n\nYes."
+    ]
+
+
+def test_a_reply_with_no_text_of_its_own_has_no_pieces() -> None:
+    assert pieces(_reply("", ABOVE), len, frozenset()) == []

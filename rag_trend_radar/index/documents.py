@@ -7,6 +7,7 @@ import psycopg
 from psycopg import sql
 from psycopg.rows import TupleRow
 
+from rag_trend_radar.ingest.chunk import reply_quote
 from rag_trend_radar.ingest.dedup import text_hash
 from rag_trend_radar.schema import Document, EmailHeaders
 
@@ -70,7 +71,7 @@ def upsert_documents(
                 continue
             texts = pieces(doc)
             if [text_hash(t) for t in texts] != chunked.get(doc.external_id, []):
-                written += _rechunk(cur, document_id, texts)
+                written += _rechunk(cur, document_id, texts, reply_quote(doc))
         _record_quotes(cur, live, ids)
     return written
 
@@ -196,12 +197,18 @@ def _recount_access(cur: psycopg.Cursor[TupleRow], quoted_ids: list[int]) -> Non
     )
 
 
-def _rechunk(cur: psycopg.Cursor[TupleRow], document_id: int, texts: list[str]) -> int:
+def _rechunk(cur: psycopg.Cursor[TupleRow], document_id: int, texts: list[str], quote: str) -> int:
     ## Deleting the chunks takes their vectors with them (ON DELETE CASCADE).
     cur.execute("DELETE FROM chunks WHERE document_id = %s", (document_id,))
     cur.execute(
-        "INSERT INTO chunks (document_id, position, text, text_hash)"
-        " SELECT %s, n - 1, t, h FROM unnest(%s::text[], %s::text[]) WITH ORDINALITY AS u(t, h, n)",
-        (document_id, texts, [text_hash(t) for t in texts]),
+        "INSERT INTO chunks (document_id, position, text, text_hash, quote_chars)"
+        " SELECT %s, n - 1, t, h, q"
+        " FROM unnest(%s::text[], %s::text[], %s::int[]) WITH ORDINALITY AS u(t, h, q, n)",
+        (
+            document_id,
+            texts,
+            [text_hash(t) for t in texts],
+            [len(quote) + 2 if quote and t.endswith(f"\n\n{quote}") else 0 for t in texts],
+        ),
     )
     return len(texts)

@@ -64,3 +64,12 @@ def test_collapse_keeps_order_and_settles_after_one_pass(bodies: list[str]) -> N
     once = collapse(hits, 10)
     assert _ids(once) == sorted(_ids(once))
     assert collapse(once, 10) == once
+
+
+def test_replies_to_one_message_are_compared_by_their_own_words() -> None:
+    above = (
+        "Do we approve the Doorstep budget of four million dollars for the Houston office this year"
+    )
+    yes = _hit(1, "Yes, approved.").model_copy(update={"context": above})
+    no = _hit(2, "No, rejected.").model_copy(update={"context": above})
+    assert _ids(collapse([yes, no], 10)) == [1, 2]

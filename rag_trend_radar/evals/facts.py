@@ -10,12 +10,13 @@ from rag_trend_radar.search.mix import Source, source
 def check(question: FactQuestion, hits: Sequence[SearchHit]) -> FactResult:
     """Which required facts `hits` hold, and whether any forbidden text came back.
 
-    A fact is a case-insensitive pattern searched in each chunk, its lead included. With
-    `needs_mail`, only chunks from people's own mail count: a press report of the fact won't do.
+    A fact is a case-insensitive pattern searched in each chunk as it reaches an answer, its lead
+    and a short reply's quote included. With `needs_mail`, only chunks from people's own mail
+    count: a press report of the fact won't do.
     """
-    texts = [h.text for h in hits if not question.needs_mail or source(h.text) is Source.MAIL]
+    texts = [h.full_text for h in hits if not question.needs_mail or source(h.text) is Source.MAIL]
     missing = tuple(f for f in question.facts if not any(_found(f, text) for text in texts))
-    leaked = tuple(f for f in question.forbid if any(_found(f, hit.text) for hit in hits))
+    leaked = tuple(f for f in question.forbid if any(_found(f, hit.full_text) for hit in hits))
     return FactResult(
         id=question.id,
         missing=missing,

@@ -42,3 +42,8 @@ def test_forbidden_text_counts_from_any_source() -> None:
 def test_no_results_score_zero_and_miss_everything() -> None:
     result = check(_question(facts=["x"]), [])
     assert (result.missing, result.top_score, result.mail) == (("x",), 0.0, 0)
+
+
+def test_a_fact_in_a_short_replys_quote_counts_since_the_answer_reads_it() -> None:
+    hit = _hit(MAIL).model_copy(update={"context": "Tickets to Judge Porteous"})
+    assert check(_question(facts=["Porteous"], needs_mail=True), [hit]).missing == ()

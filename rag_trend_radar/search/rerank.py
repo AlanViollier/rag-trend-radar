@@ -27,7 +27,7 @@ def rerank(query: str, hits: Sequence[SearchHit], model: str, top: int) -> list[
         return []
     revision = get_settings().revision(model)
     key = (model, revision, text_hash(query))
-    texts = {text_hash(hit.text): hit.text for hit in hits}
+    texts = {text_hash(hit.full_text): hit.full_text for hit in hits}
     ## The owner's connection, on a table that holds hashes and scores, never mail: readers have
     ## no grant on it, so the agent's SQL can't plant a score.
     with db.connect() as conn:
@@ -49,8 +49,10 @@ def rerank(query: str, hits: Sequence[SearchHit], model: str, top: int) -> list[
                     [(*key, h, s) for h, s in fresh.items()],
                 )
             scores |= fresh
-    ranked = sorted(hits, key=lambda hit: -scores[text_hash(hit.text)])
-    return [hit.model_copy(update={"score": scores[text_hash(hit.text)]}) for hit in ranked[:top]]
+    ranked = sorted(hits, key=lambda hit: -scores[text_hash(hit.full_text)])
+    return [
+        hit.model_copy(update={"score": scores[text_hash(hit.full_text)]}) for hit in ranked[:top]
+    ]
 
 
 @cache

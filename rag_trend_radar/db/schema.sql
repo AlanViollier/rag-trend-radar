@@ -136,6 +136,9 @@ CREATE TABLE chunks (
     position    int NOT NULL,
     text        text NOT NULL,
     text_hash   text NOT NULL,
+    -- How many trailing characters of `text` are the message a short reply answered, separator
+    -- included. Searched and embedded, never the reply's own words: above 0 tags a short reply.
+    quote_chars int NOT NULL DEFAULT 0,
     UNIQUE (document_id, position)
 );
 

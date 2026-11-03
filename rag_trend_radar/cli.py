@@ -29,7 +29,6 @@ from rag_trend_radar.ingest.chunk import MAX_TOKENS, pieces
 from rag_trend_radar.schema import EvalQuestion, FactQuestion, RecallRun, RunManifest
 from rag_trend_radar.search import hybrid
 from rag_trend_radar.search.collapse import collapse
-from rag_trend_radar.search.context import with_quotes
 from rag_trend_radar.search.mix import RESULTS, mix
 from rag_trend_radar.search.ranking import last_day
 from rag_trend_radar.search.rerank import rerank
@@ -180,7 +179,7 @@ def ask(question: str, person: str = "investigator", as_of: str = "") -> None:
         day = date.fromisoformat(as_of) if as_of else last_day(conn)
         candidates = hybrid.search(conn, question, query_vector, model, day, hybrid.DEPTH)
         reranked = rerank(question, candidates, settings.rerank_model, top=hybrid.DEPTH)
-        hits = with_quotes(conn, mix(collapse(reranked, hybrid.DEPTH), RESULTS))
+        hits = mix(collapse(reranked, hybrid.DEPTH), RESULTS)
         if not hits:
             show(f"Nothing in {person}'s mail up to {day} matches.")
             return

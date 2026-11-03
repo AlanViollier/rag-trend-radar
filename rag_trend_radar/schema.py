@@ -117,7 +117,12 @@ class SearchHit(Record):
     document_id: int
     text: str
     score: float
-    context: str = ""  # what a short reply quotes, for the answer; never searched or scored
+    context: str = ""  # what a short reply answered; `text` is only the reply's own words
+
+    @property
+    def full_text(self) -> str:
+        """What the chunk was indexed and embedded from, and what a reranker should read."""
+        return f"{self.text}\n\n{self.context}" if self.context else self.text
 
 
 class Citation(Record):
