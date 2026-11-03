@@ -45,6 +45,7 @@ CREATE TABLE watchlists (
     id           bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name         text NOT NULL UNIQUE,
     query        text NOT NULL,
+    terms        text[] NOT NULL,
     query_vector halfvec NOT NULL,
     threshold    double precision NOT NULL
 );

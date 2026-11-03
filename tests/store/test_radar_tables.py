@@ -38,8 +38,8 @@ def radar(store: None) -> Iterator[None]:
         conn.execute("INSERT INTO topic_days VALUES (%s, '2001-09-10', 1, 0)", (topic,))
         conn.execute("INSERT INTO day_totals VALUES ('2001-09-10', 1)")
         watchlist = conn.execute(
-            "INSERT INTO watchlists (name, query, query_vector, threshold)"
-            " VALUES ('worry', 'shredding', %s, 0.5) RETURNING id",
+            "INSERT INTO watchlists (name, query, terms, query_vector, threshold)"
+            " VALUES ('worry', 'shredding', '{shred}', %s, 0.5) RETURNING id",
             (VECTOR,),
         ).fetchall()[0][0]
         conn.execute(

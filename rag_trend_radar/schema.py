@@ -181,6 +181,24 @@ class FactResult(Record):
     mail: int
 
 
+class RadarEvent(Record):
+    """Something that really happened, written down before the radar first ran: the scoreboard's
+    answer key. An alert claims it when two of `words` are among its topic's keywords."""
+
+    id: str
+    day: date
+    title: str
+    words: tuple[str, ...]
+
+
+class WatchlistSeed(Record):
+    """An investigator's saved worry: `query` is matched by meaning, `terms` as written."""
+
+    name: str
+    query: str
+    terms: tuple[str, ...]
+
+
 class RunManifest(Record):
     """What a recall run measured, so every number in the README traces back to a run."""
 
