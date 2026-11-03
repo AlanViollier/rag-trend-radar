@@ -1,6 +1,5 @@
 """Commands that measure search: write questions, score them, check facts and leaks."""
 
-import subprocess
 import sys
 from datetime import UTC, datetime
 from itertools import islice
@@ -20,6 +19,7 @@ from rag_trend_radar.evals.facts import check as check_facts
 from rag_trend_radar.evals.leaks import check as check_leaks
 from rag_trend_radar.evals.questions import Retype, Style, code_holds, retyped, sample, write
 from rag_trend_radar.evals.retrieval import rankings, report
+from rag_trend_radar.run_log import commit
 from rag_trend_radar.schema import EvalQuestion, FactQuestion, RecallRun, RunManifest
 from rag_trend_radar.search import hybrid
 from rag_trend_radar.search.collapse import collapse
@@ -132,7 +132,7 @@ def recall(
             reranker=cross or "",
             retype=retype or "",
             person=person,
-            commit=_commit(),
+            commit=commit(),
             chunks=chunks,
             started=started,
         ),
@@ -247,11 +247,3 @@ def leaks(paths: list[Path]) -> None:
     show(table)
     for leak in found.leaks[:20]:
         show(leak)
-
-
-def _commit() -> str:
-    ## The code a run measured; "-dirty" when uncommitted changes took part.
-    done = subprocess.run(
-        ["git", "describe", "--always", "--dirty"], capture_output=True, text=True, check=True
-    )
-    return done.stdout.strip()

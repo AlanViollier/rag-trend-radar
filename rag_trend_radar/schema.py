@@ -199,6 +199,51 @@ class WatchlistSeed(Record):
     terms: tuple[str, ...]
 
 
+class RunStage(Record):
+    """One step of a radar run: how long it took and how many things it went through."""
+
+    seconds: float
+    items: int
+
+
+class StageSummary(Record):
+    """A step's samples added up: one sample for a one-off, one a day for a replay."""
+
+    runs: int
+    total_seconds: float
+    mean_seconds: float
+    median_seconds: float
+    p95_seconds: float
+    max_seconds: float
+    items: int
+    ms_per_item: float
+
+
+class TopicSummary(Record):
+    """A topic as a run found it, to read: size, how tight it is, its words, the mail at its centre."""
+
+    label: int
+    chunks: int
+    documents: int
+    cohesion: float
+    keywords: tuple[str, ...]
+    nearest: tuple[str, ...]
+
+
+class RadarRun(Record):
+    """A radar run saved whole, so every number quoted later traces back to it."""
+
+    kind: str
+    commit: str
+    started: datetime
+    seconds: float
+    peak_memory_mb: float
+    settings: dict[str, str | int | float]
+    stages: dict[str, list[RunStage]]
+    results: dict[str, str | int | float]
+    topics: tuple[TopicSummary, ...] = ()
+
+
 class RunManifest(Record):
     """What a recall run measured, so every number in the README traces back to a run."""
 

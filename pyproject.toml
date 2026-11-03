@@ -18,8 +18,10 @@ dependencies = [
     "pyyaml>=6.0.3",            # config.yaml
     "ranx>=0.3.21",             # retrieval metrics checked against trec_eval
     "rich>=14",                 # anything a human reads in the terminal
+    "scikit-learn>=1.9",        # HDBSCAN for the radar's topics, CountVectorizer for their words
     "semchunk>=4.1",            # splits the few emails too long to embed whole
     "typer>=0.27",              # the CLI
+    "umap-learn>=0.5.12",       # squashes chunks so clustering finds topics, not just near-copies
 ]
 
 ## Local models, kept out of CI: `uv sync --extra models`.
@@ -75,7 +77,7 @@ exclude = ["^llm_context/"]
 
 ## Untyped or optional: the models extra is absent in CI (imported lazily); ranx ships no types.
 [[tool.mypy.overrides]]
-module = ["torch", "transformers", "sentence_transformers", "ranx", "ranx.*"]
+module = ["torch", "transformers", "sentence_transformers", "ranx", "ranx.*", "sklearn.*", "umap"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
