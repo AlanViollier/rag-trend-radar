@@ -16,12 +16,17 @@ CREATE TABLE topics (
 
 -- Which topic took a chunk, and on which simulated day. Append-only, so what was known on a day
 -- is the same query with an earlier date. A chunk with no row is in the unassigned pool.
+-- `sent_on`, `document_id` and `press` are copied here so a recount never rereads the mail.
 CREATE TABLE assignments (
     chunk_id    bigint PRIMARY KEY REFERENCES chunks (id) ON DELETE CASCADE,
     topic_id    bigint NOT NULL REFERENCES topics (id),
-    assigned_on date NOT NULL
+    assigned_on date NOT NULL,
+    sent_on     date NOT NULL,
+    document_id bigint NOT NULL,
+    press       boolean NOT NULL
 );
-CREATE INDEX assignments_topic ON assignments (topic_id, assigned_on);
+CREATE INDEX assignments_topic ON assignments (topic_id, sent_on);
+CREATE INDEX assignments_sent ON assignments (sent_on);
 
 -- Documents per topic per day, recounted from `assignments`, never incremented (rule 5). Short
 -- replies and bulk mail aren't counted; `documents` holds the rest, `press` the press among them.
@@ -33,6 +38,24 @@ CREATE TABLE topic_days (
     PRIMARY KEY (topic_id, day)
 );
 CREATE INDEX topic_days_day ON topic_days (day);
+
+-- Where each topic is, once a week. `centre` is what new mail is compared to; `position` is the
+-- average of its last 28 days of mail, whichever way centres behave, and draws its trail. `speed`
+-- is how far the position moved in 4 weeks (1 - cosine). `nearest` is the closest other topic now;
+-- `heading` the one it got closest to over those weeks, `heading_gain` by how much.
+CREATE TABLE topic_weeks (
+    topic_id           bigint REFERENCES topics (id),
+    day                date,
+    centre             halfvec NOT NULL,
+    position           halfvec,
+    chunks_28d         int NOT NULL,
+    speed              double precision,
+    nearest_id         bigint REFERENCES topics (id),
+    nearest_similarity double precision,
+    heading_id         bigint REFERENCES topics (id),
+    heading_gain       double precision,
+    PRIMARY KEY (topic_id, day)
+);
 
 -- What a day's shares divide by: every document counted that day, with a topic or without.
 CREATE TABLE day_totals (
@@ -66,7 +89,8 @@ CREATE TABLE alerts (
 );
 CREATE INDEX alerts_day ON alerts (day);
 
-GRANT SELECT ON topics, assignments, topic_days, day_totals, watchlists, alerts TO radar_reader;
+GRANT SELECT ON topics, assignments, topic_days, topic_weeks, day_totals, watchlists, alerts
+    TO radar_reader;
 
 ALTER TABLE topics ENABLE ROW LEVEL SECURITY;
 CREATE POLICY topics_investigator ON topics FOR SELECT TO radar_reader
@@ -76,6 +100,9 @@ CREATE POLICY assignments_investigator ON assignments FOR SELECT TO radar_reader
     USING (current_setting('app.person', true) = 'investigator');
 ALTER TABLE topic_days ENABLE ROW LEVEL SECURITY;
 CREATE POLICY topic_days_investigator ON topic_days FOR SELECT TO radar_reader
+    USING (current_setting('app.person', true) = 'investigator');
+ALTER TABLE topic_weeks ENABLE ROW LEVEL SECURITY;
+CREATE POLICY topic_weeks_investigator ON topic_weeks FOR SELECT TO radar_reader
     USING (current_setting('app.person', true) = 'investigator');
 ALTER TABLE day_totals ENABLE ROW LEVEL SECURITY;
 CREATE POLICY day_totals_investigator ON day_totals FOR SELECT TO radar_reader

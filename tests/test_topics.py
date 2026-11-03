@@ -1,7 +1,9 @@
+from datetime import date
+
 import numpy as np
 from numpy.typing import NDArray
 
-from rag_trend_radar.trends import topics
+from rag_trend_radar.trends import assign, topics
 from rag_trend_radar.trends.words import keywords, reading_text
 
 
@@ -39,6 +41,8 @@ def test_each_topic_is_described_by_its_own_words_and_mail() -> None:
         np.arange(len(texts), dtype=np.int64),
         texts,
         vectors,
+        [date(2000, 1, 1)] * len(texts),
+        [False] * len(texts),
     )
     found = topics.describe(chosen, vectors, topics.cluster(vectors, 10, 3))
     assert {f.chunks for f in found} == {40}
@@ -79,3 +83,33 @@ def test_shortened_vectors_are_length_one_again() -> None:
     short = topics.shorten(vectors, 4)
     assert short.shape == (5, 4)
     assert np.allclose(np.linalg.norm(short, axis=1), 1.0)
+
+
+def test_a_cluster_of_one_long_document_is_not_a_topic() -> None:
+    labels = np.array([0] * 30 + [1] * 30, dtype=np.int64)
+    documents = np.array([7] * 30 + list(range(30)), dtype=np.int64)
+    kept = topics.drop_thin(labels, documents)
+    assert (kept[:30] == topics.NOISE).all()
+    assert (kept[30:] == 1).all()
+
+
+def test_a_chunk_goes_to_its_nearest_centre_with_how_close_it_is() -> None:
+    vectors = np.eye(3, dtype=np.float32)
+    labels = np.array([5, 9, assign.UNASSIGNED], dtype=np.int64)
+    numbers, centres = assign.centres_of(vectors, labels)
+    assert numbers.tolist() == [5, 9]
+    rows, best = assign.nearest(vectors, centres)
+    assert rows[:2].tolist() == [0, 1]
+    assert best[0] == 1.0
+    assert best[2] == 0.0
+
+
+def test_a_cluster_of_unrelated_mail_is_too_loose_to_be_a_topic() -> None:
+    tight, _ = _blobs()
+    loose = _unit(np.random.default_rng(1).normal(0, 1, (40, 16)).astype(np.float32))
+    vectors = np.vstack([tight[:40], loose])
+    labels = np.array([0] * 40 + [1] * 40, dtype=np.int64)
+    kept, dropped = topics.drop_loose(labels, vectors)
+    assert dropped == 1
+    assert (kept[:40] == 0).all()
+    assert (kept[40:] == topics.NOISE).all()

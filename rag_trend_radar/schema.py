@@ -230,6 +230,23 @@ class TopicSummary(Record):
     nearest: tuple[str, ...]
 
 
+class RadarWeek(Record):
+    """One week of a radar replay, to compare centre versions by."""
+
+    day: date
+    topics: int
+    births: int
+    children: int
+    twins_absorbed: int
+    chunks: int
+    joined: int
+    moved_centres: int
+    largest_share: float
+    near_twin_pairs: int
+    median_speed: float
+    loose_clusters: int = 0
+
+
 class RadarRun(Record):
     """A radar run saved whole, so every number quoted later traces back to it."""
 
@@ -242,6 +259,7 @@ class RadarRun(Record):
     stages: dict[str, list[RunStage]]
     results: dict[str, str | int | float]
     topics: tuple[TopicSummary, ...] = ()
+    weeks: tuple[RadarWeek, ...] = ()
 
 
 class RunManifest(Record):

@@ -32,8 +32,13 @@ def radar(store: None) -> Iterator[None]:
             (VECTOR,),
         ).fetchall()[0][0]
         conn.execute(
-            "INSERT INTO assignments VALUES (%s, %s, '2001-09-10')",
+            "INSERT INTO assignments VALUES (%s, %s, '2001-09-10', '2001-09-10', 1, false)",
             (chunk, topic),
+        )
+        conn.execute(
+            "INSERT INTO topic_weeks (topic_id, day, centre, chunks_28d)"
+            " VALUES (%s, '2001-09-09', %s, 1)",
+            (topic, VECTOR),
         )
         conn.execute("INSERT INTO topic_days VALUES (%s, '2001-09-10', 1, 0)", (topic,))
         conn.execute("INSERT INTO day_totals VALUES ('2001-09-10', 1)")

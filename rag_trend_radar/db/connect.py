@@ -11,7 +11,15 @@ from rag_trend_radar.config import get_settings
 
 SCHEMA_SQL = Path(__file__).with_name("schema.sql")
 RADAR_SQL = Path(__file__).with_name("radar.sql")
-RADAR_TABLES = ("alerts", "watchlists", "day_totals", "topic_days", "assignments", "topics")
+RADAR_TABLES = (
+    "alerts",
+    "watchlists",
+    "day_totals",
+    "topic_weeks",
+    "topic_days",
+    "assignments",
+    "topics",
+)
 INVESTIGATOR = "investigator"
 ## The graph walk keeps this many candidates (default 40). A filter drops most of them, so at 40
 ## the right email was missing from the top 50 for 13% of questions; at 1,000 (the maximum)
