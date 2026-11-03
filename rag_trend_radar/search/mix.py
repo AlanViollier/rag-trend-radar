@@ -6,7 +6,7 @@ from enum import StrEnum
 
 from rag_trend_radar.schema import SearchHit
 
-## An investigator's top 10 was 89% press on story questions (107 of 120, 2026-11-02), with press
+## An investigator's top 10 was 91% press on story questions (109 of 120, 2026-11-02), with press
 ## about 6% of the chunks. At most this many of a list are press or bulk mail, unless nothing
 ## else is left.
 RESULTS = 10

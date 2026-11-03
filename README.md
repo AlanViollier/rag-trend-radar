@@ -7,14 +7,14 @@ inside the company in 2001. Every day the store takes in that day's mail. Employ
 and ask questions about their own mail, enforced by Postgres row-level security. An
 investigator sees the whole corpus: what's rising, what's new, alerts, and weekly digests.
 
-**Status:** milestone 1 of 5. Question answering works end to end over September 2001
-(8,804 emails, 127 employees): hybrid search, a reranker, and answers from Claude that cite the
-emails they come from. The daily replay, the radar and the agent come with milestones 2 to 4.
+**Status:** milestone 2 of 5. The whole corpus is in, replayed day by day: 244,534 emails and
+84,358 quoted messages, 464,603 chunks. Questions get hybrid search, a reranker and answers from
+Claude that cite the emails they come from. The radar and the agent come with milestones 3 and 4.
 
 ## Ask it something
 
 ```sh
-$ uv run rag-trend-radar ask "How did the September 11 attacks affect Enron?"
+$ uv run rag-trend-radar ask "How did the September 11 attacks affect Enron?" --as-of 2001-09-30
 investigator, as of 2001-09-30
 
 Based on the news clippings in your mail, the attacks mainly caused a short trading and
@@ -28,7 +28,7 @@ Ask as an employee and the search only sees their mailbox; ask as of an earlier 
 only sees mail sent by then:
 
 ```sh
-$ uv run rag-trend-radar ask "Who wanted to sell gas to Silicon Valley Power?" --person kean-s
+$ uv run rag-trend-radar ask "Who wanted to sell gas to Silicon Valley Power?" --person kean-s --as-of 2001-09-30
 Nothing in your search results answers this. […]
 
 $ uv run rag-trend-radar ask "How did the September 11 attacks affect Enron?" --as-of 2001-09-10
@@ -50,11 +50,20 @@ carry a BM25 index (pg_search).
 → **Permissions.** An employee reads what sat in their mailbox. Every search runs as a
 database role whose rows are filtered by row-level security, before anything reaches the
 model. A canary test plants a secret in one mailbox and searches for it as others, by every
-path, in CI.
+path, in CI. A full check over 630 questions found 0 leaks in 185,529 results, by permission or
+by date.
 
 → **Search.** Keyword and vector results (50 each) are merged by reciprocal rank fusion in
-one SQL query, then a cross-encoder (bge-reranker-v2-m3) reorders them and the best 10 go to
-Claude Sonnet 5.5 as search-result blocks, so each claim comes back with its citation.
+one SQL query, then a cross-encoder (bge-reranker-v2-m3) reorders them. An employee's vector
+search measures every chunk they can read, since an index walk through everyone's mail runs out
+before finding enough of theirs; the investigator, who reads everything, uses HNSW.
+
+→ **The 10 that reach Claude.** A chunk a better result already says drops out, so one article
+pasted into five digests counts once. Press digests take at most 3 of the 10 and bulk mail 1,
+unless little else is left: on story questions they were 91% of results, from about 6% of the
+chunks, and the mail people wrote rarely surfaced. A short reply brings what it quoted, because
+"Jim will also be there" means nothing alone. They go to Claude Sonnet 5.5 as search-result
+blocks, so each claim comes back with its citation.
 
 ## The daily replay
 
@@ -75,8 +84,10 @@ its vectors exist, so a crashed run leaves searches on the last finished day.
 → **As known that day.** A signature line counts as boilerplate only from the day its 200th
 email was sent, so a day's chunks never depend on later mail. A quoted message keeps the date
 of its first quote, and its readers are recounted from every email that quotes it, whichever
-day that email came in. One caveat: dates, and the check for whether any email holds a quoted
-text, use the whole 2002 snapshot, so day D knows copies a live pipeline would see later.
+day that email came in. A mailbox reads a quoted message only from its own first quote, so a
+search as of an earlier day doesn't show what hadn't arrived yet. One caveat: dates, and the check
+for whether any email holds a quoted text, use the whole 2002 snapshot, so day D knows copies a
+live pipeline would see later.
 
 → **Deletes and model swaps.** `delete` takes a document out of every search on every day: its
 chunks and vectors go, and the row stays as a tombstone so a replay doesn't bring it back. The
@@ -91,22 +102,40 @@ rebuilt store scores what the old one did, within one question in 200.
 
 ## How well it finds things
 
-Questions written by Claude from 245 real emails and quoted messages, each asked as an employee
-who can read the answer, scored by whether the right email comes back in the top 10 and first
-(`recall`):
+Questions written by Claude from real emails, scored by whether the right email comes back in the
+top 10 and first (`recall`), over the whole corpus. A forward or re-send of the right email counts
+as right, by comparing text, never by a model.
 
-| method | 200 questions, top 10 | first | 50 with no names, top 10 | first |
+| method | employee, top 10 | first | investigator, top 10 | first |
 |---|---|---|---|---|
-| keyword (BM25) | .955 | .800 | .880 | .720 |
-| vector (EmbeddingGemma 2, 768) | .970 | .795 | .960 | .760 |
-| hybrid | .970 | .820 | .960 | .740 |
-| **hybrid + rerank** (what `ask` uses) | **.995** | **.890** | **1.000** | **.900** |
+| keyword (BM25) | .837 | .622 | .704 | .520 |
+| vector (EmbeddingGemma 2, 768) | .898 | .638 | .750 | .490 |
+| hybrid | .918 | .663 | .832 | .556 |
+| **what `ask` uses** | **.959** | **.791** | **.893** | **.750** |
 
-The reranker is the largest gain: it lifts "first" from about 80% to about 90%. The no-names
-set forbids naming people, companies and places, which costs keyword search and leaves vector
-search where it was. With 50 questions, differences under about ten points there are noise.
+196 questions, each asked two ways: as an employee who can read the answer, among a median 5,600
+chunks, and as the investigator, among all 464,603. The second is the real test, and most of what
+it misses is buried among mail on the same topic. On 99 questions quoting a deal or contract
+number, keyword search gets the right email first 93-97% of the time and vector search 60-72%,
+which is why hybrid stays; `ask` finds all 99 in its top 10.
 
-Two bugs surfaced on the way, both where the vector index meets row-level security. An HNSW
+These questions come from emails of 200 to 4,000 characters, so they can't test press digests or
+short replies. Two more checks do:
+
+→ **Hard questions** (`facts`). 30 questions from the Enron story, each listing facts that must
+appear in the 10 chunks an answer is written from, some only from people's own mail, plus checks
+that nothing from later dates comes back. 26 pass with the plain top 10, 29 with what `ask` sends.
+They were written after reading the evidence, so they're easier than blind questions.
+
+→ **Reading the results.** Across 12 story questions, press fell from 109 of 120 slots to 61. Asked
+about the Raptors, the plain top 10 is nine press digests and one email; what `ask` sends adds
+Kaminski's memo refusing to back the LJM valuations and a forwarded copy of the Watkins letter.
+
+A reranker score can't say "not in your mail" by itself: a topic the mail doesn't hold scored .29,
+a real answer .06. A new question takes about 3.5 seconds before Claude starts, 1 of search and
+2.5 of reranking on a laptop.
+
+Bugs surfaced on the way, mostly where the vector index meets row-level security. An HNSW
 scan fetches its nearest candidates first and the permission filter runs after, so an
 employee who can read 2% of the mail got no vector results at all; iterative scans fixed it
 (and the canary test now guards it). Then measuring each layer alone showed HNSW finding the
@@ -114,7 +143,9 @@ right email in the top 50 for 87% of questions where exact search found it for 1
 candidates it looked at were filtered out. Widening the search (`ef_search` 1,000) closed the
 gap at the same 38 ms a query. The final answers barely moved through either fix, because the
 merged list and the reranker covered for the broken layer, which is why each layer gets
-measured on its own. Halfvec storage costs one question in 200 against full precision
+measured on its own. At full scale the same layer-by-layer scoring found the index's scan limit
+returning as few as 8 of 50 results for a small mailbox, which is what moved employees to exact
+search: vector top 50 from .908 to .944, in less time. Halfvec storage costs one question in 200 against full precision
 (`scripts/precision.py`).
 
 Two chunking choices were checked the same way, each in its own Postgres schema so the store
@@ -132,8 +163,11 @@ docker compose up -d --wait        # Postgres 18 + pgvector + pg_search
 uv sync --extra models             # local embedding and rerank models
 uv run rag-trend-radar db-reset
 uv run rag-trend-radar stage       # read all 517k files once, ~4 min
-uv run rag-trend-radar replay      # September 2001 day by day, embedding as it goes (~30 min on an M1 Pro)
+uv run rag-trend-radar replay --since 1997-01-01 --until 2002-12-31   # every day in order, embedding as it goes (~19 h on an M1 Pro; September 2001 alone, the default, ~30 min)
 uv run rag-trend-radar ask "…"
+uv run rag-trend-radar recall --person investigator   # score search, free
+uv run rag-trend-radar facts       # hard questions, free
+uv run rag-trend-radar leaks evals/questions_full.jsonl   # permission and date checks, free
 ```
 
 The dataset goes in `data/enron/maildir` ([CMU, May 2015](https://www.cs.cmu.edu/~enron/)).

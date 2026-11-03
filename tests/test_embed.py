@@ -81,3 +81,11 @@ def test_a_model_broken_for_every_text_stops_even_a_long_run(model: _Model) -> N
 @pytest.mark.parametrize("model", [100], indirect=True)
 def test_nothing_to_embed_returns_no_rows(model: _Model) -> None:
     assert embedding.embed([], "test/fake", DIMS).shape == (0, DIMS)
+
+
+@pytest.mark.parametrize("model", [10_000], indirect=True)
+def test_a_call_gives_the_gpus_memory_back(model: _Model, monkeypatch: pytest.MonkeyPatch) -> None:
+    freed: list[bool] = []
+    monkeypatch.setattr(embedding, "_free_gpu", lambda: freed.append(True))
+    embedding.embed(["a", "b"], "test/fake", DIMS)
+    assert freed == [True]

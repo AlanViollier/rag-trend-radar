@@ -54,6 +54,9 @@ def embed(
     vectors = np.zeros((len(texts), dims), dtype=np.float32)
     if groups:
         vectors[order] = np.concatenate([_verified(g, model, dims, query) for g in groups])
+        ## Apple's GPU keeps each batch's memory otherwise: 6.8 GB against 1.9 over 15,000 long
+        ## texts, at the same speed (2026-11-03), and past 90% of a full embed, swapping.
+        _free_gpu()
     if not skip_failed and np.isnan(vectors).any():
         raise EmbeddingFailed(f"{model}: a text failed the sentinel check even alone")
     return vectors
