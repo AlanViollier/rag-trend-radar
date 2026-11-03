@@ -45,12 +45,15 @@ into each email's own text and the replies it quotes, and deduplicated across ma
 
 → **Index.** Each email is one chunk, or several past 512 tokens, led by its subject, sender
 and date, and embedded with EmbeddingGemma 2 into pgvector (halfvec, HNSW). The same chunks
-carry a BM25 index (pg_search).
+carry a BM25 index (pg_search), without common words and with word endings folded. A reply under
+200 characters is indexed with the start of the message it answered: "i sent it today" can't
+otherwise be found by the judge named in the message above it. Results and citations keep the
+reply's own words apart.
 
 → **Permissions.** An employee reads what sat in their mailbox. Every search runs as a
 database role whose rows are filtered by row-level security, before anything reaches the
 model. A canary test plants a secret in one mailbox and searches for it as others, by every
-path, in CI. A full check over 630 questions found 0 leaks in 185,529 results, by permission or
+path, in CI. A full check over 630 questions found 0 leaks in 185,589 results, by permission or
 by date.
 
 → **Search.** Keyword and vector results (50 each) are merged by reciprocal rank fusion in
@@ -61,8 +64,7 @@ before finding enough of theirs; the investigator, who reads everything, uses HN
 → **The 10 that reach Claude.** A chunk a better result already says drops out, so one article
 pasted into five digests counts once. Press digests take at most 3 of the 10 and bulk mail 1,
 unless little else is left: on story questions they were 91% of results, from about 6% of the
-chunks, and the mail people wrote rarely surfaced. A short reply brings what it quoted, because
-"Jim will also be there" means nothing alone. They go to Claude Sonnet 5.5 as search-result
+chunks, and the mail people wrote rarely surfaced. They go to Claude Sonnet 5.5 as search-result
 blocks, so each claim comes back with its citation.
 
 ## The daily replay
@@ -108,19 +110,19 @@ as right, by comparing text, never by a model.
 
 | method | employee, top 10 | first | investigator, top 10 | first |
 |---|---|---|---|---|
-| keyword (BM25) | .837 | .622 | .704 | .520 |
-| vector (EmbeddingGemma 2, 768) | .898 | .638 | .750 | .490 |
-| hybrid | .918 | .663 | .832 | .556 |
+| keyword (BM25) | .832 | .612 | .699 | .515 |
+| vector (EmbeddingGemma 2, 768) | .903 | .653 | .745 | .495 |
+| hybrid | .908 | .658 | .821 | .556 |
 | **what `ask` uses** | **.959** | **.791** | **.893** | **.750** |
 
 196 questions, each asked two ways: as an employee who can read the answer, among a median 5,600
 chunks, and as the investigator, among all 464,603. The second is the real test, and most of what
 it misses is buried among mail on the same topic. On 99 questions quoting a deal or contract
-number, keyword search gets the right email first 93-97% of the time and vector search 60-72%,
+number, keyword search gets the right email first 93-96% of the time and vector search 60-72%,
 which is why hybrid stays; `ask` finds all 99 in its top 10.
 
 These questions come from emails of 200 to 4,000 characters, so they can't test press digests or
-short replies. Two more checks do:
+short replies. Other checks do:
 
 → **Hard questions** (`facts`). 30 questions from the Enron story, each listing facts that must
 appear in the 10 chunks an answer is written from, some only from people's own mail, plus checks
@@ -130,6 +132,19 @@ They were written after reading the evidence, so they're easier than blind quest
 → **Reading the results.** Across 12 story questions, press fell from 109 of 120 slots to 61. Asked
 about the Raptors, the plain top 10 is nine press digests and one email; what `ask` sends adds
 Kaminski's memo refusing to back the LJM valuations and a forwarded copy of the Watkins letter.
+By hand, about 33 of the 58 mail slots are people or internal documents, up from about 10; the rest
+are mostly forwarded articles the rule can't detect.
+
+→ **Short replies.** 22 questions written from a random sample of replies under 200 characters: the
+investigator finds 21 in the top 10, against 14 before replies were indexed with what they answered.
+The questions were chosen and written knowing the answers, so the gain is real but flattered.
+The sets above didn't move.
+
+→ **Real answers.** 10 questions through Claude, read by hand, 29 cited facts checked against the
+cited emails by code, all present. It said "not in your mail" for trading strategies the mail
+doesn't hold and for Skilling's resignation asked the day before it happened, and laid out where
+Enron's notices and press reports disagreed on the retirement plan freeze dates. Ten answers is a
+spot check, not a score.
 
 A reranker score can't say "not in your mail" by itself: a topic the mail doesn't hold scored .29,
 a real answer .06. A new question takes about 3.5 seconds before Claude starts, 1 of search and
