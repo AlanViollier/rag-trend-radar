@@ -1,6 +1,6 @@
 -- The store, as of milestone 2. `rag-trend-radar db-reset` drops the configured schema's tables and runs
 -- this file; every row is rebuilt from the Enron files, so there are no migrations.
--- Topic, trend, watchlist and digest tables arrive with milestone 3.
+-- The radar's tables are in radar.sql, which db-reset also runs.
 
 -- A reset drops the store's tables, never the extensions (pg_search needs pgvector in public)
 -- or the embedding cache: a rebuild of the store or an experiment keeps every vector computed.
@@ -31,15 +31,15 @@ CREATE TABLE IF NOT EXISTS cache.rerank_scores (
     PRIMARY KEY (model, revision, query_hash, text_hash)
 );
 
--- One row per searchable thing: an email, a quoted message no email of ours holds, later a
--- digest or an arXiv paper.
+-- One row per searchable thing: an email, a quoted message no email of ours holds, later an
+-- arXiv paper.
 -- (source, external_id) is the stable outside id: the content hash for an email, the text
 -- hash for a quoted message.
 CREATE TABLE documents (
     id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     source      text NOT NULL,
     external_id text NOT NULL,
-    kind        text NOT NULL CHECK (kind IN ('email', 'quoted', 'digest')),
+    kind        text NOT NULL CHECK (kind IN ('email', 'quoted')),
     sent_at     timestamptz NOT NULL,  -- for a quoted message: when it was first quoted
     title       text NOT NULL,
     body        text NOT NULL,           -- the document's own text: what gets chunked

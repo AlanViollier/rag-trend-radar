@@ -17,12 +17,12 @@ from psycopg import sql
 from psycopg.rows import TupleRow
 
 from rag_trend_radar import index
+from rag_trend_radar.days import cutoff
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.evals import leaks
 from rag_trend_radar.evals.retrieval import rankings
 from rag_trend_radar.schema import Document, EvalQuestion
 from rag_trend_radar.search import hybrid, keyword, vector
-from rag_trend_radar.search.ranking import cutoff
 
 MODEL, DIMS = "test/fake", 8
 CHICAGO = ZoneInfo("America/Chicago")

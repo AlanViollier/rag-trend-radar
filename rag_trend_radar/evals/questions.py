@@ -1,6 +1,5 @@
 """Labelled questions: a real email, and a question it answers asked in other words."""
 
-import hashlib
 import re
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
@@ -13,9 +12,9 @@ import psycopg
 from psycopg.rows import TupleRow
 from pydantic import BaseModel
 
-from rag_trend_radar.config import get_settings
+from rag_trend_radar import claude
+from rag_trend_radar.days import cutoff
 from rag_trend_radar.schema import EvalQuestion, Record
-from rag_trend_radar.search.ranking import cutoff
 
 ## Bump on any change to the prompt or the sample: cached questions are keyed by it.
 PROMPT_VERSION = 4
@@ -153,7 +152,7 @@ def write(
     sources: list[Source], as_of: date, model: str, *, style: Style = Style.NAMES
 ) -> Iterator[EvalQuestion]:
     """A question per usable source; unusable ones are skipped. Cached per source (rule 6)."""
-    client = anthropic.Anthropic(api_key=get_settings().anthropic_api_key.get_secret_value())
+    client = claude.client()
     ## Calls run 8 at a time and come back in source order, so the set reproduces. Every source
     ## is asked, even past the ones the caller keeps: the spares are cached for the next run.
     with ThreadPoolExecutor(max_workers=8) as pool:
@@ -255,5 +254,4 @@ def _cached(source: Source, model: str, style: Style) -> _Written | None:
 
 def _cache_path(source: Source, model: str, style: Style) -> Path:
     key = f"{PROMPT_VERSION}\x00{model}\x00{style}\x00{source.model_dump_json()}"
-    digest = hashlib.blake2b(key.encode(), digest_size=16).hexdigest()
-    return get_settings().data_dir / "cache" / "questions" / f"{digest}.json"
+    return claude.cache_path("questions", key)

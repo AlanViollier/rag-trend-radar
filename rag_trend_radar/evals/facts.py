@@ -3,8 +3,8 @@
 import re
 from collections.abc import Sequence
 
+from rag_trend_radar.ingest.kinds import Source, source
 from rag_trend_radar.schema import FactQuestion, FactResult, SearchHit
-from rag_trend_radar.search.mix import Source, source
 
 
 def check(question: FactQuestion, hits: Sequence[SearchHit]) -> FactResult:

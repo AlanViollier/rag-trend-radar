@@ -6,8 +6,9 @@ import psycopg
 from psycopg import sql
 from psycopg.rows import TupleRow
 
+from rag_trend_radar.days import cutoff
 from rag_trend_radar.schema import SearchHit
-from rag_trend_radar.search.ranking import cutoff, hits
+from rag_trend_radar.search.ranking import hits
 
 ## `|||` matches any of the words, unparsed: a question's `?` or `:` isn't query syntax.
 ## Row-level security filters inside the BM25 scan, before the LIMIT (checked by EXPLAIN). It says

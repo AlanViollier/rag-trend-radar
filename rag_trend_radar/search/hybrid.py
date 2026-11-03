@@ -9,9 +9,10 @@ from pgvector import HalfVector
 from psycopg import sql
 from psycopg.rows import TupleRow
 
+from rag_trend_radar.days import cutoff
 from rag_trend_radar.schema import SearchHit
 from rag_trend_radar.search import keyword, vector
-from rag_trend_radar.search.ranking import cutoff, hits
+from rag_trend_radar.search.ranking import hits
 
 ## RRF fuses ranks, not scores: BM25 scores are unbounded and cosine sits in [-1, 1], so they
 ## can't be added. 60 is the constant from the original paper (Cormack et al., 2009); it keeps

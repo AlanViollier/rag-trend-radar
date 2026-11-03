@@ -1,7 +1,8 @@
 import pytest
 
+from rag_trend_radar.ingest.kinds import Source, source
 from rag_trend_radar.schema import SearchHit
-from rag_trend_radar.search.mix import MAX_PRESS, Source, mix, source
+from rag_trend_radar.search.mix import MAX_PRESS, mix
 
 PRESS = "Subject: Enron Mentions -- 01/25/02\nFrom: ann.schmidt@enron.com\n\nThe stock fell again."
 MAIL = "Subject: Re: stock\nFrom: john.arnold@enron.com\n\nI love it, I've died and gone to heaven."

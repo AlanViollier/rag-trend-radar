@@ -9,10 +9,11 @@ from pgvector import HalfVector
 from psycopg import sql
 from psycopg.rows import TupleRow
 
+from rag_trend_radar.days import cutoff
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.index import vectors_identifier
 from rag_trend_radar.schema import SearchHit
-from rag_trend_radar.search.ranking import cutoff, hits
+from rag_trend_radar.search.ranking import hits
 
 ## The investigator reads most of the store: a walk of the HNSW index finds enough rows.
 INDEXED = sql.SQL(

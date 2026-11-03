@@ -10,10 +10,10 @@ from numpy.typing import NDArray
 from psycopg.rows import TupleRow
 
 from rag_trend_radar.config import get_settings
+from rag_trend_radar.days import cutoff
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.schema import EvalQuestion, Record, SearchHit
 from rag_trend_radar.search import hybrid, keyword, vector
-from rag_trend_radar.search.ranking import cutoff
 
 
 class Leak(Record):
