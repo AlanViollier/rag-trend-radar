@@ -87,3 +87,18 @@ def _chunk(conn: psycopg.Connection[TupleRow], schema: str, text: str) -> int:
             (document, text, text_hash(text)),
         ).fetchall()[0][0]
     )
+
+
+@pytest.mark.usefixtures("store")
+def test_a_reset_leaves_tables_an_extension_owns() -> None:
+    ## A fresh image installs PostGIS in every new database: `db-reset` crashed on its table.
+    with db.connect() as conn:
+        conn.execute("CREATE EXTENSION IF NOT EXISTS postgis")
+    try:
+        db.reset()
+        with db.connect() as conn:
+            assert conn.execute("SELECT to_regclass('public.spatial_ref_sys')").fetchall()[0][0]
+            assert conn.execute("SELECT count(*) FROM employees").fetchall() == [(0,)]
+    finally:
+        with db.connect() as conn:
+            conn.execute("DROP EXTENSION postgis")

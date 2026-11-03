@@ -51,13 +51,17 @@ def reset() -> None:
     """Drop the configured schema's tables (public, or an experiment's) and recreate them.
 
     Tables, not the schema: dropping public would take pgvector with it, and with pgvector
-    every vectors table and the embedding cache, hours of embedding (2026-10-29).
+    every vectors table and the embedding cache, hours of embedding (2026-10-29). Tables an
+    extension owns stay: a fresh image installs PostGIS, and its table can't be dropped.
     """
     schema = get_settings().db_schema
     with _open() as conn:
         conn.execute(sql.SQL("CREATE SCHEMA IF NOT EXISTS {}").format(sql.Identifier(schema)))
         tables = conn.execute(
-            "SELECT tablename FROM pg_tables WHERE schemaname = %s", (schema,)
+            "SELECT t.tablename FROM pg_tables t WHERE t.schemaname = %s AND NOT EXISTS ("
+            " SELECT 1 FROM pg_depend d WHERE d.objid = format('%%I.%%I', t.schemaname, t.tablename)"
+            "::regclass AND d.deptype = 'e')",
+            (schema,),
         ).fetchall()
         for (table,) in tables:
             conn.execute(sql.SQL("DROP TABLE {} CASCADE").format(sql.Identifier(schema, table)))
