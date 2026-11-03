@@ -75,7 +75,7 @@ exclude = ["^llm_context/"]
 
 ## Untyped or optional: the models extra is absent in CI (imported lazily); ranx ships no types.
 [[tool.mypy.overrides]]
-module = ["transformers", "sentence_transformers", "ranx", "ranx.*"]
+module = ["torch", "transformers", "sentence_transformers", "ranx", "ranx.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
