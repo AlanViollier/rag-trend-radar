@@ -26,31 +26,28 @@ def radar(store: None) -> Iterator[None]:
             " SELECT id, 0, 'Gas prices.', 'radar-test-hash' FROM documents"
             " WHERE source = 'radar-test' RETURNING id"
         ).fetchall()[0][0]
-        topic = conn.execute(
-            "INSERT INTO topics (model, centre, born_on) VALUES ('test', %s, '2001-09-10')"
-            " RETURNING id",
-            (VECTOR,),
+        blob = conn.execute(
+            "INSERT INTO blobs (id, model, first_week, last_week, kind, shown)"
+            " VALUES (1, 'test', '2001-09-09', '2001-09-09', 'topic', true) RETURNING id"
         ).fetchall()[0][0]
         conn.execute(
-            "INSERT INTO assignments VALUES (%s, %s, '2001-09-10', '2001-09-10', 1, false)",
-            (chunk, topic),
+            "INSERT INTO blob_weeks VALUES"
+            " (%s, '2001-09-09', 0, %s, '{gas}', 1, 1, 1, 0, 0.5, 0.0, true)",
+            (blob, VECTOR),
         )
         conn.execute(
-            "INSERT INTO topic_weeks (topic_id, day, centre, chunks_28d)"
-            " VALUES (%s, '2001-09-09', %s, 1)",
-            (topic, VECTOR),
+            "INSERT INTO blob_chunks VALUES (%s, %s, '2001-09-09', '2001-09-09')", (blob, chunk)
         )
-        conn.execute("INSERT INTO topic_days VALUES (%s, '2001-09-10', 1, 0)", (topic,))
-        conn.execute("INSERT INTO day_totals VALUES ('2001-09-10', 1)")
+        conn.execute("INSERT INTO day_totals VALUES ('2001-09-10', 1, 1, 1, 1, 1, 0)")
         watchlist = conn.execute(
             "INSERT INTO watchlists (name, query, terms, query_vector, threshold)"
             " VALUES ('worry', 'shredding', '{shred}', %s, 0.5) RETURNING id",
             (VECTOR,),
         ).fetchall()[0][0]
         conn.execute(
-            "INSERT INTO alerts (day, kind, topic_id, observed, expected)"
+            "INSERT INTO alerts (day, kind, blob_id, observed, expected)"
             " VALUES ('2001-09-10', 'spike', %s, 0.2, 0.1)",
-            (topic,),
+            (blob,),
         )
         conn.execute(
             "INSERT INTO alerts (day, kind, watchlist_id, observed)"
@@ -95,33 +92,33 @@ def test_a_radar_reset_empties_the_radar_and_leaves_the_store() -> None:
 
 
 @pytest.mark.usefixtures("radar")
-def test_a_deleted_chunk_leaves_the_assignments() -> None:
+def test_a_deleted_chunk_leaves_the_blob() -> None:
     with db.connect() as conn:
         conn.execute(
             "DELETE FROM chunks WHERE document_id IN"
             " (SELECT id FROM documents WHERE source = 'radar-test')"
         )
-    assert _count(None, "assignments") == 0
+    assert _count(None, "blob_chunks") == 0
 
 
 @pytest.mark.usefixtures("radar")
 @pytest.mark.parametrize(
-    ("kind", "topic", "watchlist"),
+    ("kind", "blob", "watchlist"),
     [("spike", False, False), ("spike", True, True), ("watchlist", True, False)],
 )
 def test_an_alert_points_at_exactly_what_its_kind_says(
-    kind: str, topic: bool, watchlist: bool
+    kind: str, blob: bool, watchlist: bool
 ) -> None:
     with db.connect() as conn:
-        topic_id = conn.execute("SELECT id FROM topics").fetchall()[0][0] if topic else None
+        blob_id = conn.execute("SELECT id FROM blobs").fetchall()[0][0] if blob else None
         watchlist_id = (
             conn.execute("SELECT id FROM watchlists").fetchall()[0][0] if watchlist else None
         )
         with pytest.raises(psycopg.errors.CheckViolation):
             conn.execute(
-                "INSERT INTO alerts (day, kind, topic_id, watchlist_id, observed)"
+                "INSERT INTO alerts (day, kind, blob_id, watchlist_id, observed)"
                 " VALUES (%s, %s, %s, %s, 1)",
-                (date(2001, 9, 11), kind, topic_id, watchlist_id),
+                (date(2001, 9, 11), kind, blob_id, watchlist_id),
             )
 
 
@@ -129,6 +126,6 @@ def test_an_alert_points_at_exactly_what_its_kind_says(
 def test_re_raising_the_same_alert_is_refused() -> None:
     with db.connect() as conn, pytest.raises(psycopg.errors.UniqueViolation):
         conn.execute(
-            "INSERT INTO alerts (day, kind, topic_id, observed)"
-            " SELECT day, kind, topic_id, observed FROM alerts WHERE kind = 'spike'"
+            "INSERT INTO alerts (day, kind, blob_id, observed)"
+            " SELECT day, kind, blob_id, observed FROM alerts WHERE kind = 'spike'"
         )

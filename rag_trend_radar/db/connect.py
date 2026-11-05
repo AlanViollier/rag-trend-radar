@@ -15,10 +15,9 @@ RADAR_TABLES = (
     "alerts",
     "watchlists",
     "day_totals",
-    "topic_weeks",
-    "topic_days",
-    "assignments",
-    "topics",
+    "blob_chunks",
+    "blob_weeks",
+    "blobs",
 )
 INVESTIGATOR = "investigator"
 ## The graph walk keeps this many candidates (default 40). A filter drops most of them, so at 40

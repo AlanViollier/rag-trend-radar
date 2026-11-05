@@ -2,65 +2,61 @@
 -- mail, chunks and vectors alone, so a radar experiment never costs a rebuild. Everything here
 -- derives from the store. Only the investigator reads it: a topic mixes many people's mail.
 
--- A topic's centre is frozen at birth, so re-running a day gives the same answer. A cluster
--- moderately near an older topic is born with it as parent, which is how drift and splits show.
-CREATE TABLE topics (
-    id        bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    model     text NOT NULL,
-    centre    halfvec NOT NULL,
-    name      text NOT NULL DEFAULT '',
-    keywords  text[] NOT NULL DEFAULT '{}',
-    born_on   date NOT NULL,
-    parent_id bigint REFERENCES topics (id)
+-- One blob over its whole life, however many weeks it lasted. `kind` and `shown` are judged with
+-- hindsight, for the picture: alerts never read them. `name` and `family` come from the naming pass.
+CREATE TABLE blobs (
+    id         bigint PRIMARY KEY,
+    model      text NOT NULL,
+    first_week date NOT NULL,
+    last_week  date NOT NULL,
+    kind       text NOT NULL CHECK (kind IN ('topic', 'newsletter', 'footer', 'chatter')),
+    shown      boolean NOT NULL,
+    name       text NOT NULL DEFAULT '',
+    family     text NOT NULL DEFAULT ''
 );
 
--- Which topic took a chunk, and on which simulated day. Append-only, so what was known on a day
--- is the same query with an earlier date. A chunk with no row is in the unassigned pool.
--- `sent_on`, `document_id` and `press` are copied here so a recount never rereads the mail.
-CREATE TABLE assignments (
-    chunk_id    bigint PRIMARY KEY REFERENCES chunks (id) ON DELETE CASCADE,
-    topic_id    bigint NOT NULL REFERENCES topics (id),
-    assigned_on date NOT NULL,
-    sent_on     date NOT NULL,
-    document_id bigint NOT NULL,
-    press       boolean NOT NULL
+-- A blob in one week, seeing mail up to that week only, so a replay can trust it. `label` is its
+-- number in that week's saved frame. `chunks` are its members; `mail` adds the chunks near it, and
+-- `recent` and `recent_press` are the last 4 weeks of `mail`. `surge` is chunks above normal, `moving`
+-- how far its recent centre sits from its slower average, `other_seed` whether the second seed found it.
+CREATE TABLE blob_weeks (
+    blob_id      bigint REFERENCES blobs (id) ON DELETE CASCADE,
+    week         date,
+    label        int NOT NULL,
+    centre       halfvec NOT NULL,
+    keywords     text[] NOT NULL,
+    chunks       int NOT NULL,
+    mail         int NOT NULL,
+    recent       int NOT NULL,
+    recent_press int NOT NULL,
+    surge        double precision NOT NULL,
+    moving       double precision NOT NULL,
+    other_seed   boolean NOT NULL,
+    PRIMARY KEY (blob_id, week)
 );
-CREATE INDEX assignments_topic ON assignments (topic_id, sent_on);
-CREATE INDEX assignments_sent ON assignments (sent_on);
+CREATE INDEX blob_weeks_week ON blob_weeks (week);
 
--- Documents per topic per day, recounted from `assignments`, never incremented (rule 5). Short
--- replies and bulk mail aren't counted; `documents` holds the rest, `press` the press among them.
-CREATE TABLE topic_days (
-    topic_id  bigint REFERENCES topics (id),
-    day       date,
-    documents int NOT NULL,
-    press     int NOT NULL,
-    PRIMARY KEY (topic_id, day)
+-- Which chunks a blob held, first and last week: what search is limited to when a surge asks "what
+-- happened here?". A deleted chunk leaves here at once; `blob_weeks` recounts on the next build.
+CREATE TABLE blob_chunks (
+    blob_id    bigint REFERENCES blobs (id) ON DELETE CASCADE,
+    chunk_id   bigint REFERENCES chunks (id) ON DELETE CASCADE,
+    first_week date NOT NULL,
+    last_week  date NOT NULL,
+    PRIMARY KEY (blob_id, chunk_id)
 );
-CREATE INDEX topic_days_day ON topic_days (day);
+CREATE INDEX blob_chunks_chunk ON blob_chunks (chunk_id);
 
--- Where each topic is, once a week. `centre` is what new mail is compared to; `position` is the
--- average of its last 28 days of mail, whichever way centres behave, and draws its trail. `speed`
--- is how far the position moved in 4 weeks (1 - cosine). `nearest` is the closest other topic now;
--- `heading` the one it got closest to over those weeks, `heading_gain` by how much.
-CREATE TABLE topic_weeks (
-    topic_id           bigint REFERENCES topics (id),
-    day                date,
-    centre             halfvec NOT NULL,
-    position           halfvec,
-    chunks_28d         int NOT NULL,
-    speed              double precision,
-    nearest_id         bigint REFERENCES topics (id),
-    nearest_similarity double precision,
-    heading_id         bigint REFERENCES topics (id),
-    heading_gain       double precision,
-    PRIMARY KEY (topic_id, day)
-);
-
--- What a day's shares divide by: every document counted that day, with a topic or without.
+-- The store and the people in it, per day, for the page's timeline. `radar_chunks` and `press_chunks`
+-- count what the radar reads, without short replies and bulk mail.
 CREATE TABLE day_totals (
-    day       date PRIMARY KEY,
-    documents int NOT NULL
+    day          date PRIMARY KEY,
+    documents    int NOT NULL,
+    chunks       int NOT NULL,
+    senders      int NOT NULL,
+    mailboxes    int NOT NULL,
+    radar_chunks int NOT NULL,
+    press_chunks int NOT NULL
 );
 
 -- An investigator's saved worries, checked on each day's mail by word match and by meaning.
@@ -74,35 +70,31 @@ CREATE TABLE watchlists (
 );
 
 -- What the radar raised on a day. `expected` is the normal level a signal compared against; a
--- birth or a watchlist match has none.
+-- watchlist match has none.
 CREATE TABLE alerts (
     id           bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     day          date NOT NULL,
     kind         text NOT NULL CHECK (kind IN ('spike', 'rising', 'accelerating', 'birth', 'watchlist')),
-    topic_id     bigint REFERENCES topics (id),
+    blob_id      bigint REFERENCES blobs (id) ON DELETE CASCADE,
     watchlist_id bigint REFERENCES watchlists (id),
     observed     double precision NOT NULL,
     expected     double precision,
     CHECK ((kind = 'watchlist') = (watchlist_id IS NOT NULL)),
-    CHECK ((kind = 'watchlist') = (topic_id IS NULL)),
-    UNIQUE NULLS NOT DISTINCT (day, kind, topic_id, watchlist_id)
+    CHECK ((kind = 'watchlist') = (blob_id IS NULL)),
+    UNIQUE NULLS NOT DISTINCT (day, kind, blob_id, watchlist_id)
 );
 CREATE INDEX alerts_day ON alerts (day);
 
-GRANT SELECT ON topics, assignments, topic_days, topic_weeks, day_totals, watchlists, alerts
-    TO radar_reader;
+GRANT SELECT ON blobs, blob_weeks, blob_chunks, day_totals, watchlists, alerts TO radar_reader;
 
-ALTER TABLE topics ENABLE ROW LEVEL SECURITY;
-CREATE POLICY topics_investigator ON topics FOR SELECT TO radar_reader
+ALTER TABLE blobs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY blobs_investigator ON blobs FOR SELECT TO radar_reader
     USING (current_setting('app.person', true) = 'investigator');
-ALTER TABLE assignments ENABLE ROW LEVEL SECURITY;
-CREATE POLICY assignments_investigator ON assignments FOR SELECT TO radar_reader
+ALTER TABLE blob_weeks ENABLE ROW LEVEL SECURITY;
+CREATE POLICY blob_weeks_investigator ON blob_weeks FOR SELECT TO radar_reader
     USING (current_setting('app.person', true) = 'investigator');
-ALTER TABLE topic_days ENABLE ROW LEVEL SECURITY;
-CREATE POLICY topic_days_investigator ON topic_days FOR SELECT TO radar_reader
-    USING (current_setting('app.person', true) = 'investigator');
-ALTER TABLE topic_weeks ENABLE ROW LEVEL SECURITY;
-CREATE POLICY topic_weeks_investigator ON topic_weeks FOR SELECT TO radar_reader
+ALTER TABLE blob_chunks ENABLE ROW LEVEL SECURITY;
+CREATE POLICY blob_chunks_investigator ON blob_chunks FOR SELECT TO radar_reader
     USING (current_setting('app.person', true) = 'investigator');
 ALTER TABLE day_totals ENABLE ROW LEVEL SECURITY;
 CREATE POLICY day_totals_investigator ON day_totals FOR SELECT TO radar_reader

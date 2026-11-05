@@ -72,8 +72,9 @@ ignore = ["E501", "B008", "D104", "D105", "D107", "S603", "S607"]
 strict = true
 plugins = ["pydantic.mypy"]
 explicit_package_bases = true
-## The private context repo can hold scripts (chart refreshers, one-offs) that aren't the package.
-exclude = ["^llm_context/"]
+## The private context repo can hold scripts (chart refreshers, one-offs) that aren't the package;
+## data/ is gitignored, and throwaway experiments live there.
+exclude = ["^llm_context/", "^data/"]
 
 ## Untyped or optional: the models extra is absent in CI (imported lazily); ranx ships no types.
 [[tool.mypy.overrides]]

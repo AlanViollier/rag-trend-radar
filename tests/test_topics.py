@@ -1,9 +1,8 @@
-from datetime import date
-
 import numpy as np
+import pytest
 from numpy.typing import NDArray
 
-from rag_trend_radar.trends import assign, topics
+from rag_trend_radar.trends import topics
 from rag_trend_radar.trends.words import keywords, reading_text
 
 
@@ -11,48 +10,44 @@ def _unit(v: NDArray[np.float32]) -> NDArray[np.float32]:
     return (v / np.linalg.norm(v, axis=1, keepdims=True)).astype(np.float32)
 
 
-def _blobs() -> tuple[NDArray[np.float32], list[str]]:
+def _blobs() -> NDArray[np.float32]:
     rng = np.random.default_rng(0)
-    centres = np.eye(16, dtype=np.float32)[:3]
-    tight = [centres[n] + rng.normal(0, 0.01, (40, 16)) for n in range(3)]
+    centres = np.eye(16, dtype=np.float32)[:5]
+    tight = [centres[n] + rng.normal(0, 0.01, (40, 16)) for n in range(5)]
     stray = rng.normal(0, 1, (10, 16))
-    texts = [
-        *(f"Subject: Gas {i}\nFrom: a@b.c\n\ngas pipeline thanks" for i in range(40)),
-        *(f"Subject: Power {i}\nFrom: a@b.c\n\nblackout grid thanks" for i in range(40)),
-        *(f"Subject: Football {i}\nFrom: a@b.c\n\nfantasy league thanks" for i in range(40)),
-        *("Subject: Stray\nFrom: a@b.c\n\nsomething else" for _ in range(10)),
-    ]
-    return _unit(np.vstack([*tight, stray]).astype(np.float32)), texts
+    return _unit(np.vstack([*tight, stray]).astype(np.float32))
 
 
 def test_clusters_are_found_without_being_told_how_many() -> None:
-    vectors, _ = _blobs()
-    labels = topics.cluster(vectors, min_size=10, min_samples=3)
-    assert len(set(labels.tolist()) - {topics.NOISE}) == 3
-    assert [len(set(labels[i : i + 40].tolist())) for i in (0, 40, 80)] == [1, 1, 1]
-    assert len({labels[0], labels[40], labels[80]}) == 3
+    labels = topics.cluster(_blobs(), min_size=10, min_samples=3)
+    assert len(set(labels.tolist()) - {topics.NOISE}) == 5
+    assert [len(set(labels[i : i + 40].tolist())) for i in range(0, 200, 40)] == [1] * 5
 
 
-def test_each_topic_is_described_by_its_own_words_and_mail() -> None:
-    vectors, texts = _blobs()
-    vectors, texts = vectors[:120], texts[:120]
-    chosen = topics.Pool(
-        np.arange(len(texts), dtype=np.int64),
-        np.arange(len(texts), dtype=np.int64),
-        texts,
-        vectors,
-        [date(2000, 1, 1)] * len(texts),
-        [False] * len(texts),
-    )
-    found = topics.describe(chosen, vectors, topics.cluster(vectors, 10, 3))
-    assert {f.chunks for f in found} == {40}
-    by_word = {word: f for f in found for word in f.keywords[:3]}
-    assert "pipeline" in by_word
-    assert "blackout" in by_word
-    assert "fantasy" in by_word
-    assert "pipeline" not in by_word["blackout"].keywords
-    assert by_word["blackout"].nearest[0].startswith("Power")
-    assert all(0.9 < f.cohesion <= 1.0 for f in found)
+def test_a_frame_with_one_giant_blob_is_clustered_again_with_a_cap(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    caps: list[int | None] = []
+
+    def giant(points: object, min_size: int, min_samples: int, largest: int | None) -> object:
+        caps.append(largest)
+        return np.zeros(1000, dtype=np.int64)
+
+    monkeypatch.setattr(topics, "_hdbscan", giant)
+    topics.cluster(np.zeros((1000, 5), dtype=np.float32), min_size=20)
+    assert caps == [None, 50]
+
+
+def test_a_frame_without_a_giant_blob_is_clustered_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    caps: list[int | None] = []
+
+    def spread(points: object, min_size: int, min_samples: int, largest: int | None) -> object:
+        caps.append(largest)
+        return np.arange(1000, dtype=np.int64) % 10
+
+    monkeypatch.setattr(topics, "_hdbscan", spread)
+    topics.cluster(np.zeros((1000, 5), dtype=np.float32), min_size=20)
+    assert caps == [None]
 
 
 def test_a_word_every_topic_uses_loses_to_one_only_this_topic_uses() -> None:
@@ -72,17 +67,18 @@ def test_a_header_gives_its_subject_and_nothing_else_to_read() -> None:
 
 
 def test_the_same_seed_squashes_to_the_same_map() -> None:
-    vectors, _ = _blobs()
+    vectors = _blobs()
     first = topics.squash(vectors, components=3, neighbors=10, seed=1)
     assert first.shape == (len(vectors), 3)
     assert np.array_equal(first, topics.squash(vectors, components=3, neighbors=10, seed=1))
 
 
-def test_shortened_vectors_are_length_one_again() -> None:
-    vectors = _unit(np.random.default_rng(0).normal(0, 1, (5, 16)).astype(np.float32))
-    short = topics.shorten(vectors, 4)
-    assert short.shape == (5, 4)
-    assert np.allclose(np.linalg.norm(short, axis=1), 1.0)
+def test_a_map_can_start_from_where_the_last_one_ended() -> None:
+    vectors = _blobs()
+    first = topics.squash(vectors, components=3, neighbors=10, seed=1)
+    second = topics.squash(vectors, components=3, neighbors=10, seed=1, start=first)
+    cold = np.linalg.norm(topics.squash(vectors, 3, 10, seed=2) - first, axis=1).mean()
+    assert np.linalg.norm(second - first, axis=1).mean() < cold
 
 
 def test_a_cluster_of_one_long_document_is_not_a_topic() -> None:
@@ -93,19 +89,8 @@ def test_a_cluster_of_one_long_document_is_not_a_topic() -> None:
     assert (kept[30:] == 1).all()
 
 
-def test_a_chunk_goes_to_its_nearest_centre_with_how_close_it_is() -> None:
-    vectors = np.eye(3, dtype=np.float32)
-    labels = np.array([5, 9, assign.UNASSIGNED], dtype=np.int64)
-    numbers, centres = assign.centres_of(vectors, labels)
-    assert numbers.tolist() == [5, 9]
-    rows, best = assign.nearest(vectors, centres)
-    assert rows[:2].tolist() == [0, 1]
-    assert best[0] == 1.0
-    assert best[2] == 0.0
-
-
 def test_a_cluster_of_unrelated_mail_is_too_loose_to_be_a_topic() -> None:
-    tight, _ = _blobs()
+    tight = _blobs()
     loose = _unit(np.random.default_rng(1).normal(0, 1, (40, 16)).astype(np.float32))
     vectors = np.vstack([tight[:40], loose])
     labels = np.array([0] * 40 + [1] * 40, dtype=np.int64)
