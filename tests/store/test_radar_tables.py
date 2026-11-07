@@ -46,7 +46,7 @@ def radar(store: None) -> Iterator[None]:
         ).fetchall()[0][0]
         conn.execute(
             "INSERT INTO alerts (day, kind, blob_id, observed, expected)"
-            " VALUES ('2001-09-10', 'spike', %s, 0.2, 0.1)",
+            " VALUES ('2001-09-10', 'surge', %s, 0.2, 0.1)",
             (blob,),
         )
         conn.execute(
@@ -104,7 +104,7 @@ def test_a_deleted_chunk_leaves_the_blob() -> None:
 @pytest.mark.usefixtures("radar")
 @pytest.mark.parametrize(
     ("kind", "blob", "watchlist"),
-    [("spike", False, False), ("spike", True, True), ("watchlist", True, False)],
+    [("surge", False, False), ("surge", True, True), ("watchlist", True, False)],
 )
 def test_an_alert_points_at_exactly_what_its_kind_says(
     kind: str, blob: bool, watchlist: bool
@@ -127,5 +127,5 @@ def test_re_raising_the_same_alert_is_refused() -> None:
     with db.connect() as conn, pytest.raises(psycopg.errors.UniqueViolation):
         conn.execute(
             "INSERT INTO alerts (day, kind, blob_id, observed)"
-            " SELECT day, kind, blob_id, observed FROM alerts WHERE kind = 'spike'"
+            " SELECT day, kind, blob_id, observed FROM alerts WHERE kind = 'surge'"
         )

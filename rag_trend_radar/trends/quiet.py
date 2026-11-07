@@ -1,7 +1,7 @@
 """Enron's mail: which blobs are newsletters, footers or chatter rather than a subject.
 
-The one file here that knows this corpus. Judged over a blob's whole life, so it may use hindsight
-and alerts never read it. The word list goes when the naming pass marks each blob by reading it.
+The one file here that knows this corpus. `blobs.kind` is judged over a blob's whole life, with
+hindsight; an alert judges a blob on its weeks so far. The word list goes when the naming pass marks each blob by reading it.
 """
 
 import re
@@ -28,6 +28,8 @@ _CHATTY_WORDS = (
 )
 _CHATTY = set(_CHATTY_WORDS.split())
 ONE_SENDER, EMPTY_SUBJECTS = 0.8, 0.15
+## Set on a blob's top 6 keywords; a blob-week stores 10.
+CHATTY_KEYWORDS = 6
 
 
 class Kind(StrEnum):
@@ -76,7 +78,7 @@ def trait(mail: Mail, rows: NDArray[np.int64], words: Sequence[str]) -> Trait:
         top_sender=Counter(mail.senders[i] for i in picked).most_common(1)[0][1] / len(picked),
         footers=float(mail.footers[rows].mean()),
         empty_subjects=sum(not mail.subjects[i] for i in picked),
-        chatty_words=sum(word in _CHATTY for word in words),
+        chatty_words=sum(word in _CHATTY for word in words[:CHATTY_KEYWORDS]),
     )
 
 

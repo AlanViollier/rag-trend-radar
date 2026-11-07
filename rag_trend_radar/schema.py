@@ -182,8 +182,8 @@ class FactResult(Record):
 
 
 class RadarEvent(Record):
-    """Something that really happened, written down before the radar first ran: the scoreboard's
-    answer key. An alert claims it when two of `words` are among its topic's keywords."""
+    """Something that really happened, written down before the radar first ran: the page puts it
+    on the timeline, and the naming pass notes which alerts caught it."""
 
     id: str
     day: date

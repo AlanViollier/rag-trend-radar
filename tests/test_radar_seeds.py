@@ -1,4 +1,4 @@
-"""The frozen answer key and worries: they load, and the scoreboard can run on them."""
+"""The real events and the worries: they load and hold what the page and watchlists need."""
 
 from datetime import date
 from pathlib import Path

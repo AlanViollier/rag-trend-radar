@@ -69,12 +69,12 @@ CREATE TABLE watchlists (
     threshold    double precision NOT NULL
 );
 
--- What the radar raised on a day. `expected` is the normal level a signal compared against; a
--- watchlist match has none.
+-- What the radar raised on a day: a blob growing fast (`trends/alerts.py`) or a watchlist match. For a
+-- surge, `observed` is its chunks in the last 4 weeks and `expected` its normal; a watchlist has none.
 CREATE TABLE alerts (
     id           bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     day          date NOT NULL,
-    kind         text NOT NULL CHECK (kind IN ('spike', 'rising', 'accelerating', 'birth', 'watchlist')),
+    kind         text NOT NULL CHECK (kind IN ('surge', 'watchlist')),
     blob_id      bigint REFERENCES blobs (id) ON DELETE CASCADE,
     watchlist_id bigint REFERENCES watchlists (id),
     observed     double precision NOT NULL,

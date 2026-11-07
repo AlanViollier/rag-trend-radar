@@ -13,7 +13,7 @@ from psycopg.rows import TupleRow
 
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.days import cutoff
-from rag_trend_radar.trends import links, quiet, signals
+from rag_trend_radar.trends import alerts, links, quiet, signals
 from rag_trend_radar.trends.frames import Frame
 from rag_trend_radar.trends.topics import NOISE, Pool
 from rag_trend_radar.trends.words import keywords, reading_text
@@ -22,7 +22,7 @@ from rag_trend_radar.trends.words import keywords, reading_text
 LASTING_WEEKS = 9
 ALIVE_AT_END = 2
 AGREED = 0.5
-TOP_KEYWORDS = 6
+TOP_KEYWORDS = 10
 ## Enough to find what a blob is about; a blob's 7,000th chunk changes nothing, and costs memory.
 KEYWORD_CHUNKS = 1500
 
@@ -90,12 +90,14 @@ def write(
     frame_of = {f.end: f for f in frames}
     mail = quiet.read(chosen.texts)
     index = {f.end: i for i, f in enumerate(frames)}
+    traits = {
+        blob: [quiet.trait(mail, _members(frame_of[w.week], w.label), w.words) for w in life]
+        for blob, life in by_blob.items()
+    }
     shown = 0
     with conn.cursor() as cursor:
         for blob, life in by_blob.items():
-            kind = quiet.kind(
-                [quiet.trait(mail, _members(frame_of[w.week], w.label), w.words) for w in life]
-            )
+            kind = quiet.kind(traits[blob])
             visible = (
                 kind is quiet.Kind.TOPIC
                 and _lasted(index[life[0].week], index[life[-1].week], len(frames))
@@ -139,13 +141,36 @@ def write(
         for (blob, chunk), (first, last) in held.items():
             copy.write_row((blob, chunk, first, last))
     days = _write_days(conn, chosen)
+    raised = alerts.surges(
+        {
+            blob: [
+                alerts.Week(index[w.week], w.week, w.counts.recent, w.counts.surge, w.other_seed, t)
+                for w, t in zip(life, traits[blob], strict=True)
+            ]
+            for blob, life in by_blob.items()
+        },
+        {f.end: _recent_everywhere(f, chosen) for f in frames},
+    )
+    with conn.cursor() as cursor:
+        cursor.executemany(
+            "INSERT INTO alerts (day, kind, blob_id, observed, expected)"
+            " VALUES (%s, 'surge', %s, %s, %s)",
+            [(a.day, a.blob, a.observed, a.expected) for a in raised],
+        )
     return {
         "blobs": len(by_blob),
         "shown": shown,
         "blob_weeks": len(weeks),
         "blob_chunks": len(held),
         "days": days,
+        "alerts": len(raised),
     }
+
+
+def _recent_everywhere(frame: Frame, chosen: Pool) -> int:
+    """All the radar's chunks in the frame's last 4 weeks, in a blob or not."""
+    days = np.array([chosen.days[i].toordinal() for i in frame.rows.tolist()])
+    return int((days > frame.end.toordinal() - signals.RECENT_DAYS).sum())
 
 
 def _lasted(first: int, last: int, frames: int) -> bool:

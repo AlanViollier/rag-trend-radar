@@ -108,7 +108,7 @@ def test_a_build_writes_blobs_weeks_chunks_and_days(world: tuple[Pool, list[int]
 def test_a_rebuild_changes_nothing(world: tuple[Pool, list[int]]) -> None:
     chosen, _ = world
     made = _frames(WEEKS)
-    tables = ("blobs", "blob_weeks", "blob_chunks", "day_totals")
+    tables = ("blobs", "blob_weeks", "blob_chunks", "day_totals", "alerts")
     with db.connect() as conn:
         build.write(conn, chosen, made, made, MODEL)
     first = {t: _dump(t) for t in tables}
