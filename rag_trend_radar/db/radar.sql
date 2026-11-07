@@ -59,33 +59,19 @@ CREATE TABLE day_totals (
     press_chunks int NOT NULL
 );
 
--- An investigator's saved worries, checked on each day's mail by word match and by meaning.
-CREATE TABLE watchlists (
-    id           bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name         text NOT NULL UNIQUE,
-    query        text NOT NULL,
-    terms        text[] NOT NULL,
-    query_vector halfvec NOT NULL,
-    threshold    double precision NOT NULL
-);
-
--- What the radar raised on a day: a blob growing fast (`trends/alerts.py`) or a watchlist match. For a
--- surge, `observed` is its chunks in the last 4 weeks and `expected` its normal; a watchlist has none.
+-- A blob growing fast on a week (`trends/alerts.py`): `observed` is its chunks in the last 4 weeks,
+-- `expected` its normal.
 CREATE TABLE alerts (
-    id           bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    day          date NOT NULL,
-    kind         text NOT NULL CHECK (kind IN ('surge', 'watchlist')),
-    blob_id      bigint REFERENCES blobs (id) ON DELETE CASCADE,
-    watchlist_id bigint REFERENCES watchlists (id),
-    observed     double precision NOT NULL,
-    expected     double precision,
-    CHECK ((kind = 'watchlist') = (watchlist_id IS NOT NULL)),
-    CHECK ((kind = 'watchlist') = (blob_id IS NULL)),
-    UNIQUE NULLS NOT DISTINCT (day, kind, blob_id, watchlist_id)
+    id       bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    day      date NOT NULL,
+    blob_id  bigint NOT NULL REFERENCES blobs (id) ON DELETE CASCADE,
+    observed double precision NOT NULL,
+    expected double precision NOT NULL,
+    UNIQUE (day, blob_id)
 );
 CREATE INDEX alerts_day ON alerts (day);
 
-GRANT SELECT ON blobs, blob_weeks, blob_chunks, day_totals, watchlists, alerts TO radar_reader;
+GRANT SELECT ON blobs, blob_weeks, blob_chunks, day_totals, alerts TO radar_reader;
 
 ALTER TABLE blobs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY blobs_investigator ON blobs FOR SELECT TO radar_reader
@@ -98,9 +84,6 @@ CREATE POLICY blob_chunks_investigator ON blob_chunks FOR SELECT TO radar_reader
     USING (current_setting('app.person', true) = 'investigator');
 ALTER TABLE day_totals ENABLE ROW LEVEL SECURITY;
 CREATE POLICY day_totals_investigator ON day_totals FOR SELECT TO radar_reader
-    USING (current_setting('app.person', true) = 'investigator');
-ALTER TABLE watchlists ENABLE ROW LEVEL SECURITY;
-CREATE POLICY watchlists_investigator ON watchlists FOR SELECT TO radar_reader
     USING (current_setting('app.person', true) = 'investigator');
 ALTER TABLE alerts ENABLE ROW LEVEL SECURITY;
 CREATE POLICY alerts_investigator ON alerts FOR SELECT TO radar_reader

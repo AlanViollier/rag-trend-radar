@@ -13,7 +13,6 @@ SCHEMA_SQL = Path(__file__).with_name("schema.sql")
 RADAR_SQL = Path(__file__).with_name("radar.sql")
 RADAR_TABLES = (
     "alerts",
-    "watchlists",
     "day_totals",
     "blob_chunks",
     "blob_weeks",

@@ -5,7 +5,7 @@ RAG and a trend radar over one Postgres store, fed day by day.
 The Enron mailbox is replayed one simulated day at a time, as if you were the compliance team
 inside the company in 2001. Every day the store takes in that day's mail. Employees can search
 and ask questions about their own mail, enforced by Postgres row-level security. An
-investigator sees the whole corpus: what's rising, what's new, alerts and watchlists.
+investigator sees the whole corpus: what's rising, what's new, and alerts when a subject grows fast.
 
 **Status:** milestone 2 of 5. The whole corpus is in, replayed day by day: 244,534 emails and
 84,358 quoted messages, 464,603 chunks. Questions get hybrid search, a reranker and answers from

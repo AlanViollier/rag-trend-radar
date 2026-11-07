@@ -191,14 +191,6 @@ class RadarEvent(Record):
     words: tuple[str, ...]
 
 
-class WatchlistSeed(Record):
-    """An investigator's saved worry: `query` is matched by meaning, `terms` as written."""
-
-    name: str
-    query: str
-    terms: tuple[str, ...]
-
-
 class RunStage(Record):
     """One step of a radar run: how long it took and how many things it went through."""
 

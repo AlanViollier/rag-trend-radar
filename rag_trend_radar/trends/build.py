@@ -153,8 +153,7 @@ def write(
     )
     with conn.cursor() as cursor:
         cursor.executemany(
-            "INSERT INTO alerts (day, kind, blob_id, observed, expected)"
-            " VALUES (%s, 'surge', %s, %s, %s)",
+            "INSERT INTO alerts (day, blob_id, observed, expected) VALUES (%s, %s, %s, %s)",
             [(a.day, a.blob, a.observed, a.expected) for a in raised],
         )
     return {

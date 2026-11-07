@@ -1,23 +1,15 @@
-"""The real events and the worries: they load and hold what the page and watchlists need."""
+"""The real events the page puts on its timeline: they load and sit inside the radar's run."""
 
 from datetime import date
 from pathlib import Path
 
-from rag_trend_radar.schema import RadarEvent, WatchlistSeed
+from rag_trend_radar.schema import RadarEvent
 
 RADAR_STARTS, RADAR_ENDS = date(2000, 7, 1), date(2002, 2, 28)
 
 
-def test_every_event_sits_in_the_radars_window_and_can_be_matched() -> None:
+def test_every_event_sits_in_the_radars_window() -> None:
     lines = Path("evals/events.jsonl").read_text().splitlines()
     events = [RadarEvent.model_validate_json(line) for line in lines]
     assert len({e.id for e in events}) == len(events) == 11
     assert all(RADAR_STARTS <= e.day <= RADAR_ENDS for e in events)
-    assert all(len(set(e.words)) >= 2 for e in events)
-
-
-def test_every_worry_has_a_meaning_and_words_to_match() -> None:
-    lines = Path("evals/watchlists.jsonl").read_text().splitlines()
-    seeds = [WatchlistSeed.model_validate_json(line) for line in lines]
-    assert len({s.name for s in seeds}) == len(seeds) > 0
-    assert all(s.query and s.terms for s in seeds)

@@ -2,7 +2,6 @@
 
 import re
 from collections.abc import Iterator
-from datetime import date
 
 import psycopg
 import pytest
@@ -39,20 +38,10 @@ def radar(store: None) -> Iterator[None]:
             "INSERT INTO blob_chunks VALUES (%s, %s, '2001-09-09', '2001-09-09')", (blob, chunk)
         )
         conn.execute("INSERT INTO day_totals VALUES ('2001-09-10', 1, 1, 1, 1, 1, 0)")
-        watchlist = conn.execute(
-            "INSERT INTO watchlists (name, query, terms, query_vector, threshold)"
-            " VALUES ('worry', 'shredding', '{shred}', %s, 0.5) RETURNING id",
-            (VECTOR,),
-        ).fetchall()[0][0]
         conn.execute(
-            "INSERT INTO alerts (day, kind, blob_id, observed, expected)"
-            " VALUES ('2001-09-10', 'surge', %s, 0.2, 0.1)",
+            "INSERT INTO alerts (day, blob_id, observed, expected)"
+            " VALUES ('2001-09-10', %s, 0.2, 0.1)",
             (blob,),
-        )
-        conn.execute(
-            "INSERT INTO alerts (day, kind, watchlist_id, observed)"
-            " VALUES ('2001-09-10', 'watchlist', %s, 1)",
-            (watchlist,),
         )
     yield
     db.reset_radar()
@@ -102,30 +91,9 @@ def test_a_deleted_chunk_leaves_the_blob() -> None:
 
 
 @pytest.mark.usefixtures("radar")
-@pytest.mark.parametrize(
-    ("kind", "blob", "watchlist"),
-    [("surge", False, False), ("surge", True, True), ("watchlist", True, False)],
-)
-def test_an_alert_points_at_exactly_what_its_kind_says(
-    kind: str, blob: bool, watchlist: bool
-) -> None:
-    with db.connect() as conn:
-        blob_id = conn.execute("SELECT id FROM blobs").fetchall()[0][0] if blob else None
-        watchlist_id = (
-            conn.execute("SELECT id FROM watchlists").fetchall()[0][0] if watchlist else None
-        )
-        with pytest.raises(psycopg.errors.CheckViolation):
-            conn.execute(
-                "INSERT INTO alerts (day, kind, blob_id, watchlist_id, observed)"
-                " VALUES (%s, %s, %s, %s, 1)",
-                (date(2001, 9, 11), kind, blob_id, watchlist_id),
-            )
-
-
-@pytest.mark.usefixtures("radar")
 def test_re_raising_the_same_alert_is_refused() -> None:
     with db.connect() as conn, pytest.raises(psycopg.errors.UniqueViolation):
         conn.execute(
-            "INSERT INTO alerts (day, kind, blob_id, observed)"
-            " SELECT day, kind, blob_id, observed FROM alerts WHERE kind = 'surge'"
+            "INSERT INTO alerts (day, blob_id, observed, expected)"
+            " SELECT day, blob_id, observed, expected FROM alerts"
         )
