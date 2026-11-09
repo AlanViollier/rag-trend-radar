@@ -1,176 +1,135 @@
 # rag-trend-radar
 
-RAG and a trend radar over one Postgres store, fed day by day.
+A RAG over all of the public Enron emails, in one Postgres database. You can ask the agent about
+an email, a person, a deal or a stat, and it finds the mail and answers with citations. I built
+it to get more hands-on experience with RAG and vector databases.
 
-The Enron mailbox is replayed one simulated day at a time, as if you were the compliance team
-inside the company in 2001. Every day the store takes in that day's mail. Employees can search
-and ask questions about their own mail, enforced by Postgres row-level security. An
-investigator sees the whole corpus: what's rising, what's new, and alerts when a subject grows fast.
+I also used the same vectors to track topics over time. Every week the mail is clustered, each
+cluster is followed as it grows, and an alert fires when one suddenly takes off. Then I compared
+those alerts to what really happened at Enron.
 
-**Status:** milestone 3 of 5. The whole corpus is in, replayed day by day: 244,534 emails and
-84,358 quoted messages, 464,603 chunks. Questions get hybrid search, a reranker and answers from
-Claude that cite the emails they come from. The radar is built and its page comes next; the agent comes with milestone 4.
+**There are two demos I'd recommend if you just want to see the cool part. More detail below.**
 
-## Ask it something
+**[Watch the agent work a case →](https://alanviollier.github.io/rag-trend-radar/investigator/)**
+Real questions, step by step: the tools it picks, the search, the answer with its citations. It's
+a recording, because live API calls on a public page are not in my budget.
 
-```sh
-$ uv run rag-trend-radar ask "How did the September 11 attacks affect Enron?" --as-of 2001-09-30
-investigator, as of 2001-09-30
+<!-- GIF of the investigator goes here -->
 
-Based on the news clippings in your mail, the attacks mainly caused a short trading and
-office shutdown at Enron, followed by a quick return to business. […]
+**[Watch the radar replay →](https://alanviollier.github.io/rag-trend-radar/radar/)**
+Twenty months of Enron's mail as moving clusters, stopping on the moments that mattered.
 
-[1] Enron Mentions (document 2132)
-[2] Enron Mentions - 09/15/01 - 09/16/01 (document 3342)
-```
+<!-- GIF of the replay goes here -->
 
-Ask as an employee and the search only sees their mailbox; ask as of an earlier day and it
-only sees mail sent by then:
+| | |
+|---|---|
+| the data | 517,401 files → 244,534 emails → 464,603 chunks |
+| finding the right email, top 10 | .959 as an employee, .893 as the investigator |
+| permission leaks | 0 in 185,589 results |
+| the radar | 87 weeks, 973 clusters, 72 alerts |
+| a question | about 3.5 s before Claude starts, 1 to 3 cents |
 
-```sh
-$ uv run rag-trend-radar ask "Who wanted to sell gas to Silicon Valley Power?" --person kean-s --as-of 2001-09-30
-Nothing in your search results answers this. […]
+## 01 · Playing investigator
 
-$ uv run rag-trend-radar ask "How did the September 11 attacks affect Enron?" --as-of 2001-09-10
-This isn't in your mail. Today is 2001-09-10, so the September 11 attacks haven't happened yet […]
-```
+To have a bit of fun, and to make this as close to the real world as I could, the project
+roleplays the compliance team inside Enron in 2001.
 
-An answer costs one to three cents.
+The mail arrives one simulated day at a time. Each of the 150 employees can search only their own
+mailbox. The investigator can search everyone's mail and gets the radar. Every search takes a
+date and only sees what had been sent by then.
 
-## How it works
+That roleplay is what brought in the real problems: permissions, mail arriving in batches, and
+re-runs that must not double-count.
 
-→ **Ingest.** 517,401 files from the CMU Enron dataset are parsed, stripped of markup, split
-into each email's own text and the replies it quotes, and deduplicated across mailboxes into
-244,534 emails. A quoted message no mailbox holds as an email becomes a document of its own.
+## 02 · Cleaning the mail
 
-→ **Index.** Each email is one chunk, or several past 512 tokens, led by its subject, sender
-and date, and embedded with EmbeddingGemma 2 into pgvector (halfvec, HNSW). The same chunks
-carry a BM25 index (pg_search), without common words and with word endings folded. A reply under
-200 characters is indexed with the start of the message it answered: "i sent it today" can't
-otherwise be found by the judge named in the message above it. Results and citations keep the
-reply's own words apart.
+Most of the early work went here.
 
-→ **Permissions.** An employee reads what sat in their mailbox. Every search runs as a
-database role whose rows are filtered by row-level security, before anything reaches the
-model. A canary test plants a secret in one mailbox and searches for it as others, by every
-path, in CI. A full check over 630 questions found 0 leaks in 185,589 results, by permission or
-by date.
+→ **The same email sat in many mailboxes.** Matching copies on subject and body took 517,401 files down to 244,534 emails.
 
-→ **Search.** Keyword and vector results (50 each) are merged by reciprocal rank fusion in
-one SQL query, then a cross-encoder (bge-reranker-v2-m3) reorders them. An employee's vector
-search measures every chunk they can read, since an index walk through everyone's mail runs out
-before finding enough of theirs; the investigator, who reads everything, uses HNSW.
+→ **Replies quote everything before them.** Each email is split into what its author wrote and what it quotes, so one sentence doesn't count 15 times. No library handled Enron's Lotus forwards, so that part is my own code.
 
-→ **The 10 that reach Claude.** A chunk a better result already says drops out, so one article
-pasted into five digests counts once. Press digests take at most 3 of the 10 and bulk mail 1,
-unless little else is left: on story questions they were 91% of results, from about 6% of the
-chunks, and the mail people wrote rarely surfaced. They go to Claude Sonnet 5.5 as search-result
-blocks, so each claim comes back with its citation.
+→ **Signatures and footers repeat.** A trailing line found in at least 200 different emails is trimmed from what gets searched.
 
-## The daily replay
+→ **"i sent it today" can't be found on its own.** A reply under 200 characters is indexed with the start of the message it answered.
 
-The store is fed the way a compliance system would be: one day at a time, each day safe to run
-again.
+→ **Newsletters drown everything.** On story questions, press digests were 91% of the results from about 6% of the chunks. Every chunk is labelled mail, press or bulk by rule, so search can cap them and the radar can leave them out.
 
-→ **Stage once.** An email's date is only known once all its copies are seen: the Lotus and
-Outlook exports shift the same email by whole hours, so copies of a late-evening email can fall
-on two different days. `stage` reads all 517,401 files once (4 minutes), resolves each email's
-date over its copies, and writes the schedule to a table. Each day then reads its own rows,
-about 3 seconds a day before embedding.
+## 03 · The RAG
 
-→ **Re-running a day changes nothing.** Documents are keyed by a hash of their content, and
-an email is re-chunked only when its chunks would read differently; a day's counts are
-recounted from the stored rows, never added to. Running all 30 days of September a second time wrote nothing. A day's row closes only once
-its vectors exist, so a crashed run leaves searches on the last finished day.
+A question runs keyword search and vector search, 50 results each. They're merged, reranked and
+trimmed to the best 10, and Claude answers from those with a citation for each claim. The agent
+decides when to search and when to read the stats tables instead.
 
-→ **As known that day.** A signature line counts as boilerplate only from the day its 200th
-email was sent, so a day's chunks never depend on later mail. A quoted message keeps the date
-of its first quote, and its readers are recounted from every email that quotes it, whichever
-day that email came in. A mailbox reads a quoted message only from its own first quote, so a
-search as of an earlier day doesn't show what hadn't arrived yet. One caveat: dates, and the check
-for whether any email holds a quoted text, use the whole 2002 snapshot, so day D knows copies a
-live pipeline would see later.
-
-→ **Deletes and model swaps.** `delete` takes a document out of every search on every day: its
-chunks and vectors go, and the row stays as a tombstone so a replay doesn't bring it back. The
-corpus never asks for one; the path is tested. A new embedding model fills its own table
-beside the one serving searches, `vectors` shows how much of the corpus it covers, and the
-config flips once it's full. MiniLM filled September in under two minutes, found the right
-email in the top 10 for .910 of questions against EmbeddingGemma's .970, and was dropped.
-
-Rebuilding September through the replay found a dedup bug from a refactor: a copy whose body
-opened on a blank line counted as a second email (756 across the corpus). After the fix the
-rebuilt store scores what the old one did, within one question in 200.
-
-## How well it finds things
-
-Questions written by Claude from real emails, scored by whether the right email comes back in the
-top 10 and first (`recall`), over the whole corpus. A forward or re-send of the right email counts
-as right, by comparing text, never by a model.
+Claude wrote 196 questions from real emails, and I scored each layer by whether the right email
+came back, as an employee who can read the answer and as the investigator among everything.
 
 | method | employee, top 10 | first | investigator, top 10 | first |
 |---|---|---|---|---|
-| keyword (BM25) | .832 | .612 | .699 | .515 |
-| vector (EmbeddingGemma 2, 768) | .903 | .653 | .745 | .495 |
+| keyword | .832 | .612 | .699 | .515 |
+| vector | .903 | .653 | .745 | .495 |
 | hybrid | .908 | .658 | .821 | .556 |
-| **what `ask` uses** | **.959** | **.791** | **.893** | **.750** |
+| **with rerank, collapse and caps** | **.959** | **.791** | **.893** | **.750** |
 
-196 questions, each asked two ways: as an employee who can read the answer, among a median 5,600
-chunks, and as the investigator, among all 464,603. The second is the real test, and most of what
-it misses is buried among mail on the same topic. On 99 questions quoting a deal or contract
-number, keyword search gets the right email first 93-96% of the time and vector search 60-72%,
-which is why hybrid stays; `ask` finds all 99 in its top 10.
+**Why these choices:**
 
-These questions come from emails of 200 to 4,000 characters, so they can't test press digests or
-short replies. Other checks do:
+| I chose | over | because |
+|---|---|---|
+| one whole email per chunk, split only past 512 tokens | fixed-size chunks | an email is already one thought, and 90% of them fit. 256 and 1,024 tokens scored within a couple of points |
+| subject, sender and date leading every chunk | the bare body | the right email comes first 4 to 6 points more often |
+| no overlap between chunks | overlap | I built it, and it mixed the two subjects a split had just separated |
+| EmbeddingGemma 2 | MiniLM, paid embedding APIs | runs locally for free, and found the right email .970 of the time against MiniLM's .910 (vector alone, September) |
+| 768 dimensions | 256 | 1 to 2 points better on the final score, and no slower |
+| halfvec | full float32 | half the storage, and it changed one question in 200 |
+| keyword + vector | either alone | on questions quoting a deal number, keyword gets it first 93–96% of the time and vector 60–72%. Vector wins when the words differ |
+| merging by rank (RRF) | blending scores | keyword and vector scores aren't on the same scale, but ranks are |
+| bge-reranker-v2-m3, on 50 candidates | Qwen3, 30 candidates | Qwen3 was within noise. With 30 candidates the investigator's top 10 falls to .878 |
+| Postgres with pgvector and pg_search | a dedicated vector database | permissions, dates, deletes and vectors sit in one query, and the filters are the hard part |
+| exact search for an employee, HNSW for the investigator | one index for everyone | HNSW grabs its nearest matches first and permissions remove most of them, so a small mailbox got 8 results of 50. Exact takes 102 ms there. Over everything it takes 8 s, so the investigator gets the index |
+| row-level security | filtering in the app or the prompt | the database refuses the row, whatever the code above it does |
+| daily batches | streaming | most production RAG re-indexes on a schedule anyway |
 
-→ **Hard questions** (`facts`). 30 questions from the Enron story, each listing facts that must
-appear in the 10 chunks an answer is written from, some only from people's own mail, plus checks
-that nothing from later dates comes back. 26 pass with the plain top 10, 29 with what `ask` sends.
-They were written after reading the evidence, so they're easier than blind questions.
+## 04 · Tracking trends with the vectors
 
-→ **Reading the results.** Across 12 story questions, press fell from 109 of 120 slots to 61. Asked
-about the Raptors, the plain top 10 is nine press digests and one email; what `ask` sends adds
-Kaminski's memo refusing to back the LJM valuations and a forwarded copy of the Watkins letter.
-By hand, about 33 of the 58 mail slots are people or internal documents, up from about 10; the rest
-are mostly forwarded articles the rule can't detect.
+This was my favourite part. Search can't answer "what was suddenly rising in October?", because
+no single email holds that answer. So each week, the last 26 weeks of mail are clustered from
+scratch using only mail sent so far, and neighbouring weeks are linked by the chunks they share.
+The faint glow on the map is 4,000 real chunks of mail no cluster took.
 
-→ **Short replies.** 22 questions written from a random sample of replies under 200 characters: the
-investigator finds 21 in the top 10, against 14 before replies were indexed with what they answered.
-The questions were chosen and written knowing the answers, so the gain is real but flattered.
-The sets above didn't move.
+**An alert fires when a cluster, in its last 4 weeks, holds at least 4 times its own normal and
+at least 1% of all the mail the radar read,** was also found by a second run with a different
+seed, looks like a real subject, and hasn't alerted in 8 weeks. Seven of the 72, the ones the
+replay stops on:
 
-→ **Real answers.** 10 questions through Claude, read by hand, 29 cited facts checked against the
-cited emails by code, all present. It said "not in your mail" for trading strategies the mail
-doesn't hold and for Skilling's resignation asked the day before it happened, and laid out where
-Enron's notices and press reports disagreed on the retirement plan freeze dates. Ten answers is a
-spot check, not a score.
+| alert | cluster | emails in 4 weeks | normal | it followed |
+|---|---|---|---|---|
+| Feb 18, 2001 | California utilities | 284 | 22 | blackouts, 32 days before |
+| Aug 26, 2001 | Skilling's exit | 124 | 3 | his resignation, 12 days before |
+| Sep 16, 2001 | Americans, people | 213 | 12 | September 11, 5 days before |
+| Oct 28, 2001 | Fastow, partnerships | 665 | 35 | Fastow replaced, 4 days before |
+| Nov 18, 2001 | Dynegy merger | 597 | 4 | the deal, 9 days before |
+| Jan 13, 2002 | Bush, Lay, O'Neill, Andersen | 234 | 6 | the investigations |
+| Jan 27, 2002 | creditors, UBS, bankruptcy | 371 | 4 | the bankruptcy, 56 days before |
 
-A reranker score can't say "not in your mail" by itself: a topic the mail doesn't hold scored .29,
-a real answer .06. A new question takes about 3.5 seconds before Claude starts, 1 of search and
-2.5 of reranking on a laptop.
+Every one of these came after the news. I tried to make it see things earlier, but lowering
+thresholds is a touchy game. 968 cluster-weeks grew 4 times, and only 342 of those were also 1%
+of the mail, so every step down buys you a pile of noise. I preferred thresholds that actually
+mean something over trying to catch something early. It could also run day by day, about 18 hours
+on a laptop, but I didn't want to spend all that compute.
 
-Bugs surfaced on the way, mostly where the vector index meets row-level security. An HNSW
-scan fetches its nearest candidates first and the permission filter runs after, so an
-employee who can read 2% of the mail got no vector results at all; iterative scans fixed it
-(and the canary test now guards it). Then measuring each layer alone showed HNSW finding the
-right email in the top 50 for 87% of questions where exact search found it for 100%: most
-candidates it looked at were filtered out. Widening the search (`ef_search` 1,000) closed the
-gap at the same 38 ms a query. The final answers barely moved through either fix, because the
-merged list and the reranker covered for the broken layer, which is why each layer gets
-measured on its own. At full scale the same layer-by-layer scoring found the index's scan limit
-returning as few as 8 of 50 results for a small mailbox, which is what moved employees to exact
-search: vector top 50 from .908 to .944, in less time. Halfvec storage costs one question in 200 against full precision
-(`scripts/precision.py`).
+**Why these choices:**
 
-Two chunking choices were checked the same way, each in its own Postgres schema so the store
-stays untouched. Leading every chunk with its subject, sender and date puts the right email
-first 4 to 6 points more often than the bare body (hybrid .820 against .780, vector .795
-against .735, 200 questions). Chunk size barely matters: 256, 512 and 1,024 tokens land within
-a couple of points of each other, because most emails fit whole under all three. The Qwen3
-reranker scored within noise of bge (.875 against .890 first), so bge stays.
+| I chose | over | because |
+|---|---|---|
+| re-clustering every week | fixed topics that move | four versions of that melted together or got taken over by unrelated mail |
+| UMAP, then HDBSCAN | HDBSCAN alone | alone it left 89–90% of the mail unassigned and found near-copies |
+| HDBSCAN | k-means | it doesn't need the number of topics up front, and it's allowed to leave mail out |
+| a 26-week window | 8 or 16 weeks | two seeds agreed on 55–58% of lasting splits, against 29–45% at 8 weeks. A new subject takes longer to appear |
+| clusters of at least 100 | 200 | 200 was too coarse |
+| two seeds | one | a cluster only one run finds isn't trustworthy |
+| hiding chatter, footers and newsletters | showing everything | they were 30% of the mail in clusters. There's a button to bring them back |
 
-## Run it
+## 05 · Run it
 
 ```sh
 cp .env.template .env              # set POSTGRES_PASSWORD and ANTHROPIC_API_KEY
@@ -178,11 +137,25 @@ docker compose up -d --wait        # Postgres 18 + pgvector + pg_search
 uv sync --extra models             # local embedding and rerank models
 uv run rag-trend-radar db-reset
 uv run rag-trend-radar stage       # read all 517k files once, ~4 min
-uv run rag-trend-radar replay --since 1997-01-01 --until 2002-12-31   # every day in order, embedding as it goes (~19 h on an M1 Pro; September 2001 alone, the default, ~30 min)
-uv run rag-trend-radar ask "…"
-uv run rag-trend-radar recall --person investigator   # score search, free
-uv run rag-trend-radar facts       # hard questions, free
-uv run rag-trend-radar leaks evals/questions_full.jsonl   # permission and date checks, free
+uv run rag-trend-radar replay      # September 2001, ~30 min
+uv run rag-trend-radar ask "How did the September 11 attacks affect Enron?" --as-of 2001-09-30
 ```
 
-The dataset goes in `data/enron/maildir` ([CMU, May 2015](https://www.cs.cmu.edu/~enron/)).
+The dataset goes in `data/enron/maildir` ([CMU, May 2015](https://www.cs.cmu.edu/~enron/)). The
+whole corpus takes about 19 hours on an M1 Pro, and the radar about 2 more.
+
+## 06 · Limits
+
+→ Search was tuned on the same 196 questions as the table, and Claude wrote them, so .893 is probably a little flattering.
+
+→ The alert thresholds were picked watching the whole run, ending included. Each alert only reads past mail, but "4 times" and "1%" knew how the story ended. About half of the alerts from August 2001 on are newsletters and ads.
+
+→ The permissions hold against the queries this code runs, but not against someone writing their own SQL. That's why the agent gets search and stats tools and doesn't write SQL.
+
+→ It's one company, in English, from one 2002 snapshot.
+
+## Credits
+
+The Enron corpus as released by [CMU](https://www.cs.cmu.edu/~enron/). EmbeddingGemma 2 by Google,
+bge-reranker-v2-m3 by BAAI, ParadeDB for pg_search, pgvector, UMAP and HDBSCAN, three.js for the
+page.

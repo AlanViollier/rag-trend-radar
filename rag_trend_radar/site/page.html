@@ -265,7 +265,7 @@ const linear = (rgb) => new THREE.Color().setRGB(rgb[0] / 255, rgb[1] / 255, rgb
 const PAPER_LINEAR = linear([0x1a, 0x17, 0x14]);
 const SPECKS = dust.first.length;
 const dustPositions = new Float32Array(SPECKS * 3), dustColours = new Float32Array(SPECKS * 4);
-const dustTint = linear([0xa0, 0x7a, 0x52]);
+const dustTint = { r: 0xa0 / 255, g: 0x7a / 255, b: 0x52 / 255 };
 for (let i = 0; i < SPECKS; i++) dustColours.set([dustTint.r, dustTint.g, dustTint.b, 0], i * 4);
 const dustGeometry = new THREE.BufferGeometry();
 dustGeometry.setAttribute("position", new THREE.BufferAttribute(dustPositions, 3).setUsage(THREE.DynamicDrawUsage));
@@ -277,9 +277,36 @@ glowFill.addColorStop(0, "rgba(255,255,255,1)");
 glowFill.addColorStop(1, "rgba(255,255,255,0)");
 glowContext.fillStyle = glowFill;
 glowContext.fillRect(0, 0, 64, 64);
-const dustPoints = new THREE.Points(dustGeometry, new THREE.PointsMaterial({ size: 64, map: new THREE.CanvasTexture(glow), sizeAttenuation: false, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+const dustPoints = new THREE.Points(dustGeometry, new THREE.PointsMaterial({ size: 32, map: new THREE.CanvasTexture(glow), sizeAttenuation: false, vertexColors: true, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending }));
 dustPoints.frustumCulled = false;
-scene.add(dustPoints);
+// Thousands of very faint sprites round to nothing on a normal 8-bit screen, each colour differently.
+// So they add up in a half-size, high-precision image first, and that image goes behind the spheres.
+const glowScene = new THREE.Scene();
+glowScene.add(dustPoints);
+const glowTarget = new THREE.WebGLRenderTarget(256, 256, { type: THREE.HalfFloatType, depthBuffer: false });
+const glowLayer = new THREE.Scene();
+const flatCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+glowLayer.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+  uniforms: { glow: { value: glowTarget.texture } },
+  vertexShader: "varying vec2 place; void main() { place = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }",
+  fragmentShader: `uniform sampler2D glow; varying vec2 place;
+    float noise(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+    void main() { gl_FragColor = vec4(texture2D(glow, place).rgb + (noise(gl_FragCoord.xy) - 0.5) / 255.0, 1.0); }`,
+  blending: THREE.AdditiveBlending, transparent: true, depthTest: false, depthWrite: false,
+})));
+renderer.autoClear = false;
+
+function draw() {
+  renderer.setRenderTarget(glowTarget);
+  renderer.setClearColor(0x000000, 1);
+  renderer.clear();
+  renderer.render(glowScene, camera);
+  renderer.setRenderTarget(null);
+  renderer.setClearColor(0x1a1714, 1);
+  renderer.clear();
+  renderer.render(glowLayer, flatCamera);
+  renderer.render(scene, camera);
+}
 const controls = new OrbitControls(camera, mapEl);
 controls.enabled = false;
 controls.enablePan = false;
@@ -301,6 +328,7 @@ function resize() {
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
   renderer.setPixelRatio(ratio);
   renderer.setSize(side, side, false);
+  glowTarget.setSize(Math.ceil((side * ratio) / 2), Math.ceil((side * ratio) / 2));
   el("over").width = el("over").height = side * ratio;
   over.setTransform(ratio, 0, 0, ratio, 0, 0);
 }
@@ -604,7 +632,7 @@ function frame(now) {
   moveCamera(now);
   const placed = layout(time);
   updateDust(time);
-  renderer.render(scene, camera);
+  draw();
   project(placed);
   current = placed;
   const week = Math.round(time);
