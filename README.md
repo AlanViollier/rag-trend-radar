@@ -19,7 +19,7 @@ a recording, because live API calls on a public page are not in my budget.
 **[Watch the radar replay →](https://alanviollier.github.io/rag-trend-radar/radar/)**
 Twenty months of Enron's mail as moving clusters, stopping on the moments that mattered.
 
-<!-- GIF of the replay goes here -->
+<a href="https://alanviollier.github.io/rag-trend-radar/radar/"><img src="docs/radar/replay.gif" alt="The opening of the radar replay: clusters of Enron's mail appearing and growing week by week from July 2000, with alerts landing in a feed beside them."></a>
 
 | | |
 |---|---|

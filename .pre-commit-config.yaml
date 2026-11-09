@@ -5,7 +5,7 @@ repos:
     hooks:
       - id: detect-private-key
       - id: check-added-large-files
-        args: ['--maxkb=1000']   # raise per project for a README GIF or a chart
+        args: ['--maxkb=9000']   # the README's GIFs
       - id: check-merge-conflict
       - id: check-yaml
       - id: check-toml
