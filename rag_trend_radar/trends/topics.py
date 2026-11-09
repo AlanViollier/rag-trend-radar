@@ -86,22 +86,20 @@ def pool(
 
 def drop_loose(
     labels: NDArray[np.int64], vectors: NDArray[np.float32], min_cohesion: float = MIN_COHESION
-) -> tuple[NDArray[np.int64], int]:
-    """Clusters whose members barely resemble their centre go back to `NOISE`; how many did.
+) -> NDArray[np.int64]:
+    """Clusters whose members barely resemble their centre go back to `NOISE`.
 
     Such a centre is the average of unrelated mail, which sits near all mail, so everything joins
     it: one born at .83 took 31,591 chunks in six months (2026-11-03).
     """
     kept = labels.copy()
-    dropped = 0
     for number in set(labels.tolist()) - {NOISE}:
         rows = labels == number
         centre = vectors[rows].mean(axis=0)
         centre /= np.linalg.norm(centre)
         if float((vectors[rows] @ centre).mean()) < min_cohesion:
             kept[rows] = NOISE
-            dropped += 1
-    return kept, dropped
+    return kept
 
 
 def squash(

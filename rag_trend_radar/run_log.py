@@ -17,7 +17,7 @@ from pathlib import Path
 
 import numpy as np
 
-from rag_trend_radar.schema import RadarRun, RadarWeek, RunStage, StageSummary, TopicSummary
+from rag_trend_radar.schema import RadarRun, RunStage, StageSummary
 
 
 @dataclass
@@ -35,8 +35,6 @@ class RunLog:
         self.settings = settings
         self.started = datetime.now(UTC)
         self.results: dict[str, str | int | float] = {}
-        self.topics: tuple[TopicSummary, ...] = ()
-        self.weeks: list[RadarWeek] = []
         self._stages: dict[str, list[RunStage]] = {}
         self._clock = time.perf_counter()
 
@@ -62,8 +60,6 @@ class RunLog:
             settings=self.settings,
             stages=self._stages,
             results=self.results,
-            topics=self.topics,
-            weeks=tuple(self.weeks),
         )
 
     def save(self, folder: Path) -> Path:

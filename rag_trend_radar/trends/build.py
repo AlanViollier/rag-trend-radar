@@ -18,11 +18,10 @@ from rag_trend_radar.trends.frames import Frame
 from rag_trend_radar.trends.topics import NOISE, Pool
 from rag_trend_radar.trends.words import keywords, reading_text
 
-## Under 8 weeks a blob is a blip, unless the mail ends before it could prove itself.
+## Seen across fewer than 9 weekly frames, a blob is a blip, unless the mail ends before it could prove itself.
 LASTING_WEEKS = 9
 ALIVE_AT_END = 2
 AGREED = 0.5
-TOP_KEYWORDS = 10
 ## Enough to find what a blob is about; a blob's 7,000th chunk changes nothing, and costs memory.
 KEYWORD_CHUNKS = 1500
 
@@ -187,7 +186,7 @@ def _words(frame: Frame, chosen: Pool) -> dict[int, list[str]]:
         " ".join(reading_text(chosen.texts[i]) for i in _members(frame, n)[:KEYWORD_CHUNKS])
         for n in numbers
     ]
-    return dict(zip(numbers, keywords(texts, TOP_KEYWORDS), strict=True))
+    return dict(zip(numbers, keywords(texts), strict=True))
 
 
 def _held(

@@ -80,7 +80,7 @@ def make(
                 labels = topics.drop_thin(
                     topics.cluster(points, min_size), chosen.document_ids[rows]
                 )
-                labels, _ = topics.drop_loose(labels, chosen.vectors[rows])
+                labels = topics.drop_loose(labels, chosen.vectors[rows])
                 handled.items = len(rows)
             ## Saved row for row with the chunk ids, deleted chunks as noise.
             full = np.full(len(kept), NOISE, dtype=np.int64)

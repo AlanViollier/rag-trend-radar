@@ -94,7 +94,6 @@ def test_a_cluster_of_unrelated_mail_is_too_loose_to_be_a_topic() -> None:
     loose = _unit(np.random.default_rng(1).normal(0, 1, (40, 16)).astype(np.float32))
     vectors = np.vstack([tight[:40], loose])
     labels = np.array([0] * 40 + [1] * 40, dtype=np.int64)
-    kept, dropped = topics.drop_loose(labels, vectors)
-    assert dropped == 1
+    kept = topics.drop_loose(labels, vectors)
     assert (kept[:40] == 0).all()
     assert (kept[40:] == topics.NOISE).all()

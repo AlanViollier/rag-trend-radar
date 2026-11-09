@@ -1,1 +1,1 @@
-"""The radar: topics found in the mail, their share of each day, and what moves."""
+"""The radar: blobs found in each week's mail, linked across weeks, how fast they grow, and alerts."""

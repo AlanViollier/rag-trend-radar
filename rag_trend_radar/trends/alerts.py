@@ -31,7 +31,7 @@ class Week:
 
 @dataclass(frozen=True)
 class Alert:
-    """A surge raised on `day`: `observed` chunks in the last 4 weeks against `expected` normal."""
+    """A blob growing fast on `day`: `observed` chunks in the last 4 weeks against `expected` normal."""
 
     day: date
     blob: int
