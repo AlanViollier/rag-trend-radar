@@ -1,4 +1,4 @@
-"""What the page's data file holds. A blob's lists run week by week from its `first` week."""
+"""The data inside the page. A blob's lists run week by week from its `first` week."""
 
 from datetime import date
 from typing import Literal
@@ -7,20 +7,19 @@ from rag_trend_radar.schema import Record
 
 
 class PageWeek(Record):
-    """One week of the replay. `documents` and `chunks` are the store so far; the people counts
-    are the busiest day of the week."""
+    """One week of the replay. `documents` and `chunks` are the store so far; `senders` the most
+    different people who sent mail on one day of the week."""
 
     day: date
     documents: int
     chunks: int
     mail: int
-    mailboxes: int
     senders: int
     live_blobs: int
 
 
 class PageBlob(Record):
-    """A blob smoothed for the picture, later mail allowed. One only an alert shows has no lists."""
+    """A blob smoothed for the picture, later mail allowed. `shown` false: only in the full view."""
 
     id: int
     first: int
@@ -30,10 +29,11 @@ class PageBlob(Record):
     mail: tuple[int, ...] = ()
     recent: tuple[int, ...] = ()
     surge: tuple[int, ...] = ()
-    moving: tuple[float, ...] = ()
-    press: tuple[float, ...] = ()
     x: tuple[float, ...] = ()
     y: tuple[float, ...] = ()
+    lifted_x: tuple[float, ...] = ()
+    lifted_y: tuple[float, ...] = ()
+    lifted_z: tuple[float, ...] = ()
 
 
 class PageAlert(Record):
@@ -57,6 +57,20 @@ class PageEvent(Record):
     title: str
 
 
+class Moment(Record):
+    """Where the replay stops to explain an alert. `text` may hold {observed}, {normal}, {mail}."""
+
+    day: date
+    blob: int
+    text: str
+
+
+class PageMoment(Moment):
+    """A moment with its numbers filled in, and the week it stops on."""
+
+    week: int
+
+
 class PageData(Record):
     """Everything the replay draws."""
 
@@ -64,4 +78,4 @@ class PageData(Record):
     blobs: tuple[PageBlob, ...]
     alerts: tuple[PageAlert, ...]
     events: tuple[PageEvent, ...]
-    stories: tuple[str, ...] = ()
+    moments: tuple[PageMoment, ...]

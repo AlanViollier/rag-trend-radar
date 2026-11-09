@@ -12,6 +12,8 @@ from rag_trend_radar.site import smooth
 RADIUS_PER_ROOT, RADIUS_BASE = 0.00085, 0.002
 # 60 neighbours keeps a blob's weeks together, and the map's large shape over the whole run.
 _NEIGHBOURS, _MIN_DIST, _SEED = 60, 0.6, 1
+# How a lifted map begins: the flat one at UMAP's own scale, with some depth to grow from.
+_START_SCALE, _START_DEPTH = 10.0, 1.0
 _MARGIN = 0.06
 # Each week starts mostly where the last ended, so a blob drifts instead of jumping.
 _KEEP = 0.925
@@ -25,8 +27,10 @@ def radius(mail: NDArray[np.float64]) -> NDArray[np.float64]:
     return RADIUS_PER_ROOT * np.sqrt(mail) + RADIUS_BASE
 
 
-def map_points(centres: NDArray[np.float32]) -> NDArray[np.float64]:
-    """Every blob-week's centre as a point in the unit square; the same input gives the same map."""
+def map_points(
+    main: NDArray[np.float32], others: NDArray[np.float32]
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    """Blob-week centres as points in the unit square: `main` shapes the map, `others` join it."""
     reducer = UMAP(
         n_components=2,
         n_neighbors=_NEIGHBOURS,
@@ -34,9 +38,23 @@ def map_points(centres: NDArray[np.float32]) -> NDArray[np.float64]:
         metric="cosine",
         random_state=_SEED,
     )
-    points = cast("NDArray[np.float64]", reducer.fit_transform(centres))
-    spread = (points - points.min(axis=0)) / (points.max(axis=0) - points.min(axis=0))
-    return spread * (1 - 2 * _MARGIN) + _MARGIN
+    return _embedded(reducer, main, others)
+
+
+def lift(
+    main: NDArray[np.float32], flat: NDArray[np.float64], others: NDArray[np.float32]
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    """The same blob-weeks in three dimensions, started from the flat map so neighbours stay put."""
+    depth = np.random.default_rng(_SEED).normal(0, _START_DEPTH, len(flat))
+    reducer = UMAP(
+        n_components=3,
+        n_neighbors=_NEIGHBOURS,
+        min_dist=_MIN_DIST,
+        metric="cosine",
+        random_state=_SEED,
+        init=np.column_stack([flat * _START_SCALE, depth]),
+    )
+    return _embedded(reducer, main, others)
 
 
 def pack(want: NDArray[np.float64], mail: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -60,9 +78,23 @@ def pack(want: NDArray[np.float64], mail: NDArray[np.float64]) -> NDArray[np.flo
         )
     for row, living in enumerate(alive):
         weeks = np.flatnonzero(living)
-        for axis in range(2):
+        for axis in range(want.shape[2]):
             placed[row, weeks, axis] = smooth.mean(placed[row, weeks, axis], _SETTLE_WEEKS)
     return placed
+
+
+def _embedded(
+    reducer: UMAP, main: NDArray[np.float32], others: NDArray[np.float32]
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    points = cast("NDArray[np.float64]", reducer.fit_transform(main))
+    rest = (
+        cast("NDArray[np.float64]", reducer.transform(others))
+        if len(others)
+        else np.empty((0, points.shape[1]))
+    )
+    low, high = points.min(axis=0), points.max(axis=0)
+    scale = (1 - 2 * _MARGIN) / (high - low)
+    return (points - low) * scale + _MARGIN, (rest - low) * scale + _MARGIN
 
 
 def _push_apart(

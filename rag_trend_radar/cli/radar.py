@@ -16,7 +16,8 @@ from rag_trend_radar.site import export
 from rag_trend_radar.trends import build, frames, topics
 
 EVENTS = Path("evals/events.jsonl")
-PAGE_DATA = Path("docs/radar/data.json")
+MOMENTS = Path("evals/moments.jsonl")
+PAGE = Path("docs/radar/index.html")
 
 
 @app.command()
@@ -67,15 +68,17 @@ def radar_build() -> None:
 
 
 @app.command()
-def radar_export(out: Path = PAGE_DATA) -> None:
-    """Write the replay page's data file from the radar tables (free, a few minutes)."""
+def radar_export(out: Path = PAGE) -> None:
+    """Write the replay page, data inside, from the radar tables (free, under a minute)."""
     settings = get_settings()
     log = RunLog("export", {"out": str(out)})
     with log.stage("read tables") as handled, db.connect(db.INVESTIGATOR) as conn:
         tables = export.read(conn)
         handled.items = len(tables.seen)
     with log.stage("smooth, place, name") as handled:
-        data = export.page(tables, export.events_from(EVENTS), frames.week_ends())
+        data = export.page(
+            tables, export.events_from(EVENTS), export.moments_from(MOMENTS), frames.week_ends()
+        )
         handled.items = len(data.blobs)
     with log.stage("write"):
         log.results["bytes"] = export.write(data, out)

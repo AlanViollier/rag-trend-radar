@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Radar Replay</title>
+<meta name="description" content="Enron's mail replayed week by week: every sphere a cluster of emails on one subject, growing and raising alerts.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #1A1714; --ink: #EDE6D8; --muted: #8A8474; --line: #2E2924; --dim: #3A352E;
+  --ember: #EA580C; --surge: #F06A25; --active: #E8C25A; --rest: #4A443C;
+  --font: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --chrome: linear-gradient(115deg, #e6e8f2 0%, #ff9de2 18%, #9de8ff 36%, #ffffff 50%, #b8ffcf 64%, #ffe29d 82%, #e6e8f2 100%);
+  --side: clamp(440px, calc(100vh - 322px), min(800px, calc(100vw - 470px)));
+}
+* { box-sizing: border-box; margin: 0; }
+html { background: var(--paper); }
+body { background: var(--paper); color: var(--ink); font: 400 12.5px/1.6 var(--font); padding: 20px 40px 28px; max-width: 1320px; margin: 0 auto; }
+.tick { height: 3px; width: 56px; background: var(--ember); margin-bottom: 12px; }
+h1 { font-size: 20px; font-weight: 600; letter-spacing: .02em; }
+.sub { color: var(--muted); margin: 2px 0 14px; }
+.stage { display: grid; grid-template-columns: var(--side) minmax(0, 1fr); gap: 28px; align-items: start; }
+.map { position: relative; aspect-ratio: 1; width: 100%; touch-action: none; }
+.map canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#over { pointer-events: none; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 8px; color: var(--muted); }
+.group { display: flex; align-items: center; gap: 8px; }
+.seg { display: inline-flex; border: 1px solid var(--dim); }
+button { all: unset; cursor: pointer; padding: 3px 9px; color: var(--muted); font: inherit; text-align: center; }
+button:hover { color: var(--ink); }
+.seg button + button { border-left: 1px solid var(--dim); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
+#play { color: var(--paper); background: var(--ember); min-width: 7ch; font-weight: 500; }
+#depth { position: absolute; left: 0; top: 0; z-index: 1; padding: 7px 15px; font-weight: 600; font-size: 13px; border: 1.5px solid transparent; border-radius: 3px;
+  background: linear-gradient(var(--paper), var(--paper)) padding-box, var(--chrome) border-box;
+  background-size: 100% 100%, 300% 100%; animation: chrome-edge 4.5s linear infinite; }
+#depth span { background: var(--chrome); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: chrome-text 4.5s linear infinite; }
+#depth:hover { filter: brightness(1.25); }
+@keyframes chrome-edge { to { background-position: 0 0, 150% 0; } }
+@keyframes chrome-text { to { background-position: 150% 0; } }
+@media (prefers-reduced-motion: reduce) { #depth, #depth span { animation: none; } }
+.panel { display: flex; flex-direction: column; height: calc(var(--side) + 34px); min-width: 0; }
+.when { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.date { color: var(--surge); font-size: 22px; font-weight: 500; line-height: 1.2; }
+#restart { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 1; padding: 6px 14px; background: rgba(26, 23, 20, .92); border: 1px solid var(--ember); color: var(--ink); font-size: 14px; white-space: nowrap; pointer-events: none; }
+#restart:empty { display: none; }
+.event { min-height: 1.6em; margin: 2px 0 8px; }
+.event b { color: var(--ember); font-weight: 400; }
+.stats { display: grid; grid-template-columns: 1fr auto; row-gap: 1px; }
+.stats span:nth-child(odd) { color: var(--muted); }
+.stats span:nth-child(even) { text-align: right; font-variant-numeric: tabular-nums; }
+.head { display: flex; align-items: center; gap: 10px; margin: 12px 0 6px; font-size: 11px; }
+.head::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.legend { display: grid; gap: 1px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; }
+.legend b { color: var(--ink); font-weight: 400; }
+.legend i.ring { background: none; border: 1.5px solid var(--surge); }
+#alerts { flex: 1; overflow-y: auto; min-height: 0; scrollbar-width: thin; scrollbar-color: var(--dim) transparent; }
+.alert { margin-bottom: 7px; line-height: 1.4; opacity: .55; }
+.alert.bold { opacity: 1; }
+.alert.bold .name { font-weight: 600; }
+.alert.muted { opacity: .3; }
+.alert small { display: block; color: var(--muted); font-size: 11px; }
+.alert p { font-size: 11.5px; margin-top: 2px; }
+.alert .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.caption { position: absolute; left: 0; top: 46px; width: min(72%, 440px); padding: 10px 12px 12px; background: rgba(26, 23, 20, .92); border-left: 2px solid var(--ember); cursor: pointer; display: none; z-index: 1; }
+.caption small { display: block; color: var(--muted); font-size: 11px; margin-top: 3px; }
+#caption-left { height: 1px; background: var(--ember); margin-top: 8px; transform-origin: left; }
+.card { position: absolute; z-index: 2; width: 250px; padding: 10px 12px; background: var(--paper); border: 1px solid var(--dim); pointer-events: none; display: none; }
+.card h2 { font-size: 12.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card .was { color: var(--muted); font-size: 11px; line-height: 1.45; margin: 3px 0 7px; }
+.card canvas { position: static; width: 100%; height: 56px; display: block; }
+.card .row { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; color: var(--muted); margin-top: 5px; }
+.strip { position: relative; margin-top: 12px; height: 88px; cursor: pointer; touch-action: none; }
+.strip canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+#head { position: absolute; top: 0; bottom: 18px; width: 1px; background: var(--ember); pointer-events: none; }
+#tip { min-height: 1.6em; color: var(--muted); margin-top: 2px; font-size: 11px; }
+.note { color: var(--muted); margin-top: 10px; font-size: 11px; }
+.note a { color: var(--ember); text-decoration: none; }
+@media (max-width: 1000px) {
+  :root { --side: 100%; }
+  .stage { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .panel { height: auto; }
+  #alerts { flex: none; max-height: 260px; }
+}
+@media (max-width: 640px) {
+  body { padding: 20px 16px 28px; }
+  .caption { width: 100%; position: static; }
+}
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div class="tick"></div>
+<h1>The radar, replayed</h1>
+<p class="sub">Every Enron email is a vector. Each week we cluster the last 6 months of them, name each cluster, and raise an alert when one grows fast.</p>
+
+<div class="stage">
+  <div>
+    <div class="map" id="map">
+      <canvas id="scene"></canvas>
+      <canvas id="over"></canvas>
+      <button id="depth" aria-label="Switch between the flat map and the 3D map"><span>view in 3D</span></button>
+      <div id="restart"></div>
+      <div class="caption" id="caption">
+        <div id="caption-text"></div>
+        <small>click to continue</small>
+        <div id="caption-left"></div>
+      </div>
+      <div class="card" id="card">
+        <h2 id="c-name"></h2>
+        <div class="was" id="c-was"></div>
+        <canvas id="c-spark"></canvas>
+        <div class="row"><span id="c-now"></span><span id="c-alerts"></span></div>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="play" aria-label="Play or pause">pause</button>
+      <div class="group"><span>speed</span><div class="seg" id="speeds"></div></div>
+      <div class="group"><span>show</span><div class="seg" id="thins"></div></div>
+    </div>
+  </div>
+
+  <aside class="panel">
+    <div class="date" id="date"></div>
+    <div class="event" id="event"></div>
+    <div class="stats" id="stats"></div>
+    <div class="head">what the colours mean</div>
+    <div class="legend">
+      <span><i style="background:var(--surge)"></i><b>suddenly growing</b>: far above its own normal</span>
+      <span><i style="background:var(--active)"></i><b>busiest</b>: the most mail right now</span>
+      <span><i style="background:var(--rest)"></i>everything else</span>
+      <span><i class="ring"></i><b>ring</b>: an alert fired on this cluster</span>
+    </div>
+    <div class="head">alerts</div>
+    <div id="alerts"></div>
+  </aside>
+</div>
+
+<div class="strip" id="strip">
+  <canvas id="time"></canvas>
+  <div id="head"></div>
+</div>
+<div id="tip">Emails per week. The line is how many different people sent mail. Real events above, alerts below. Click or drag to move through time.</div>
+<p class="note">The Enron corpus, as released by CMU. Each week's clusters and every alert saw only the mail up to that week. Sizes and places are smoothed with later mail, for the picture only. <a href="https://github.com/AlanViollier/rag-trend-radar">The code →</a></p>
+
+<script id="data" type="application/json">__DATA__</script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+const { weeks, blobs, alerts, events, moments } = JSON.parse(document.getElementById("data").textContent);
+const WEEKS = weeks.length;
+const rows = blobs;
+const COUNT = rows.length;
+const MAIN = blobs.filter((b) => b.shown).length;
+const blobById = new Map(blobs.map((b) => [b.id, b]));
+const rowById = new Map(rows.map((b, row) => [b.id, row]));
+
+const RADIUS_PER_ROOT = 0.00085, RADIUS_BASE = 0.002;
+const FADE_WEEKS = 4, HOLD_MS = 3000, WEEKS_PER_SECOND = 1.8, SURGE_FLOOR = 30, COLOURED = 10;
+const THIN = [["top 5", 5], ["top 10", 10], ["top 50", 50], ["subjects", "subjects"], ["everything", "everything"]];
+const SPEEDS = [["0.5x", 0.5], ["1x", 1], ["2x", 2], ["4x", 4]], EVENT_WEEKS = 6;
+const LABELLED_SURGE = 5, LABELLED_ACTIVE = 3, RING_MS = 1100, MORPH_MS = 900;
+const CAMERA_FOV = 30, FLAT_DISTANCE = 0.5 / Math.tan((CAMERA_FOV / 2) * Math.PI / 180), DEEP_DISTANCE = FLAT_DISTANCE * 1.08;
+const SURGE = [0xf0, 0x6a, 0x25], ACTIVE = [0xe8, 0xc2, 0x5a], GREY = [0x4a, 0x44, 0x3c];
+
+const at = (row, week) => row * WEEKS + week;
+const cells = () => new Float32Array(COUNT * WEEKS);
+const flatX = cells(), flatY = cells(), liftX = cells(), liftY = cells(), liftZ = cells(), size = cells();
+const alive = new Uint8Array(COUNT * WEEKS);
+
+rows.forEach((blob, row) => {
+  const last = blob.first + blob.mail.length - 1;
+  blob.mail.forEach((mail, k) => {
+    const week = blob.first + k, cell = at(row, week);
+    flatX[cell] = blob.x[k];
+    flatY[cell] = blob.y[k];
+    liftX[cell] = blob.lifted_x[k];
+    liftY[cell] = blob.lifted_y[k];
+    liftZ[cell] = blob.lifted_z[k];
+    alive[cell] = 1;
+    const growing = blob.first > 0 ? (k + 1) / FADE_WEEKS : 1;
+    const dying = last < WEEKS - 1 ? (last - week + 1) / FADE_WEEKS : 1;
+    size[cell] = mail * Math.min(growing, dying, 1);
+  });
+});
+
+const value = (blob, series, week) => blob[series][week - blob.first];
+
+function nameAt(blob, week) {
+  let name = blob.names[0][1];
+  for (const [from, text] of blob.names) if (from <= week) name = text;
+  return name;
+}
+
+const ranked = weeks.map((_, week) => {
+  const on = [];
+  for (let row = 0; row < MAIN; row++) if (alive[at(row, week)]) on.push(row);
+  const by = (series) => [...on].sort((a, b) => value(rows[b], series, week) - value(rows[a], series, week));
+  return { surge: by("surge"), active: by("recent") };
+});
+
+function spread(flags) {
+  const out = cells();
+  for (let row = 0; row < COUNT; row++) {
+    for (let week = 0; week < WEEKS; week++) {
+      let sum = 0, seen = 0;
+      for (let near = Math.max(0, week - 2); near <= Math.min(WEEKS - 1, week + 2); near++) { sum += flags[at(row, near)]; seen++; }
+      out[at(row, week)] = sum / seen;
+    }
+  }
+  return out;
+}
+
+function topFlags(lists, top, keep) {
+  const flags = cells();
+  ranked.forEach((rank, week) => {
+    for (const list of lists) {
+      for (const row of rank[list].slice(0, top)) if (keep(row, week, list)) flags[at(row, week)] = 1;
+    }
+  });
+  return spread(flags);
+}
+
+const isSurging = (row, week) => value(rows[row], "surge", week) > SURGE_FLOOR;
+const heatSurge = topFlags(["surge"], COLOURED, isSurging);
+const heatActive = topFlags(["active"], COLOURED, () => true);
+let kept = cells();
+
+const el = (id) => document.getElementById(id);
+const mapEl = el("map");
+const renderer = new THREE.WebGLRenderer({ canvas: el("scene"), antialias: true });
+renderer.setClearColor(0x1a1714);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(CAMERA_FOV, 1, 0.1, 20);
+camera.position.set(0, 0, FLAT_DISTANCE);
+scene.add(camera);
+const ambient = new THREE.AmbientLight(0xffffff, Math.PI);
+const sun = new THREE.DirectionalLight(0xffffff, 0);
+sun.position.set(0.8, 1, 1.4);
+camera.add(sun);
+camera.add(sun.target);
+sun.target.position.set(0, 0, -1);
+scene.add(ambient);
+const mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 36, 26), new THREE.MeshLambertMaterial({ color: 0xffffff }), COUNT);
+mesh.frustumCulled = false;
+mesh.setColorAt(0, new THREE.Color());
+scene.add(mesh);
+const controls = new OrbitControls(camera, mapEl);
+controls.enabled = false;
+controls.enablePan = false;
+controls.enableDamping = true;
+controls.autoRotateSpeed = 0.7;
+controls.minDistance = FLAT_DISTANCE * 0.6;
+controls.maxDistance = FLAT_DISTANCE * 2.4;
+
+const over = el("over").getContext("2d");
+const smoothstep = (u) => u * u * (3 - 2 * u);
+const mix = (a, b, u) => a * (1 - u) + b * u;
+const radius = (mail) => RADIUS_PER_ROOT * Math.sqrt(mail) + RADIUS_BASE;
+
+let side = 0, depth = 0, deepTarget = 0, morphStart = null, cameraFrom = new THREE.Vector3();
+const FRONT_FLAT = new THREE.Vector3(0, 0, FLAT_DISTANCE), FRONT_DEEP = new THREE.Vector3(0, 0, DEEP_DISTANCE);
+
+function resize() {
+  side = mapEl.clientWidth;
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  renderer.setPixelRatio(ratio);
+  renderer.setSize(side, side, false);
+  el("over").width = el("over").height = side * ratio;
+  over.setTransform(ratio, 0, 0, ratio, 0, 0);
+}
+new ResizeObserver(resize).observe(mapEl);
+
+const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), rotation = new THREE.Quaternion(), scale = new THREE.Vector3(), colour = new THREE.Color(), probe = new THREE.Vector3();
+
+function layout(time) {
+  const from = Math.floor(time), to = Math.min(from + 1, WEEKS - 1), u = time - from, s = smoothstep(u);
+  const placed = [];
+  for (let row = 0; row < COUNT; row++) {
+    const a = at(row, from), b = at(row, to);
+    const mail = alive[a] || alive[b] ? mix(size[a], size[b], u) : 0;
+    const keep = mix(kept[a], kept[b], u);
+    const r = mail > 2 && keep > 0.3 ? radius(mail) * Math.min(1, keep * 1.4) : 0;
+    if (!r) {
+      matrix.makeScale(0, 0, 0);
+      mesh.setMatrixAt(row, matrix);
+      continue;
+    }
+    const pick = (values) => {
+      const p = alive[a] ? values[a] : values[b], q = alive[b] ? values[b] : p;
+      return mix(p, q, s);
+    };
+    const wx = mix(pick(flatX), pick(liftX), depth) - 0.5;
+    const wy = 0.5 - mix(pick(flatY), pick(liftY), depth);
+    const wz = mix(row * 1e-5, pick(liftZ) - 0.5, depth);
+    const hs = mix(heatSurge[a], heatSurge[b], u), ha = mix(heatActive[a], heatActive[b], u);
+    const ws = hs, wa = ha * (1 - ws), wg = 1 - ws - wa;
+    position.set(wx, wy, wz);
+    scale.setScalar(r);
+    matrix.compose(position, rotation, scale);
+    mesh.setMatrixAt(row, matrix);
+    colour.setRGB(
+      (ws * SURGE[0] + wa * ACTIVE[0] + wg * GREY[0]) / 255,
+      (ws * SURGE[1] + wa * ACTIVE[1] + wg * GREY[1]) / 255,
+      (ws * SURGE[2] + wa * ACTIVE[2] + wg * GREY[2]) / 255,
+      THREE.SRGBColorSpace,
+    );
+    mesh.setColorAt(row, colour);
+    placed.push({ row, wx, wy, wz, radius: r });
+  }
+  mesh.instanceMatrix.needsUpdate = true;
+  mesh.instanceColor.needsUpdate = true;
+  return placed;
+}
+
+function project(placed) {
+  const halfFov = Math.tan((CAMERA_FOV / 2) * Math.PI / 180);
+  for (const bubble of placed) {
+    probe.set(bubble.wx, bubble.wy, bubble.wz).applyMatrix4(camera.matrixWorldInverse);
+    const distance = -probe.z, perUnit = side / 2 / (halfFov * distance);
+    bubble.sx = side / 2 + probe.x * perUnit;
+    bubble.sy = side / 2 - probe.y * perUnit;
+    bubble.sr = bubble.radius * perUnit;
+    bubble.distance = distance;
+  }
+}
+
+const labelAlpha = new Float32Array(COUNT);
+let rings = [], hovered = null, current = [], stopped = null;
+
+function drawOver(placed, week, now) {
+  over.clearRect(0, 0, side, side);
+  over.font = `400 ${side < 480 ? 11 : 12.5}px 'IBM Plex Mono', monospace`;
+  over.textBaseline = "bottom";
+  over.textAlign = "left";
+  over.lineJoin = "round";
+  const lists = ranked[week];
+  const order = [...lists.surge.slice(0, LABELLED_SURGE), ...lists.active.slice(0, LABELLED_ACTIVE)];
+  if (stopped && rowById.has(stopped.blob)) order.unshift(rowById.get(stopped.blob));
+  const wanted = new Map();
+  order.forEach((row, i) => { if (!wanted.has(row)) wanted.set(row, i); });
+  const rank = (b) => wanted.get(b.row) ?? Infinity;
+  const taken = [];
+  for (const bubble of [...placed].sort((a, b) => rank(a) - rank(b))) {
+    let target = 0, labelX = 0, labelY = 0, name = "";
+    if (wanted.has(bubble.row)) {
+      name = nameAt(rows[bubble.row], week);
+      const width = over.measureText(name).width;
+      labelX = Math.max(4, Math.min(bubble.sx - width / 2, side - width - 4));
+      labelY = Math.max(16, bubble.sy - bubble.sr - 4);
+      if (!taken.some((box) => Math.abs(labelY - box.y) < 15 && labelX < box.x + box.width + 8 && box.x < labelX + width + 8)) {
+        taken.push({ x: labelX, y: labelY, width });
+        target = 1;
+      }
+    }
+    labelAlpha[bubble.row] += (target - labelAlpha[bubble.row]) * 0.14;
+    if (target && labelAlpha[bubble.row] > 0.03) {
+      over.strokeStyle = `rgba(26,23,20,${labelAlpha[bubble.row] * 0.85})`;
+      over.lineWidth = 3;
+      over.strokeText(name, labelX, labelY);
+      over.fillStyle = `rgba(237,230,216,${labelAlpha[bubble.row]})`;
+      over.fillText(name, labelX, labelY);
+    }
+  }
+  rings = rings.filter((ring) => now - ring.start < RING_MS);
+  for (const ring of rings) {
+    const bubble = placed.find((b) => b.row === ring.row);
+    if (!bubble) continue;
+    const age = (now - ring.start) / RING_MS;
+    over.strokeStyle = `rgba(240,106,37,${1 - age})`;
+    over.lineWidth = 1.5;
+    over.beginPath();
+    over.arc(bubble.sx, bubble.sy, bubble.sr + 4 + age * 34, 0, 7);
+    over.stroke();
+  }
+  if (hovered !== null) {
+    const bubble = placed.find((b) => b.row === hovered);
+    if (bubble) {
+      over.strokeStyle = "#EDE6D8";
+      over.lineWidth = 1;
+      over.beginPath();
+      over.arc(bubble.sx, bubble.sy, bubble.sr + 3, 0, 7);
+      over.stroke();
+    }
+  }
+}
+
+const dateFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const shortFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+const parse = (day) => new Date(`${day}T00:00:00Z`);
+const number = (n) => n.toLocaleString("en-US");
+const esc = (text) => text.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+const eventWeeks = events.map((event) => ({ ...event, week: Math.max(0, weeks.findIndex((w) => w.day >= event.day)) }));
+
+function change(week) {
+  if (week < 4) return "";
+  const before = (weeks[week - 1].mail + weeks[week - 2].mail + weeks[week - 3].mail + weeks[week - 4].mail) / 4;
+  if (!before) return "";
+  const percent = Math.round((weeks[week].mail / before - 1) * 100);
+  return ` (${percent >= 0 ? "+" : ""}${percent}%)`;
+}
+
+let panelWeek = -1, feedCount = -1;
+
+function drawPanel(week, now) {
+  if (week === panelWeek) return;
+  const previous = panelWeek;
+  panelWeek = week;
+  const w = weeks[week];
+  el("date").textContent = dateFormat.format(parse(w.day));
+  const event = [...eventWeeks].reverse().find((e) => e.week <= week && week - e.week < EVENT_WEEKS);
+  el("event").innerHTML = event ? `<b>→</b> ${esc(shortFormat.format(parse(event.day)))}, ${esc(event.title)}` : "";
+  el("stats").innerHTML = [
+    ["emails stored", number(w.documents)],
+    ["this week", number(w.mail) + change(week)],
+    ["live clusters", number(w.live_blobs)],
+  ].map(([k, v]) => `<span>${k}</span><span>${v}</span>`).join("");
+  const landed = alerts.filter((a) => a.week <= week);
+  if (landed.length !== feedCount) {
+    feedCount = landed.length;
+    el("alerts").innerHTML = landed.slice().reverse().map((a) => {
+      const what = a.kind === "new" ? "new subject" : "speeding up";
+      const note = a.note ? `<p>${esc(a.note)}</p>` : "";
+      return `<div class="alert ${a.weight}"><span class="name">${esc(nameAt(blobById.get(a.blob), a.week))}</span><small>${shortFormat.format(parse(a.day))} · ${what} · ${number(a.observed)} in 4 weeks, normal ${number(Math.round(a.normal))}</small>${note}</div>`;
+    }).join("");
+    el("alerts").scrollTop = 0;
+  }
+  if (playing && previous >= 0 && week > previous && week - previous <= 2) {
+    for (const alert of alerts) {
+      if (alert.week > previous && alert.week <= week && rowById.has(alert.blob)) rings.push({ row: rowById.get(alert.blob), start: now });
+    }
+  }
+}
+
+const timeCanvas = el("time");
+
+function drawTime() {
+  const box = timeCanvas.getBoundingClientRect(), ratio = window.devicePixelRatio || 1, w = box.width, h = box.height;
+  timeCanvas.width = w * ratio;
+  timeCanvas.height = h * ratio;
+  const c = timeCanvas.getContext("2d");
+  c.setTransform(ratio, 0, 0, ratio, 0, 0);
+  const base = h - 18, top = 12, height = base - top;
+  const across = (week) => (week / (WEEKS - 1)) * w;
+  const most = Math.max(...weeks.map((week) => week.mail)), people = Math.max(...weeks.map((week) => week.senders));
+  c.fillStyle = "#3A352E";
+  c.beginPath();
+  c.moveTo(0, base);
+  weeks.forEach((week, i) => c.lineTo(across(i), base - (week.mail / most) * height));
+  c.lineTo(w, base);
+  c.closePath();
+  c.fill();
+  c.strokeStyle = "#8A8474";
+  c.lineWidth = 1;
+  c.beginPath();
+  weeks.forEach((week, i) => { const py = base - (week.senders / people) * height; if (i) c.lineTo(across(i), py); else c.moveTo(0, py); });
+  c.stroke();
+  c.fillStyle = "#EA580C";
+  for (const event of eventWeeks) {
+    c.fillRect(across(event.week), 2, 1, base - 2);
+    c.beginPath();
+    c.arc(across(event.week), 4, 2.5, 0, 7);
+    c.fill();
+  }
+  c.fillStyle = "#F06A25";
+  for (const alert of alerts) c.fillRect(across(alert.week) - 1, base + 1, 2, 4);
+  c.fillStyle = "#8A8474";
+  c.font = "400 11px 'IBM Plex Mono', monospace";
+  c.textBaseline = "alphabetic";
+  weeks.forEach((week, i) => {
+    const d = parse(week.day), before = i ? parse(weeks[i - 1].day) : null;
+    if (before && d.getUTCMonth() !== before.getUTCMonth() && d.getUTCMonth() % 6 === 0) {
+      const text = new Intl.DateTimeFormat("en-GB", { month: "short", year: "numeric", timeZone: "UTC" }).format(d);
+      c.fillText(text, Math.min(across(i), w - c.measureText(text).width), h - 2);
+    }
+  });
+}
+
+let time = 0, playing = !window.matchMedia("(prefers-reduced-motion: reduce)").matches, speed = 1, lastFrame = null, holdUntil = 0;
+let nextMoment = 0, stopUntil = 0, stopLength = 0, ringAt = 0;
+
+function setPlaying(next) {
+  playing = next;
+  el("play").textContent = playing ? "pause" : "play";
+}
+
+function stopAt(moment, now) {
+  stopped = moment;
+  stopLength = (1800 + moment.text.length * 32) / Math.max(1, speed);
+  stopUntil = now + stopLength;
+  ringAt = 0;
+  el("caption-text").textContent = moment.text;
+  el("caption").style.display = "block";
+}
+
+function endStop() {
+  stopped = null;
+  el("caption").style.display = "none";
+}
+
+function advance(now, elapsed) {
+  if (stopped) {
+    if (!playing) { stopUntil += elapsed; return; }
+    if (now >= stopUntil) endStop();
+    return;
+  }
+  if (!playing) return;
+  if (time < WEEKS - 1) {
+    const moment = moments[nextMoment];
+    const next = Math.min(WEEKS - 1, time + (elapsed / 1000) * WEEKS_PER_SECOND * speed);
+    if (moment && next >= moment.week) {
+      time = moment.week;
+      nextMoment++;
+      stopAt(moment, now);
+    } else {
+      time = next;
+    }
+  } else if (!holdUntil) {
+    holdUntil = now + HOLD_MS;
+  } else if (now >= holdUntil) {
+    time = 0;
+    holdUntil = 0;
+    nextMoment = 0;
+    rings = [];
+    panelWeek = -1;
+    feedCount = -1;
+  }
+}
+
+function moveCamera(now) {
+  if (morphStart !== null) {
+    const u = Math.min(1, (now - morphStart) / MORPH_MS), s = smoothstep(u);
+    depth = deepTarget ? s : 1 - s;
+    camera.position.lerpVectors(cameraFrom, deepTarget ? FRONT_DEEP : FRONT_FLAT, s);
+    camera.lookAt(0, 0, 0);
+    ambient.intensity = mix(Math.PI, 2.3, depth);
+    sun.intensity = mix(0, 2.4, depth);
+    if (u >= 1) {
+      morphStart = null;
+      controls.enabled = controls.autoRotate = Boolean(deepTarget);
+    }
+  }
+  if (controls.enabled) controls.update();
+  camera.updateMatrixWorld();
+}
+
+function frame(now) {
+  const elapsed = lastFrame === null ? 0 : now - lastFrame;
+  lastFrame = now;
+  advance(now, elapsed);
+  moveCamera(now);
+  const placed = layout(time);
+  renderer.render(scene, camera);
+  project(placed);
+  current = placed;
+  const week = Math.round(time);
+  drawPanel(week, now);
+  if (stopped && now >= ringAt && rowById.has(stopped.blob)) {
+    rings.push({ row: rowById.get(stopped.blob), start: now });
+    ringAt = now + RING_MS;
+  }
+  if (stopped) el("caption-left").style.transform = `scaleX(${Math.max(0, (stopUntil - now) / stopLength)})`;
+  drawOver(placed, week, now);
+  el("restart").textContent = holdUntil ? `restarting in ${Math.max(1, Math.ceil((holdUntil - now) / 1000))}` : "";
+  el("head").style.left = `${(time / (WEEKS - 1)) * 100}%`;
+  if (hovered !== null) drawCard(week);
+  requestAnimationFrame(frame);
+}
+
+function drawCard(week) {
+  const blob = rows[hovered];
+  if (week < blob.first || week >= blob.first + blob.mail.length) return;
+  el("c-name").textContent = nameAt(blob, week);
+  const peak = blob.recent.indexOf(Math.max(...blob.recent));
+  el("c-was").textContent = `born ${dateFormat.format(parse(weeks[blob.first].day))} · peak ${number(blob.recent[peak])} on ${shortFormat.format(parse(weeks[blob.first + peak].day))}${blob.shown ? "" : " · not one of the main subjects"}`;
+  el("c-now").textContent = `${number(value(blob, "recent", week))} emails in the last 4 weeks`;
+  const fired = alerts.filter((a) => a.blob === blob.id);
+  el("c-alerts").textContent = fired.length ? `${fired.length} alert${fired.length > 1 ? "s" : ""}` : "";
+  const canvas = el("c-spark"), box = canvas.getBoundingClientRect(), ratio = window.devicePixelRatio || 1;
+  canvas.width = box.width * ratio;
+  canvas.height = box.height * ratio;
+  const c = canvas.getContext("2d");
+  c.setTransform(ratio, 0, 0, ratio, 0, 0);
+  const most = Math.max(...blob.recent, 1), last = blob.recent.length - 1 || 1;
+  const across = (i) => (i / last) * box.width, up = (v) => box.height - 3 - (v / most) * (box.height - 9);
+  c.strokeStyle = "#EDE6D8";
+  c.lineWidth = 1;
+  c.beginPath();
+  blob.recent.forEach((v, i) => { if (i) c.lineTo(across(i), up(v)); else c.moveTo(across(i), up(v)); });
+  c.stroke();
+  c.fillStyle = "#EA580C";
+  c.fillRect(across(week - blob.first), 0, 1, box.height);
+  c.fillStyle = "#F06A25";
+  for (const alert of fired) {
+    c.beginPath();
+    c.arc(across(alert.week - blob.first), up(blob.recent[alert.week - blob.first]), 3, 0, 7);
+    c.fill();
+  }
+}
+
+let orbiting = false;
+
+function showCard(event) {
+  if (orbiting) return;
+  const box = mapEl.getBoundingClientRect(), px = event.clientX - box.left, py = event.clientY - box.top;
+  let best = null, bestScore = Infinity;
+  for (const bubble of current) {
+    const gap = Math.hypot(bubble.sx - px, bubble.sy - py) - bubble.sr;
+    if (gap < 8 && gap + bubble.distance * 4 < bestScore) { best = bubble; bestScore = gap + bubble.distance * 4; }
+  }
+  const card = el("card");
+  hovered = best ? best.row : null;
+  card.style.display = best ? "block" : "none";
+  if (!best) return;
+  drawCard(Math.round(time));
+  card.style.left = `${Math.max(0, px + 262 > side ? px - 262 : px + 12)}px`;
+  card.style.top = `${Math.max(0, Math.min(py + 12, side - card.offsetHeight))}px`;
+}
+
+function hideCard() {
+  hovered = null;
+  el("card").style.display = "none";
+}
+
+function resumeAfter(target) {
+  time = target;
+  holdUntil = 0;
+  rings = [];
+  endStop();
+  nextMoment = moments.findIndex((m) => m.week > time);
+  if (nextMoment < 0) nextMoment = moments.length;
+}
+
+function scrub(event) {
+  const box = el("strip").getBoundingClientRect();
+  resumeAfter(Math.min(WEEKS - 1, Math.max(0, ((event.clientX - box.left) / box.width) * (WEEKS - 1))));
+}
+
+function describeStrip(event) {
+  const box = el("strip").getBoundingClientRect();
+  const week = Math.min(WEEKS - 1, Math.max(0, Math.round(((event.clientX - box.left) / box.width) * (WEEKS - 1))));
+  const near = eventWeeks.find((e) => Math.abs(((e.week - week) / (WEEKS - 1)) * box.width) < 7);
+  el("tip").textContent = near
+    ? `${shortFormat.format(parse(near.day))}, ${near.title}`
+    : `Week of ${shortFormat.format(parse(weeks[week].day))}: ${number(weeks[week].mail)} emails.`;
+}
+
+mapEl.addEventListener("pointerdown", (event) => { if (deepTarget) { orbiting = true; hideCard(); } else showCard(event); });
+window.addEventListener("pointerup", () => { orbiting = false; });
+mapEl.addEventListener("pointermove", showCard);
+mapEl.addEventListener("pointerleave", hideCard);
+el("play").addEventListener("click", () => setPlaying(!playing));
+el("caption").addEventListener("pointerdown", (event) => { event.stopPropagation(); endStop(); });
+window.addEventListener("keydown", (event) => {
+  if (event.code === "Space" && event.target.tagName !== "BUTTON") { event.preventDefault(); setPlaying(!playing); }
+});
+
+// The orbit controls listen on the map and would capture this press, and the click with it.
+el("depth").addEventListener("pointerdown", (event) => event.stopPropagation());
+el("depth").addEventListener("click", () => {
+  deepTarget = deepTarget ? 0 : 1;
+  el("depth").firstChild.textContent = deepTarget ? "back to 2D" : "view in 3D";
+  cameraFrom.copy(camera.position);
+  controls.enabled = controls.autoRotate = false;
+  morphStart = performance.now();
+});
+
+function segment(id, options, initial, pick) {
+  const group = el(id);
+  for (const [label, choice] of options) {
+    const button = document.createElement("button");
+    button.textContent = label;
+    button.setAttribute("aria-pressed", String(choice === initial));
+    button.addEventListener("click", () => {
+      group.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
+      pick(choice);
+    });
+    group.append(button);
+  }
+}
+
+function setThin(choice) {
+  if (typeof choice === "number") {
+    kept = topFlags(["surge", "active"], choice, () => true);
+    return;
+  }
+  kept = cells();
+  kept.fill(1, 0, choice === "everything" ? COUNT * WEEKS : MAIN * WEEKS);
+}
+
+segment("speeds", SPEEDS, speed, (choice) => { speed = choice; });
+segment("thins", THIN, "subjects", setThin);
+
+let dragging = false;
+const strip = el("strip");
+strip.addEventListener("pointerdown", (event) => { dragging = true; strip.setPointerCapture(event.pointerId); scrub(event); });
+strip.addEventListener("pointermove", (event) => { describeStrip(event); if (dragging) scrub(event); });
+strip.addEventListener("pointerup", () => { dragging = false; });
+window.addEventListener("resize", drawTime);
+
+// The README's GIF is recorded through this.
+window.replay = { seek(week) { setPlaying(false); resumeAfter(week); }, weeks: WEEKS };
+
+resize();
+setPlaying(playing);
+setThin("subjects");
+drawTime();
+if (document.fonts) document.fonts.ready.then(drawTime);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
