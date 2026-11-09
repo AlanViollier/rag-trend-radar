@@ -1,7 +1,8 @@
 """One map and one set of blobs per week over the last 26 weeks of mail, each map started from the last.
 
 Saved as files: a map takes a minute or two, and everything else is recomputed from them. Each week
-keeps the chunk ids it was made from, so a chunk deleted later just drops out of its blob.
+keeps the chunk ids it was made from, so a chunk deleted later just drops out of its blob. Those ids
+are only good in the store that handed them out, so each folder records that store and refuses another.
 """
 
 from collections.abc import Sequence
@@ -24,6 +25,11 @@ SEEDS = (1, 2)
 ## on any edit to a docstring.
 CLUSTER_VERSION = "v1"
 _NEAREST = 5
+STAMP = "store.txt"
+
+
+class OtherStore(Exception):
+    """Saved weeks from another store: their chunk ids would name other mail here."""
 
 
 @dataclass(frozen=True)
@@ -57,6 +63,9 @@ def make(
 ) -> None:
     """Fill `folder` with each week's map and blobs; a week already there is kept, so it resumes."""
     folder.mkdir(parents=True, exist_ok=True)
+    if not any(folder.iterdir()):
+        (folder / STAMP).write_text(chosen.store)
+    _same_store(folder, chosen.store)
     previous: tuple[NDArray[np.int64], NDArray[np.float32]] | None = None
     for end in ends:
         map_file = folder / f"{end}.npy"
@@ -90,6 +99,7 @@ def make(
 
 def load(chosen: topics.Pool, ends: Sequence[date], folder: Path) -> list[Frame]:
     """The saved weeks matched to `chosen` by chunk id: a chunk deleted since is in no week."""
+    _same_store(folder, chosen.store)
     found = []
     for end in ends:
         rows, kept = _matched(chosen, folder, end)
@@ -129,6 +139,16 @@ def _matched(
     kept: NDArray[np.bool_] = chosen.chunk_ids[at] == saved
     rows: NDArray[np.int64] = at[kept]
     return rows, kept
+
+
+def _same_store(folder: Path, store: str) -> None:
+    stamp = folder / STAMP
+    saved = stamp.read_text() if stamp.exists() else "an unknown store"
+    if saved != store:
+        raise OtherStore(
+            f"{folder} was made from {saved}, the store is now {store}: move it aside and run"
+            " radar-frames (about 2 hours)"
+        )
 
 
 def _labels_file(folder: Path, end: date) -> Path:

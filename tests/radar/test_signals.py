@@ -17,7 +17,7 @@ def _unit(v: NDArray[np.float32]) -> NDArray[np.float32]:
 def _pool(vectors: NDArray[np.float32], days: list[date], press: list[bool]) -> Pool:
     n = len(vectors)
     ids = np.arange(n, dtype=np.int64)
-    return Pool(ids, ids, ["" for _ in range(n)], vectors, days, press)
+    return Pool(ids, ids, ["" for _ in range(n)], vectors, days, press, "store-a")
 
 
 def test_a_blobs_centre_is_its_members_average_with_length_one() -> None:

@@ -57,6 +57,7 @@ def world(store: None) -> Iterator[tuple[Pool, list[int]]]:
             vectors.append(vector / np.linalg.norm(vector))
             days.append(sent)
         index.write_vectors(conn, MODEL, ids, np.array(vectors, dtype=np.float32))
+        made_in = str(conn.execute("SELECT id FROM store").fetchall()[0][0])
     n = len(ids)
     yield (
         Pool(
@@ -66,6 +67,7 @@ def world(store: None) -> Iterator[tuple[Pool, list[int]]]:
             np.array(vectors, dtype=np.float32),
             days,
             [False] * n,
+            made_in,
         ),
         ids,
     )
@@ -152,6 +154,7 @@ def test_a_delete_then_a_rebuild_takes_the_chunk_out_and_leaves_other_blobs_thei
     world: tuple[Pool, list[int]], tmp_path: Path
 ) -> None:
     chosen, ids = world
+    (tmp_path / frames.STAMP).write_text(chosen.store)
     for made in _frames(WEEKS):
         np.save(tmp_path / f"{made.end}-chunks.npy", chosen.chunk_ids[made.rows])
         np.save(tmp_path / f"{made.end}-labels-{frames.CLUSTER_VERSION}.npy", made.labels)

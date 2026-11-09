@@ -104,3 +104,14 @@ def test_a_reset_leaves_tables_an_extension_owns() -> None:
         if had_it is None:
             with db.connect() as conn:
                 conn.execute("DROP EXTENSION postgis")
+
+
+@pytest.mark.usefixtures("experiment")
+def test_a_reset_makes_a_new_store_so_saved_chunk_ids_cant_carry_over() -> None:
+    with db.connect() as conn:
+        before = conn.execute("SELECT id FROM store").fetchall()
+    db.reset()
+    with db.connect() as conn:
+        after = conn.execute("SELECT id FROM store").fetchall()
+    assert len(before) == len(after) == 1
+    assert before != after

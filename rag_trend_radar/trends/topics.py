@@ -30,7 +30,7 @@ MIN_COHESION = 0.84
 
 @dataclass(frozen=True)
 class Pool:
-    """Chunks to cluster, row for row: who they are and their vectors."""
+    """Chunks to cluster, row for row: who they are and their vectors, from the store `store`."""
 
     chunk_ids: NDArray[np.int64]
     document_ids: NDArray[np.int64]
@@ -38,6 +38,7 @@ class Pool:
     vectors: NDArray[np.float32]
     days: list[date]
     press: list[bool]
+    store: str
 
     def take(self, rows: NDArray[np.int64]) -> Pool:
         """The same pool cut down to `rows`."""
@@ -48,6 +49,7 @@ class Pool:
             self.vectors[rows],
             [self.days[i] for i in rows],
             [self.press[i] for i in rows],
+            self.store,
         )
 
 
@@ -81,6 +83,7 @@ def pool(
         np.array([r[3].to_numpy() for r, _ in kept], dtype=np.float32).reshape(len(kept), dims),
         [r[4] for r, _ in kept],
         [kind is Source.PRESS for _, kind in kept],
+        str(conn.execute("SELECT id FROM store").fetchall()[0][0]),
     )
 
 

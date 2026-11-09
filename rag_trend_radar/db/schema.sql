@@ -31,6 +31,14 @@ CREATE TABLE IF NOT EXISTS cache.rerank_scores (
     PRIMARY KEY (model, revision, query_hash, text_hash)
 );
 
+-- Which store this is: a new id on every reset. Chunk ids are only good inside one store, since a
+-- rebuild hands them out again; files kept outside it (the radar's saved weeks) record this id
+-- and refuse to load against another.
+CREATE TABLE store (
+    id uuid NOT NULL DEFAULT gen_random_uuid()
+);
+INSERT INTO store DEFAULT VALUES;
+
 -- One row per searchable thing: an email, a quoted message no email of ours holds, later an
 -- arXiv paper.
 -- (source, external_id) is the stable outside id: the content hash for an email, the text

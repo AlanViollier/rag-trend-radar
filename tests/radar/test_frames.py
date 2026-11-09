@@ -1,7 +1,9 @@
+from dataclasses import replace
 from datetime import date, timedelta
 from pathlib import Path
 
 import numpy as np
+import pytest
 from numpy.typing import NDArray
 
 from rag_trend_radar.run_log import RunLog
@@ -29,7 +31,7 @@ def _world(weeks_after: int) -> Pool:
         f"Subject: {named[s]}\nFrom: a{i}@b.c\n\n{named[s]} today" for i, (s, _) in enumerate(rows)
     ]
     ids = np.arange(len(rows), dtype=np.int64)
-    return Pool(ids, ids, texts, vectors, [d for _, d in rows], [False] * len(rows))
+    return Pool(ids, ids, texts, vectors, [d for _, d in rows], [False] * len(rows), "store-a")
 
 
 def _rows(
@@ -113,3 +115,23 @@ def test_blobs_made_after_a_delete_still_line_up_with_the_saved_chunks(tmp_path:
     frames.make(smaller, [D], 1, tmp_path, RunLog("test", {}), min_size=20)
     made = frames.load(smaller, [D], tmp_path)
     assert len(made[0].labels) == len(made[0].rows) == len(frames.window(chosen, D)) - 1
+
+
+def test_saved_weeks_refuse_to_load_against_a_rebuilt_store(tmp_path: Path) -> None:
+    chosen = _world(0)
+    frames.make(chosen, [D], 1, tmp_path, RunLog("test", {}), min_size=20)
+    ## Same chunk ids, but a rebuild could have handed them to other mail.
+    with pytest.raises(frames.OtherStore, match="store-a, the store is now store-b"):
+        frames.load(replace(chosen, store="store-b"), [D], tmp_path)
+    with pytest.raises(frames.OtherStore):
+        frames.make(
+            replace(chosen, store="store-b"), [D], 1, tmp_path, RunLog("test", {}), min_size=20
+        )
+
+
+def test_saved_weeks_with_no_store_recorded_refuse_to_load(tmp_path: Path) -> None:
+    chosen = _world(0)
+    frames.make(chosen, [D], 1, tmp_path, RunLog("test", {}), min_size=20)
+    (tmp_path / frames.STAMP).unlink()
+    with pytest.raises(frames.OtherStore, match="unknown store"):
+        frames.load(chosen, [D], tmp_path)
