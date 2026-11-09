@@ -31,5 +31,9 @@ class EmbeddingFailed(AppError):
     """The model returned vectors that fail the sentinel check; nothing from that batch is kept."""
 
 
+class ExportRefused(AppError):
+    """The page's data file would hold something that must not be published."""
+
+
 class OtherStore(AppError):
     """Saved weeks from another store: their chunk ids would name other mail here."""

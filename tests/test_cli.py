@@ -17,6 +17,7 @@ def test_every_command_is_registered() -> None:
         "leaks",
         "questions",
         "radar-build",
+        "radar-export",
         "radar-frames",
         "radar-reset",
         "radar-runs",

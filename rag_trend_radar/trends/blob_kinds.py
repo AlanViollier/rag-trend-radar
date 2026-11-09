@@ -27,7 +27,7 @@ _CHATTY_WORDS = (
     " fyi fw fwd doc re cc hi hey see great really jpg mvc- exe gif mpg mpeg click unsubscribe"
     " remove http html www hotmail aol yahoo com"
 )
-_CHATTY = set(_CHATTY_WORDS.split())
+CHATTY = set(_CHATTY_WORDS.split())
 ONE_SENDER, EMPTY_SUBJECTS = 0.8, 0.15
 # Set on a blob's top 6 keywords; a blob-week stores 10.
 CHATTY_KEYWORDS = 6
@@ -79,7 +79,7 @@ def trait(mail: Mail, rows: NDArray[np.int64], words: Sequence[str]) -> Trait:
         top_sender=Counter(mail.senders[i] for i in picked).most_common(1)[0][1] / len(picked),
         footers=float(mail.footers[rows].mean()),
         empty_subjects=sum(not mail.subjects[i] for i in picked),
-        chatty_words=sum(word in _CHATTY for word in words[:CHATTY_KEYWORDS]),
+        chatty_words=sum(word in CHATTY for word in words[:CHATTY_KEYWORDS]),
     )
 
 

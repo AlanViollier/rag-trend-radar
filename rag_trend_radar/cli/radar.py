@@ -12,7 +12,11 @@ from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.run_log import RunLog, summarise
 from rag_trend_radar.schema import RadarRun
+from rag_trend_radar.site import export
 from rag_trend_radar.trends import build, frames, topics
+
+EVENTS = Path("evals/events.jsonl")
+PAGE_DATA = Path("docs/radar/data.json")
 
 
 @app.command()
@@ -60,6 +64,25 @@ def radar_build() -> None:
     path = log.save(settings.data_dir / "reports" / "radar")
     _show(log.run())
     show(f"saved → {path}", file=sys.stderr)
+
+
+@app.command()
+def radar_export(out: Path = PAGE_DATA) -> None:
+    """Write the replay page's data file from the radar tables (free, a few minutes)."""
+    settings = get_settings()
+    log = RunLog("export", {"out": str(out)})
+    with log.stage("read tables") as handled, db.connect(db.INVESTIGATOR) as conn:
+        tables = export.read(conn)
+        handled.items = len(tables.seen)
+    with log.stage("smooth, place, name") as handled:
+        data = export.page(tables, export.events_from(EVENTS), frames.week_ends())
+        handled.items = len(data.blobs)
+    with log.stage("write"):
+        log.results["bytes"] = export.write(data, out)
+    log.results |= {"weeks": len(data.weeks), "blobs": len(data.blobs), "alerts": len(data.alerts)}
+    path = log.save(settings.data_dir / "reports" / "radar")
+    _show(log.run())
+    show(f"{out}, saved → {path}", file=sys.stderr)
 
 
 @app.command()
