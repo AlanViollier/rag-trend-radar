@@ -48,8 +48,7 @@ button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
 .date { color: var(--surge); font-size: 22px; font-weight: 500; line-height: 1.2; }
 #restart { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 1; padding: 6px 14px; background: rgba(26, 23, 20, .92); border: 1px solid var(--ember); color: var(--ink); font-size: 14px; white-space: nowrap; pointer-events: none; }
 #restart:empty { display: none; }
-.event { min-height: 1.6em; margin: 2px 0 8px; }
-.event b { color: var(--ember); font-weight: 400; }
+.date { margin-bottom: 8px; }
 .stats { display: grid; grid-template-columns: 1fr auto; row-gap: 1px; }
 .stats span:nth-child(odd) { color: var(--muted); }
 .stats span:nth-child(even) { text-align: right; font-variant-numeric: tabular-nums; }
@@ -66,9 +65,13 @@ button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
 .alert.muted { opacity: .3; }
 .alert small { display: block; color: var(--muted); font-size: 11px; }
 .alert p { font-size: 11.5px; margin-top: 2px; }
+.alert .follows { color: var(--ember); }
+.happened { color: var(--ember); font-size: 11.5px; margin-bottom: 7px; line-height: 1.4; }
 .alert .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
 .caption { position: absolute; left: 0; top: 46px; width: min(72%, 440px); padding: 10px 12px 12px; background: rgba(26, 23, 20, .92); border-left: 2px solid var(--ember); cursor: pointer; display: none; z-index: 1; }
 .caption small { display: block; color: var(--muted); font-size: 11px; margin-top: 3px; }
+#caption-follows { color: var(--ember); margin: 0 0 3px; }
+#caption-follows:empty { display: none; }
 #caption-left { height: 1px; background: var(--ember); margin-top: 8px; transform-origin: left; }
 .card { position: absolute; z-index: 2; width: 250px; padding: 10px 12px; background: var(--paper); border: 1px solid var(--dim); pointer-events: none; display: none; }
 .card h2 { font-size: 12.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -102,7 +105,7 @@ button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
 <body>
 <div class="tick"></div>
 <h1>The radar, replayed</h1>
-<p class="sub">Every Enron email is a vector. Each week we cluster the last 6 months of them, name each cluster, and raise an alert when one grows fast.</p>
+<p class="sub">Every Enron email is a vector. Each week we cluster the last 6 months, name each cluster, and alert when one grows fast. The glow is the emails left out.</p>
 
 <div class="stage">
   <div>
@@ -112,6 +115,7 @@ button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
       <button id="depth" aria-label="Switch between the flat map and the 3D map"><span>view in 3D</span></button>
       <div id="restart"></div>
       <div class="caption" id="caption">
+        <small id="caption-follows"></small>
         <div id="caption-text"></div>
         <small>click to continue</small>
         <div id="caption-left"></div>
@@ -132,16 +136,17 @@ button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
 
   <aside class="panel">
     <div class="date" id="date"></div>
-    <div class="event" id="event"></div>
     <div class="stats" id="stats"></div>
-    <div class="head">what the colours mean</div>
+    <div class="head">what you're seeing</div>
     <div class="legend">
       <span><i style="background:var(--surge)"></i><b>suddenly growing</b>: far above its own normal</span>
       <span><i style="background:var(--active)"></i><b>busiest</b>: the most mail right now</span>
       <span><i style="background:var(--rest)"></i>everything else</span>
       <span><i class="ring"></i><b>ring</b>: an alert fired on this cluster</span>
+      <span><i style="background:#6B5C47"></i><b>glow</b>: emails no cluster took</span>
+      <span><i style="background:#332E28"></i><b>+ junk</b>: newsletters, footers, chatter, one-offs we filter out</span>
     </div>
-    <div class="head">alerts</div>
+    <div class="head">events and alerts</div>
     <div id="alerts"></div>
   </aside>
 </div>
@@ -150,7 +155,7 @@ button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
   <canvas id="time"></canvas>
   <div id="head"></div>
 </div>
-<div id="tip">Emails per week. The line is how many different people sent mail. Real events above, alerts below. Click or drag to move through time.</div>
+<div id="tip">Emails per week. The line is how many different people sent mail. Events on top, alerts underneath. Click or drag to move through time.</div>
 <p class="note">The Enron corpus, as released by CMU. Each week's clusters and every alert saw only the mail up to that week. Sizes and places are smoothed with later mail, for the picture only. <a href="https://github.com/AlanViollier/rag-trend-radar">The code →</a></p>
 
 <script id="data" type="application/json">__DATA__</script>
@@ -158,7 +163,7 @@ button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-const { weeks, blobs, alerts, events, moments } = JSON.parse(document.getElementById("data").textContent);
+const { weeks, blobs, alerts, events, moments, dust } = JSON.parse(document.getElementById("data").textContent);
 const WEEKS = weeks.length;
 const rows = blobs;
 const COUNT = rows.length;
@@ -168,11 +173,11 @@ const rowById = new Map(rows.map((b, row) => [b.id, row]));
 
 const RADIUS_PER_ROOT = 0.00085, RADIUS_BASE = 0.002;
 const FADE_WEEKS = 4, HOLD_MS = 3000, WEEKS_PER_SECOND = 1.8, SURGE_FLOOR = 30, COLOURED = 10;
-const THIN = [["top 5", 5], ["top 10", 10], ["top 50", 50], ["subjects", "subjects"], ["everything", "everything"]];
-const SPEEDS = [["0.5x", 0.5], ["1x", 1], ["2x", 2], ["4x", 4]], EVENT_WEEKS = 6;
+const THIN = [["top 5", 5], ["top 10", 10], ["top 50", 50], ["all topics", "topics"], ["+ junk", "everything"]];
+const SPEEDS = [["0.5x", 0.5], ["1x", 1], ["2x", 2], ["4x", 4]], DUST_WEEKS = 26;
 const LABELLED_SURGE = 5, LABELLED_ACTIVE = 3, RING_MS = 1100, MORPH_MS = 900;
 const CAMERA_FOV = 30, FLAT_DISTANCE = 0.5 / Math.tan((CAMERA_FOV / 2) * Math.PI / 180), DEEP_DISTANCE = FLAT_DISTANCE * 1.08;
-const SURGE = [0xf0, 0x6a, 0x25], ACTIVE = [0xe8, 0xc2, 0x5a], GREY = [0x4a, 0x44, 0x3c];
+const SURGE = [0xf0, 0x6a, 0x25], ACTIVE = [0xe8, 0xc2, 0x5a], GREY = [0x4a, 0x44, 0x3c], JUNK = [0x33, 0x2e, 0x28];
 
 const at = (row, week) => row * WEEKS + week;
 const cells = () => new Float32Array(COUNT * WEEKS);
@@ -256,6 +261,25 @@ const mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 36, 26), new TH
 mesh.frustumCulled = false;
 mesh.setColorAt(0, new THREE.Color());
 scene.add(mesh);
+const linear = (rgb) => new THREE.Color().setRGB(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, THREE.SRGBColorSpace);
+const PAPER_LINEAR = linear([0x1a, 0x17, 0x14]);
+const SPECKS = dust.first.length;
+const dustPositions = new Float32Array(SPECKS * 3), dustColours = new Float32Array(SPECKS * 4);
+const dustTint = linear([0xa0, 0x7a, 0x52]);
+for (let i = 0; i < SPECKS; i++) dustColours.set([dustTint.r, dustTint.g, dustTint.b, 0], i * 4);
+const dustGeometry = new THREE.BufferGeometry();
+dustGeometry.setAttribute("position", new THREE.BufferAttribute(dustPositions, 3).setUsage(THREE.DynamicDrawUsage));
+dustGeometry.setAttribute("color", new THREE.BufferAttribute(dustColours, 4).setUsage(THREE.DynamicDrawUsage));
+const glow = document.createElement("canvas");
+glow.width = glow.height = 64;
+const glowContext = glow.getContext("2d"), glowFill = glowContext.createRadialGradient(32, 32, 0, 32, 32, 32);
+glowFill.addColorStop(0, "rgba(255,255,255,1)");
+glowFill.addColorStop(1, "rgba(255,255,255,0)");
+glowContext.fillStyle = glowFill;
+glowContext.fillRect(0, 0, 64, 64);
+const dustPoints = new THREE.Points(dustGeometry, new THREE.PointsMaterial({ size: 64, map: new THREE.CanvasTexture(glow), sizeAttenuation: false, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+dustPoints.frustumCulled = false;
+scene.add(dustPoints);
 const controls = new OrbitControls(camera, mapEl);
 controls.enabled = false;
 controls.enablePan = false;
@@ -284,6 +308,22 @@ new ResizeObserver(resize).observe(mapEl);
 
 const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), rotation = new THREE.Quaternion(), scale = new THREE.Vector3(), colour = new THREE.Color(), probe = new THREE.Vector3();
 
+function updateDust(time) {
+  let drawn = 0;
+  for (let i = 0; i < SPECKS; i++) {
+    const age = time - dust.first[i];
+    if (age < 0 || age > DUST_WEEKS) continue;
+    dustPositions[drawn * 3] = mix(dust.x[i], dust.lifted_x[i], depth) - 0.5;
+    dustPositions[drawn * 3 + 1] = 0.5 - mix(dust.y[i], dust.lifted_y[i], depth);
+    dustPositions[drawn * 3 + 2] = mix(-0.03, dust.lifted_z[i] - 0.5, depth);
+    dustColours[drawn * 4 + 3] = 0.0125 * Math.min(1, age / 2 + 0.2, (DUST_WEEKS - age) / 4);
+    drawn++;
+  }
+  dustGeometry.setDrawRange(0, drawn);
+  dustGeometry.attributes.position.needsUpdate = true;
+  dustGeometry.attributes.color.needsUpdate = true;
+}
+
 function layout(time) {
   const from = Math.floor(time), to = Math.min(from + 1, WEEKS - 1), u = time - from, s = smoothstep(u);
   const placed = [];
@@ -305,15 +345,15 @@ function layout(time) {
     const wy = 0.5 - mix(pick(flatY), pick(liftY), depth);
     const wz = mix(row * 1e-5, pick(liftZ) - 0.5, depth);
     const hs = mix(heatSurge[a], heatSurge[b], u), ha = mix(heatActive[a], heatActive[b], u);
-    const ws = hs, wa = ha * (1 - ws), wg = 1 - ws - wa;
+    const ws = hs, wa = ha * (1 - ws), wg = 1 - ws - wa, base = row < MAIN ? GREY : JUNK;
     position.set(wx, wy, wz);
     scale.setScalar(r);
     matrix.compose(position, rotation, scale);
     mesh.setMatrixAt(row, matrix);
     colour.setRGB(
-      (ws * SURGE[0] + wa * ACTIVE[0] + wg * GREY[0]) / 255,
-      (ws * SURGE[1] + wa * ACTIVE[1] + wg * GREY[1]) / 255,
-      (ws * SURGE[2] + wa * ACTIVE[2] + wg * GREY[2]) / 255,
+      (ws * SURGE[0] + wa * ACTIVE[0] + wg * base[0]) / 255,
+      (ws * SURGE[1] + wa * ACTIVE[1] + wg * base[1]) / 255,
+      (ws * SURGE[2] + wa * ACTIVE[2] + wg * base[2]) / 255,
       THREE.SRGBColorSpace,
     );
     mesh.setColorAt(row, colour);
@@ -412,6 +452,7 @@ function change(week) {
 }
 
 let panelWeek = -1, feedCount = -1;
+const feed = [...eventWeeks, ...alerts].sort((a, b) => a.day.localeCompare(b.day) || (b.title ? 1 : 0) - (a.title ? 1 : 0));
 
 function drawPanel(week, now) {
   if (week === panelWeek) return;
@@ -419,20 +460,20 @@ function drawPanel(week, now) {
   panelWeek = week;
   const w = weeks[week];
   el("date").textContent = dateFormat.format(parse(w.day));
-  const event = [...eventWeeks].reverse().find((e) => e.week <= week && week - e.week < EVENT_WEEKS);
-  el("event").innerHTML = event ? `<b>→</b> ${esc(shortFormat.format(parse(event.day)))}, ${esc(event.title)}` : "";
   el("stats").innerHTML = [
     ["emails stored", number(w.documents)],
     ["this week", number(w.mail) + change(week)],
     ["live clusters", number(w.live_blobs)],
   ].map(([k, v]) => `<span>${k}</span><span>${v}</span>`).join("");
-  const landed = alerts.filter((a) => a.week <= week);
+  const landed = feed.filter((item) => item.week <= week);
   if (landed.length !== feedCount) {
     feedCount = landed.length;
-    el("alerts").innerHTML = landed.slice().reverse().map((a) => {
-      const what = a.kind === "new" ? "new subject" : "speeding up";
-      const note = a.note ? `<p>${esc(a.note)}</p>` : "";
-      return `<div class="alert ${a.weight}"><span class="name">${esc(nameAt(blobById.get(a.blob), a.week))}</span><small>${shortFormat.format(parse(a.day))} · ${what} · ${number(a.observed)} in 4 weeks, normal ${number(Math.round(a.normal))}</small>${note}</div>`;
+    el("alerts").innerHTML = landed.slice().reverse().map((item) => {
+      if (item.title) return `<div class="happened">→ ${shortFormat.format(parse(item.day))}, ${esc(item.title)}</div>`;
+      const what = item.kind === "new" ? "new subject" : "speeding up";
+      const follows = item.follows ? `<small class="follows">${esc(item.follows)}</small>` : "";
+      const note = item.note ? `<p>${esc(item.note)}</p>` : "";
+      return `<div class="alert ${item.weight}"><span class="name">${esc(nameAt(blobById.get(item.blob), item.week))}</span><small>${shortFormat.format(parse(item.day))} · ${what} · ${number(item.observed)} in 4 weeks, normal ${number(Math.round(item.normal))}</small>${follows}${note}</div>`;
     }).join("");
     el("alerts").scrollTop = 0;
   }
@@ -500,6 +541,7 @@ function stopAt(moment, now) {
   stopLength = (1800 + moment.text.length * 32) / Math.max(1, speed);
   stopUntil = now + stopLength;
   ringAt = 0;
+  el("caption-follows").textContent = moment.follows;
   el("caption-text").textContent = moment.text;
   el("caption").style.display = "block";
 }
@@ -561,6 +603,7 @@ function frame(now) {
   advance(now, elapsed);
   moveCamera(now);
   const placed = layout(time);
+  updateDust(time);
   renderer.render(scene, camera);
   project(placed);
   current = placed;
@@ -700,7 +743,7 @@ function setThin(choice) {
 }
 
 segment("speeds", SPEEDS, speed, (choice) => { speed = choice; });
-segment("thins", THIN, "subjects", setThin);
+segment("thins", THIN, "topics", setThin);
 
 let dragging = false;
 const strip = el("strip");
@@ -714,7 +757,7 @@ window.replay = { seek(week) { setPlaying(false); resumeAfter(week); }, weeks: W
 
 resize();
 setPlaying(playing);
-setThin("subjects");
+setThin("topics");
 drawTime();
 if (document.fonts) document.fonts.ready.then(drawTime);
 requestAnimationFrame(frame);

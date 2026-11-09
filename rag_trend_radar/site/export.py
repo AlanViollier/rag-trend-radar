@@ -1,5 +1,6 @@
 """The replay page, one file with its data inside, from the radar tables. Writes no table."""
 
+import math
 import re
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
@@ -10,16 +11,21 @@ from pathlib import Path
 import numpy as np
 import psycopg
 from numpy.typing import NDArray
+from psycopg import sql
 from psycopg.rows import TupleRow
 
+from rag_trend_radar.config import get_settings
 from rag_trend_radar.days import cutoff
 from rag_trend_radar.exceptions import ExportRefused
+from rag_trend_radar.index import vectors_identifier
+from rag_trend_radar.ingest.kinds import Source, source
 from rag_trend_radar.site import names, places, smooth
 from rag_trend_radar.site.records import (
     Moment,
     PageAlert,
     PageBlob,
     PageData,
+    PageDust,
     PageEvent,
     PageMoment,
     PageWeek,
@@ -28,6 +34,10 @@ from rag_trend_radar.site.records import (
 # Weeks either side that calm a blob's size and its place, and its faster-moving numbers.
 _SLOW, _QUICK = 4, 2
 _NEW_BLOB_DAYS = 28
+# A sample of the chunks no cluster ever took, enough for a glow. Bulk mail is dropped after
+# sampling, as the radar drops it, so more are read than kept.
+_DUST, _DUST_READ = 4000, 6000
+_DUST_WEEKS = 26
 TEMPLATE = Path(__file__).with_name("page.html")
 _SHAPES = {
     "SSN-shaped": re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
@@ -71,6 +81,14 @@ class Day:
 
 
 @dataclass(frozen=True)
+class Speck:
+    """A chunk no cluster took, and the day it was sent."""
+
+    vector: NDArray[np.float32]
+    day: date
+
+
+@dataclass(frozen=True)
 class Tables:
     """Everything the page reads from the store."""
 
@@ -79,9 +97,10 @@ class Tables:
     days: list[Day]
     documents_before: int
     chunks_before: int
+    dust: list[Speck]
 
 
-def read(conn: psycopg.Connection[TupleRow]) -> Tables:
+def read(conn: psycopg.Connection[TupleRow], model: str, dims: int, ends: Sequence[date]) -> Tables:
     """Every blob, the alerts, and the store day by day."""
     seen = [
         Seen(b, s, w, c.to_numpy(), tuple(k), m, r, u)
@@ -112,7 +131,30 @@ def read(conn: psycopg.Connection[TupleRow]) -> Tables:
         " WHERE d.sent_at < %s",
         (start,),
     ).fetchall()[0][0]
-    return Tables(seen, fired, days, documents, chunks)
+    return Tables(seen, fired, days, documents, chunks, _dust(conn, model, dims, ends))
+
+
+def _dust(
+    conn: psycopg.Connection[TupleRow], model: str, dims: int, ends: Sequence[date]
+) -> list[Speck]:
+    rows = conn.execute(
+        sql.SQL(
+            "SELECT v.embedding, (d.sent_at AT TIME ZONE %s)::date, c.text FROM chunks c"
+            " JOIN documents d ON d.id = c.document_id JOIN {} v ON v.chunk_id = c.id"
+            " WHERE d.sent_at >= %s AND d.sent_at < %s AND c.quote_chars = 0"
+            " AND NOT EXISTS (SELECT 1 FROM blob_chunks b WHERE b.chunk_id = c.id)"
+            " ORDER BY c.text_hash LIMIT %s"
+        ).format(vectors_identifier(model, dims)),
+        (
+            get_settings().timezone,
+            cutoff(ends[0] - timedelta(weeks=_DUST_WEEKS)),
+            cutoff(ends[-1]),
+            _DUST_READ,
+        ),
+    ).fetchall()
+    return [Speck(v.to_numpy(), d) for v, d, text in rows if source(text) is not Source.BULK][
+        :_DUST
+    ]
 
 
 def events_from(path: Path) -> list[PageEvent]:
@@ -137,19 +179,22 @@ def page(
     for row in tables.seen:
         lives[row.blob].append(row)
     ordered = _shown_first(lives)
-    flat, lifted = _places([life for _, life in ordered], where, len(ends))
+    flat, lifted, dust_flat, dust_lifted = _places(
+        [life for _, life in ordered], tables.dust, where, len(ends)
+    )
     blobs = [
         _blob(blob, life, where, flat[row], lifted[row]) for row, (blob, life) in enumerate(ordered)
     ]
     weeks = _weeks(tables, ends, blobs)
-    stops = _moments(moments, tables.fired, where, weeks)
-    notes = {(m.day, m.blob): m.text for m in stops}
+    stops = _moments(moments, tables.fired, where, weeks, events)
+    notes = {(m.day, m.blob): m for m in stops}
     return PageData(
         weeks=weeks,
         blobs=tuple(blobs),
-        alerts=tuple(_alert(f, where, notes.get((f.day, f.blob), "")) for f in tables.fired),
+        alerts=tuple(_alert(f, where, notes.get((f.day, f.blob))) for f in tables.fired),
         events=tuple(events),
         moments=stops,
+        dust=_page_dust(tables.dust, ends, dust_flat, dust_lifted),
     )
 
 
@@ -170,26 +215,57 @@ def _shown_first(lives: Mapping[int, list[Seen]]) -> list[tuple[int, list[Seen]]
 
 
 def _places(
-    lives: Sequence[Sequence[Seen]], where: Mapping[date, int], weeks: int
-) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-    """Each blob's flat and lifted place every week. Only shown blobs shape the map, or push apart."""
+    lives: Sequence[Sequence[Seen]],
+    dust: Sequence[Speck],
+    where: Mapping[date, int],
+    weeks: int,
+) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
+    """Each blob's flat and lifted place every week, then the dust's. Only shown blobs shape the
+    map or push apart."""
     main = [life for life in lives if life[0].shown]
     others = [life for life in lives if not life[0].shown]
-    centres, extra = _centres(main), _centres(others)
+    dims = main[0][0].centre.size
+    centres = _centres(main, dims)
+    extra = np.concatenate(
+        [
+            _centres(others, dims),
+            np.array([s.vector for s in dust], dtype=np.float32).reshape(len(dust), dims),
+        ]
+    )
     flat, flat_extra = places.map_points(centres, extra)
     lifted, lifted_extra = places.lift(centres, flat, extra)
+    joined = len(extra) - len(dust)
 
     def packed(rows: Sequence[Sequence[Seen]], points: NDArray[np.float64]) -> NDArray[np.float64]:
         return places.pack(_wanted(rows, where, points, weeks), _mail(rows, where, weeks))
 
     return (
-        np.concatenate([packed(main, flat), packed(others, flat_extra)]),
-        np.concatenate([packed(main, lifted), packed(others, lifted_extra)]),
+        np.concatenate([packed(main, flat), packed(others, flat_extra[:joined])]),
+        np.concatenate([packed(main, lifted), packed(others, lifted_extra[:joined])]),
+        flat_extra[joined:],
+        lifted_extra[joined:],
     )
 
 
-def _centres(lives: Sequence[Sequence[Seen]]) -> NDArray[np.float32]:
-    return np.array([r.centre for life in lives for r in life], dtype=np.float32)
+def _centres(lives: Sequence[Sequence[Seen]], dims: int) -> NDArray[np.float32]:
+    centres = [r.centre for life in lives for r in life]
+    return np.array(centres, dtype=np.float32).reshape(len(centres), dims)
+
+
+def _page_dust(
+    dust: Sequence[Speck],
+    ends: Sequence[date],
+    flat: NDArray[np.float64],
+    lifted: NDArray[np.float64],
+) -> PageDust:
+    return PageDust(
+        first=tuple(math.ceil((s.day - ends[0]).days / 7) for s in dust),
+        x=_rounded(flat[:, 0], 3),
+        y=_rounded(flat[:, 1], 3),
+        lifted_x=_rounded(lifted[:, 0], 3),
+        lifted_y=_rounded(lifted[:, 1], 3),
+        lifted_z=_rounded(lifted[:, 2], 3),
+    )
 
 
 def _mail(
@@ -282,8 +358,10 @@ def _moments(
     fired: Sequence[Fired],
     where: Mapping[date, int],
     weeks: Sequence[PageWeek],
+    events: Sequence[PageEvent],
 ) -> tuple[PageMoment, ...]:
     found = {(f.day, f.blob): f for f in fired}
+    happened = {e.id: e for e in events}
     stops = []
     for moment in moments:
         alert = found.get((moment.day, moment.blob))
@@ -295,11 +373,19 @@ def _moments(
             normal=f"{round(alert.expected):,}",
             mail=f"{weeks[week].mail:,}",
         )
-        stops.append(PageMoment(day=moment.day, blob=moment.blob, text=text, week=week))
+        follows = ""
+        if moment.event:
+            if moment.event not in happened:
+                raise ExportRefused(f"the moment on {moment.day} follows no event {moment.event}")
+            event = happened[moment.event]
+            follows = f"{(moment.day - event.day).days} days after: {event.title}"
+        stops.append(
+            PageMoment(day=moment.day, blob=moment.blob, text=text, week=week, follows=follows)
+        )
     return tuple(stops)
 
 
-def _alert(fired: Fired, where: Mapping[date, int], note: str) -> PageAlert:
+def _alert(fired: Fired, where: Mapping[date, int], moment: PageMoment | None) -> PageAlert:
     return PageAlert(
         day=fired.day,
         week=where[fired.day],
@@ -307,8 +393,9 @@ def _alert(fired: Fired, where: Mapping[date, int], note: str) -> PageAlert:
         observed=round(fired.observed),
         normal=round(fired.expected, 1),
         kind="new" if (fired.day - fired.born).days < _NEW_BLOB_DAYS else "speeding",
-        note=note,
-        weight="bold" if note else "",
+        note=moment.text if moment else "",
+        follows=moment.follows if moment else "",
+        weight="bold" if moment else "",
     )
 
 
@@ -317,4 +404,5 @@ def _whole(values: NDArray[np.float64]) -> tuple[int, ...]:
 
 
 def _rounded(values: NDArray[np.float64], digits: int) -> tuple[float, ...]:
-    return tuple(np.round(values, digits).tolist())
+    # UMAP's transform hands back float32: rounded as it is, 0.123 prints as 0.12300000339746475.
+    return tuple(np.round(values.astype(np.float64), digits).tolist())

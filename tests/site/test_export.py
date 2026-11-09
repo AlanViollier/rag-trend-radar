@@ -33,7 +33,8 @@ def _day(week: int, documents: int = 5) -> export.Day:
 
 def _tables(fired: list[export.Fired] | None = None) -> export.Tables:
     seen = [_seen(1, 0), _seen(1, 2, mail=300), _seen(9, 1, shown=False), _seen(2, 3)]
-    return export.Tables(seen, fired or [], [_day(0), _day(1, 7)], 100, 200)
+    dust = [export.Speck(np.ones(4, dtype=np.float32), ENDS[1])]
+    return export.Tables(seen, fired or [], [_day(0), _day(1, 7)], 100, 200, dust)
 
 
 @pytest.fixture(autouse=True)
@@ -76,6 +77,25 @@ def test_a_moment_fills_in_its_numbers_and_makes_its_alert_bold() -> None:
     assert (data.alerts[0].note, data.alerts[0].weight) == (data.moments[0].text, "bold")
 
 
+def test_a_moment_says_how_long_after_its_event() -> None:
+    fired = export.Fired(ENDS[3], 1, 10.0, 2.0, ENDS[0])
+    event = PageEvent(id="x", day=ENDS[3] - timedelta(days=12), title="Something")
+    moment = Moment(day=ENDS[3], blob=1, text="t", event="x")
+    data = export.page(_tables([fired]), [event], [moment], ENDS)
+    assert data.alerts[0].follows == "12 days after: Something"
+
+
+def test_a_moment_naming_an_unknown_event_stops_the_export() -> None:
+    fired = export.Fired(ENDS[3], 1, 10.0, 2.0, ENDS[0])
+    with pytest.raises(ExportRefused):
+        export.page(_tables([fired]), [], [Moment(day=ENDS[3], blob=1, text="t", event="x")], ENDS)
+
+
+def test_dust_arrives_the_week_it_was_sent() -> None:
+    dust = export.page(_tables(), [], [], ENDS).dust
+    assert (dust.first, len(dust.x), len(dust.lifted_z)) == ((1,), 1, 1)
+
+
 def test_a_moment_with_no_alert_stops_the_export() -> None:
     with pytest.raises(ExportRefused):
         export.page(_tables(), [], [Moment(day=ENDS[3], blob=1, text="x")], ENDS)
@@ -106,6 +126,10 @@ def test_an_alert_on_a_young_blob_is_new_on_an_older_one_speeding() -> None:
     older = export.Fired(ENDS[4], 1, 90.0, 10.0, ENDS[0])
     alerts = export.page(_tables([young, older]), [], [], ENDS).alerts
     assert [(a.week, a.kind, a.observed) for a in alerts] == [(3, "new", 80), (4, "speeding", 90)]
+
+
+def test_small_floats_round_to_short_numbers() -> None:
+    assert export._rounded(np.array([0.123], dtype=np.float32), 3) == (0.123,)
 
 
 def test_events_pass_through() -> None:

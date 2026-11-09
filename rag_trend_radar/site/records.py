@@ -46,6 +46,7 @@ class PageAlert(Record):
     normal: float
     kind: Literal["new", "speeding"]
     note: str = ""
+    follows: str = ""
     weight: str = ""
 
 
@@ -58,17 +59,31 @@ class PageEvent(Record):
 
 
 class Moment(Record):
-    """Where the replay stops to explain an alert. `text` may hold {observed}, {normal}, {mail}."""
+    """Where the replay stops to explain an alert. `text` may hold {observed}, {normal}, {mail};
+    `event` is the id of the real event it follows, if there's one."""
 
     day: date
     blob: int
     text: str
+    event: str = ""
 
 
 class PageMoment(Moment):
-    """A moment with its numbers filled in, and the week it stops on."""
+    """A moment with its numbers filled in, the week it stops on, the event it follows."""
 
     week: int
+    follows: str = ""
+
+
+class PageDust(Record):
+    """Unclustered chunks, column by column. `first` is the week each arrives, negative if early."""
+
+    first: tuple[int, ...]
+    x: tuple[float, ...]
+    y: tuple[float, ...]
+    lifted_x: tuple[float, ...]
+    lifted_y: tuple[float, ...]
+    lifted_z: tuple[float, ...]
 
 
 class PageData(Record):
@@ -79,3 +94,4 @@ class PageData(Record):
     alerts: tuple[PageAlert, ...]
     events: tuple[PageEvent, ...]
     moments: tuple[PageMoment, ...]
+    dust: PageDust

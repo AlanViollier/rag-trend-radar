@@ -73,7 +73,9 @@ def radar_export(out: Path = PAGE) -> None:
     settings = get_settings()
     log = RunLog("export", {"out": str(out)})
     with log.stage("read tables") as handled, db.connect(db.INVESTIGATOR) as conn:
-        tables = export.read(conn)
+        tables = export.read(
+            conn, settings.embedding_model, settings.embedding_dims, frames.week_ends()
+        )
         handled.items = len(tables.seen)
     with log.stage("smooth, place, name") as handled:
         data = export.page(
