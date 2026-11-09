@@ -1,6 +1,7 @@
 """One map and one set of blobs per week over the last 26 weeks of mail, each map started from the last.
 
-Saved as files: a map takes a minute or two, and everything else is recomputed from them.
+Saved as files: a map takes a minute or two, and everything else is recomputed from them. Each week
+keeps the chunk ids it was made from, so a chunk deleted later just drops out of its blob.
 """
 
 from collections.abc import Sequence
@@ -13,6 +14,7 @@ from numpy.typing import NDArray
 
 from rag_trend_radar.run_log import RunLog
 from rag_trend_radar.trends import topics
+from rag_trend_radar.trends.topics import NOISE
 
 ## Locked with the owner 2026-11-05. 26 weeks: 8 and 16 kept a blob too briefly (median life, mail in
 ## lasting blobs). First window Jan–Jul 2000: too little mail before. After Feb 2002 mailboxes empty out.
@@ -57,17 +59,20 @@ def make(
     folder.mkdir(parents=True, exist_ok=True)
     previous: tuple[NDArray[np.int64], NDArray[np.float32]] | None = None
     for end in ends:
-        rows = window(chosen, end)
         map_file = folder / f"{end}.npy"
         if map_file.exists():
-            points = np.load(map_file)
+            rows, kept = _matched(chosen, folder, end)
+            points = np.load(map_file)[kept]
         else:
+            rows = window(chosen, end)
+            kept = np.ones(len(rows), dtype=bool)
             with log.stage("map") as handled:
                 start = None if previous is None else warm_start(chosen.vectors, rows, *previous)
                 neighbors = min(topics.NEIGHBORS, len(rows) - 1)
                 points = topics.squash(chosen.vectors[rows], topics.SQUASH, neighbors, seed, start)
                 handled.items = len(rows)
             np.save(map_file, points)
+            np.save(_chunks_file(folder, end), chosen.chunk_ids[rows])
         previous = rows, points
         labels_file = _labels_file(folder, end)
         if not labels_file.exists():
@@ -77,12 +82,19 @@ def make(
                 )
                 labels, _ = topics.drop_loose(labels, chosen.vectors[rows])
                 handled.items = len(rows)
-            np.save(labels_file, labels)
+            ## Saved row for row with the chunk ids, deleted chunks as noise.
+            full = np.full(len(kept), NOISE, dtype=np.int64)
+            full[kept] = labels
+            np.save(labels_file, full)
 
 
 def load(chosen: topics.Pool, ends: Sequence[date], folder: Path) -> list[Frame]:
-    """The saved weeks, row for row with `chosen`."""
-    return [Frame(end, window(chosen, end), np.load(_labels_file(folder, end))) for end in ends]
+    """The saved weeks matched to `chosen` by chunk id: a chunk deleted since is in no week."""
+    found = []
+    for end in ends:
+        rows, kept = _matched(chosen, folder, end)
+        found.append(Frame(end, rows, np.load(_labels_file(folder, end))[kept]))
+    return found
 
 
 def warm_start(
@@ -107,5 +119,21 @@ def warm_start(
     return start
 
 
+def _matched(
+    chosen: topics.Pool, folder: Path, end: date
+) -> tuple[NDArray[np.int64], NDArray[np.bool_]]:
+    """Where each chunk the week was made from sits in `chosen` now, and which are still there."""
+    saved = np.load(_chunks_file(folder, end))
+    ## The pool comes ordered by chunk id.
+    at = np.minimum(np.searchsorted(chosen.chunk_ids, saved), len(chosen.chunk_ids) - 1)
+    kept: NDArray[np.bool_] = chosen.chunk_ids[at] == saved
+    rows: NDArray[np.int64] = at[kept]
+    return rows, kept
+
+
 def _labels_file(folder: Path, end: date) -> Path:
     return folder / f"{end}-labels-{CLUSTER_VERSION}.npy"
+
+
+def _chunks_file(folder: Path, end: date) -> Path:
+    return folder / f"{end}-chunks.npy"

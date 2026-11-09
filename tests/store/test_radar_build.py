@@ -2,13 +2,14 @@
 
 from collections.abc import Iterator
 from datetime import date, timedelta
+from pathlib import Path
 
 import numpy as np
 import pytest
 
 from rag_trend_radar import index
 from rag_trend_radar.db import connect as db
-from rag_trend_radar.trends import build
+from rag_trend_radar.trends import build, frames
 from rag_trend_radar.trends.frames import Frame
 from rag_trend_radar.trends.topics import Pool
 
@@ -145,3 +146,33 @@ def test_a_short_lived_blob_isnt_shown_unless_the_mail_ended_first(
     with db.connect() as conn:
         kinds = conn.execute("SELECT shown FROM blobs ORDER BY id").fetchall()
     assert kinds == [(True,), (False,)]
+
+
+def test_a_delete_then_a_rebuild_takes_the_chunk_out_and_leaves_other_blobs_their_mail(
+    world: tuple[Pool, list[int]], tmp_path: Path
+) -> None:
+    chosen, ids = world
+    for made in _frames(WEEKS):
+        np.save(tmp_path / f"{made.end}-chunks.npy", chosen.chunk_ids[made.rows])
+        np.save(tmp_path / f"{made.end}-labels-{frames.CLUSTER_VERSION}.npy", made.labels)
+    saved = frames.load(chosen, WEEKS, tmp_path)
+    with db.connect() as conn:
+        build.write(conn, chosen, saved, saved, MODEL)
+    letters = _without_surge(_dump("blob_weeks")[len(WEEKS) :])
+    gone = ids[3]
+    with db.connect() as conn:
+        document = conn.execute("SELECT document_id FROM chunks WHERE id = %s", (gone,)).fetchall()
+        index.delete_document(conn, document[0][0])
+    left = chosen.take(np.flatnonzero(chosen.chunk_ids != gone))
+    after = frames.load(left, WEEKS, tmp_path)
+    with db.connect() as conn:
+        build.write(conn, left, after, after, MODEL)
+        held = conn.execute("SELECT count(*) FROM blob_chunks WHERE chunk_id = %s", (gone,))
+        sizes = conn.execute("SELECT DISTINCT chunks FROM blob_weeks WHERE blob_id = 0")
+        assert (held.fetchall(), sizes.fetchall()) == ([(0,)], [(SIZE - 1,)])
+    ## Surge moves a little: it compares each blob against all mail, now one chunk less.
+    assert _without_surge(_dump("blob_weeks")[len(WEEKS) :]) == letters
+
+
+def _without_surge(rows: list[tuple[object, ...]]) -> list[tuple[object, ...]]:
+    return [row[:9] + row[10:] for row in rows]

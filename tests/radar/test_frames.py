@@ -84,3 +84,32 @@ def test_a_week_already_saved_isnt_made_again(tmp_path: Path) -> None:
     log = RunLog("test", {})
     frames.make(chosen, [D], 1, tmp_path, log, min_size=20)
     assert log.run().stages == {}
+
+
+def _without(chosen: Pool, gone: int) -> Pool:
+    return chosen.take(np.flatnonzero(chosen.chunk_ids != gone))
+
+
+def _labelled(made: list[frames.Frame], chosen: Pool) -> dict[int, int]:
+    return dict(zip(chosen.chunk_ids[made[0].rows].tolist(), made[0].labels.tolist(), strict=True))
+
+
+def test_a_deleted_chunk_drops_out_of_its_week_and_nothing_else_moves(tmp_path: Path) -> None:
+    chosen = _world(0)
+    frames.make(chosen, [D], 1, tmp_path, RunLog("test", {}), min_size=20)
+    before = _labelled(frames.load(chosen, [D], tmp_path), chosen)
+    gone = int(chosen.chunk_ids[frames.window(chosen, D)[100]])
+    after = _labelled(frames.load(_without(chosen, gone), [D], tmp_path), _without(chosen, gone))
+    assert gone not in after
+    assert after == {k: v for k, v in before.items() if k != gone}
+
+
+def test_blobs_made_after_a_delete_still_line_up_with_the_saved_chunks(tmp_path: Path) -> None:
+    chosen = _world(0)
+    frames.make(chosen, [D], 1, tmp_path, RunLog("test", {}), min_size=20)
+    next(tmp_path.glob("*-labels-*.npy")).unlink()
+    gone = int(chosen.chunk_ids[frames.window(chosen, D)[100]])
+    smaller = _without(chosen, gone)
+    frames.make(smaller, [D], 1, tmp_path, RunLog("test", {}), min_size=20)
+    made = frames.load(smaller, [D], tmp_path)
+    assert len(made[0].labels) == len(made[0].rows) == len(frames.window(chosen, D)) - 1
