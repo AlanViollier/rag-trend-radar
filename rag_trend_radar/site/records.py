@@ -45,6 +45,7 @@ class PageAlert(Record):
     observed: int
     normal: float
     kind: Literal["new", "speeding"]
+    headline: str = ""
     note: str = ""
     follows: str = ""
     weight: str = ""
@@ -56,6 +57,27 @@ class PageEvent(Record):
     id: str
     day: date
     title: str
+
+
+class Naming(Record):
+    """A blob as a person read it, for the page only: alerts never see this. `names` are (week it
+    starts, name); only a `topic` goes on the map."""
+
+    blob: int
+    first: date
+    kind: Literal["topic", "newsletter", "footer", "chatter"]
+    family: str
+    names: tuple[tuple[date, str], ...]
+
+
+class AlertNote(Record):
+    """An alert as a person read it: bold for a real story, muted for junk, empty for routine."""
+
+    day: date
+    blob: int
+    weight: Literal["bold", "", "muted"]
+    headline: str = ""
+    note: str = ""
 
 
 class Moment(Record):

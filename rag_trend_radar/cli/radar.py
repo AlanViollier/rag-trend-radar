@@ -13,10 +13,13 @@ from rag_trend_radar.db import connect as db
 from rag_trend_radar.run_log import RunLog, summarise
 from rag_trend_radar.schema import RadarRun
 from rag_trend_radar.site import export
+from rag_trend_radar.site.records import AlertNote, Moment, Naming, PageEvent
 from rag_trend_radar.trends import build, frames, topics
 
 EVENTS = Path("evals/events.jsonl")
 MOMENTS = Path("evals/moments.jsonl")
+NAMES = Path("evals/blob_names.jsonl")
+ALERT_NOTES = Path("evals/alert_notes.jsonl")
 PAGE = Path("docs/radar/index.html")
 
 
@@ -79,7 +82,12 @@ def radar_export(out: Path = PAGE) -> None:
         handled.items = len(tables.seen)
     with log.stage("smooth, place, name") as handled:
         data = export.page(
-            tables, export.events_from(EVENTS), export.moments_from(MOMENTS), frames.week_ends()
+            tables,
+            export.records_from(EVENTS, PageEvent),
+            export.records_from(MOMENTS, Moment),
+            frames.week_ends(),
+            export.records_from(NAMES, Naming),
+            export.records_from(ALERT_NOTES, AlertNote),
         )
         handled.items = len(data.blobs)
     with log.stage("write"):

@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 import pytest
@@ -7,7 +8,7 @@ from numpy.typing import NDArray
 
 from rag_trend_radar.exceptions import ExportRefused
 from rag_trend_radar.site import export, places
-from rag_trend_radar.site.records import Moment, PageData, PageEvent
+from rag_trend_radar.site.records import AlertNote, Moment, Naming, PageData, PageEvent
 
 START = date(2001, 1, 7)
 ENDS = [START + timedelta(weeks=i) for i in range(6)]
@@ -89,6 +90,44 @@ def test_a_moment_naming_an_unknown_event_stops_the_export() -> None:
     fired = export.Fired(ENDS[3], 1, 10.0, 2.0, ENDS[0])
     with pytest.raises(ExportRefused):
         export.page(_tables([fired]), [], [Moment(day=ENDS[3], blob=1, text="t", event="x")], ENDS)
+
+
+def _named(kind: Literal["topic", "newsletter"] = "topic", first: date = ENDS[0]) -> Naming:
+    names = ((first, "Gas"), (ENDS[2], "Pipes"))
+    return Naming(blob=1, first=first, kind=kind, family="Trading", names=names)
+
+
+def test_a_read_blob_takes_its_names_and_family() -> None:
+    blob = export.page(_tables(), [], [], ENDS, [_named()]).blobs[0]
+    assert (blob.names, blob.family) == (((0, "Gas"), (2, "Pipes")), "Trading")
+
+
+def test_a_blob_nobody_read_keeps_its_rough_name() -> None:
+    blobs = {b.id: b for b in export.page(_tables(), [], [], ENDS, [_named()]).blobs}
+    assert (blobs[2].family, len(blobs[2].names)) == ("", 1)
+
+
+def test_a_blob_read_as_a_newsletter_leaves_the_map() -> None:
+    blobs = {b.id: b for b in export.page(_tables(), [], [], ENDS, [_named("newsletter")]).blobs}
+    assert (blobs[1].shown, blobs[2].shown) == (False, True)
+
+
+def test_a_name_for_the_wrong_first_week_stops_the_export() -> None:
+    with pytest.raises(ExportRefused):
+        export.page(_tables(), [], [], ENDS, [_named(first=ENDS[1])])
+
+
+def test_a_read_alert_takes_its_weight_and_note() -> None:
+    fired = export.Fired(ENDS[3], 1, 80.0, 2.0, ENDS[0])
+    note = AlertNote(day=ENDS[3], blob=1, weight="muted", headline="Gift ads", note="Junk.")
+    alert = export.page(_tables([fired]), [], [], ENDS, read_alerts=[note]).alerts[0]
+    assert (alert.weight, alert.headline, alert.note) == ("muted", "Gift ads", "Junk.")
+
+
+def test_a_note_on_no_alert_stops_the_export() -> None:
+    note = AlertNote(day=ENDS[3], blob=1, weight="bold", note="x")
+    with pytest.raises(ExportRefused):
+        export.page(_tables(), [], [], ENDS, read_alerts=[note])
 
 
 def test_dust_arrives_the_week_it_was_sent() -> None:

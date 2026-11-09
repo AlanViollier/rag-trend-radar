@@ -62,7 +62,7 @@ button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
 .alert { margin-bottom: 7px; line-height: 1.4; opacity: .55; }
 .alert.bold { opacity: 1; }
 .alert.bold .name { font-weight: 600; }
-.alert.muted { opacity: .3; }
+.alert.muted { opacity: .42; }
 .alert small { display: block; color: var(--muted); font-size: 11px; }
 .alert p { font-size: 11.5px; margin-top: 2px; }
 .alert .follows { color: var(--ember); }
@@ -501,7 +501,7 @@ function drawPanel(week, now) {
       const what = item.kind === "new" ? "new subject" : "speeding up";
       const follows = item.follows ? `<small class="follows">${esc(item.follows)}</small>` : "";
       const note = item.note ? `<p>${esc(item.note)}</p>` : "";
-      return `<div class="alert ${item.weight}"><span class="name">${esc(nameAt(blobById.get(item.blob), item.week))}</span><small>${shortFormat.format(parse(item.day))} · ${what} · ${number(item.observed)} in 4 weeks, normal ${number(Math.round(item.normal))}</small>${follows}${note}</div>`;
+      return `<div class="alert ${item.weight}"><span class="name">${esc(item.headline || nameAt(blobById.get(item.blob), item.week))}</span><small>${shortFormat.format(parse(item.day))} · ${what} · ${number(item.observed)} in 4 weeks, normal ${number(Math.round(item.normal))}</small>${follows}${note}</div>`;
     }).join("");
     el("alerts").scrollTop = 0;
   }

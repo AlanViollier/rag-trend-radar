@@ -4,7 +4,7 @@ import math
 import re
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -19,9 +19,12 @@ from rag_trend_radar.days import cutoff
 from rag_trend_radar.exceptions import ExportRefused
 from rag_trend_radar.index import vectors_identifier
 from rag_trend_radar.ingest.kinds import Source, source
+from rag_trend_radar.schema import Record
 from rag_trend_radar.site import names, places, smooth
 from rag_trend_radar.site.records import (
+    AlertNote,
     Moment,
+    Naming,
     PageAlert,
     PageBlob,
     PageData,
@@ -157,14 +160,9 @@ def _dust(
     ]
 
 
-def events_from(path: Path) -> list[PageEvent]:
-    """The real events, one JSON object a line."""
-    return [PageEvent.model_validate_json(line) for line in path.read_text().splitlines()]
-
-
-def moments_from(path: Path) -> list[Moment]:
-    """Where the replay stops, one JSON object a line."""
-    return [Moment.model_validate_json(line) for line in path.read_text().splitlines()]
+def records_from[T: Record](path: Path, record: type[T]) -> list[T]:
+    """A file of records, one JSON object a line."""
+    return [record.model_validate_json(line) for line in path.read_text().splitlines()]
 
 
 def page(
@@ -172,26 +170,35 @@ def page(
     events: Sequence[PageEvent],
     moments: Sequence[Moment],
     ends: Sequence[date],
+    named: Sequence[Naming] = (),
+    read_alerts: Sequence[AlertNote] = (),
 ) -> PageData:
-    """The whole page: every shown blob smoothed and placed, its names, the alerts, the weeks."""
+    """The whole page: every shown blob smoothed and placed, its names, the alerts, the weeks.
+    What's been read by hand replaces the rough names and decides what's on the map."""
     where = {end: i for i, end in enumerate(ends)}
+    reading = {n.blob: n for n in named}
     lives: defaultdict[int, list[Seen]] = defaultdict(list)
-    for row in tables.seen:
+    for row in _as_read(tables.seen, named, where):
         lives[row.blob].append(row)
     ordered = _shown_first(lives)
     flat, lifted, dust_flat, dust_lifted = _places(
         [life for _, life in ordered], tables.dust, where, len(ends)
     )
     blobs = [
-        _blob(blob, life, where, flat[row], lifted[row]) for row, (blob, life) in enumerate(ordered)
+        _blob(blob, life, where, flat[row], lifted[row], reading.get(blob))
+        for row, (blob, life) in enumerate(ordered)
     ]
     weeks = _weeks(tables, ends, blobs)
     stops = _moments(moments, tables.fired, where, weeks, events)
     notes = {(m.day, m.blob): m for m in stops}
+    judged = _judged(read_alerts, tables.fired)
     return PageData(
         weeks=weeks,
         blobs=tuple(blobs),
-        alerts=tuple(_alert(f, where, notes.get((f.day, f.blob))) for f in tables.fired),
+        alerts=tuple(
+            _alert(f, where, notes.get((f.day, f.blob)), judged.get((f.day, f.blob)))
+            for f in tables.fired
+        ),
         events=tuple(events),
         moments=stops,
         dust=_page_dust(tables.dust, ends, dust_flat, dust_lifted),
@@ -208,6 +215,30 @@ def write(data: PageData, out: Path) -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html)
     return len(html.encode())
+
+
+def _as_read(
+    seen: Sequence[Seen], named: Sequence[Naming], where: Mapping[date, int]
+) -> list[Seen]:
+    """Each blob on or off the map as it was read. A name that fits no blob stops the export."""
+    born: dict[int, date] = {}
+    for row in seen:
+        born.setdefault(row.blob, row.week)
+    for reading in named:
+        if born.get(reading.blob) != reading.first or any(w not in where for w, _ in reading.names):
+            raise ExportRefused(f"the names for blob {reading.blob} don't fit its weeks")
+    topics = {n.blob: n.kind == "topic" for n in named}
+    return [replace(r, shown=topics[r.blob]) if r.blob in topics else r for r in seen]
+
+
+def _judged(
+    read_alerts: Sequence[AlertNote], fired: Sequence[Fired]
+) -> dict[tuple[date, int], AlertNote]:
+    alerts = {(f.day, f.blob) for f in fired}
+    for note in read_alerts:
+        if (note.day, note.blob) not in alerts:
+            raise ExportRefused(f"the note on {note.day} names no alert on blob {note.blob}")
+    return {(n.day, n.blob): n for n in read_alerts}
 
 
 def _shown_first(lives: Mapping[int, list[Seen]]) -> list[tuple[int, list[Seen]]]:
@@ -304,8 +335,14 @@ def _blob(
     where: Mapping[date, int],
     flat: NDArray[np.float64],
     lifted: NDArray[np.float64],
+    reading: Naming | None,
 ) -> PageBlob:
     seen = [where[r.week] for r in life]
+    named = (
+        tuple((where[week], name) for week, name in reading.names)
+        if reading
+        else tuple(names.rough(seen, [r.words for r in life]))
+    )
 
     def calm(values: Sequence[float], weeks: int) -> NDArray[np.float64]:
         return smooth.median(smooth.fill(seen, values), weeks)
@@ -315,7 +352,8 @@ def _blob(
         id=blob,
         first=seen[0],
         shown=life[0].shown,
-        names=tuple(names.rough(seen, [r.words for r in life])),
+        names=named,
+        family=reading.family if reading else "",
         mail=_whole(calm([r.mail for r in life], _SLOW)),
         recent=_whole(calm([r.recent for r in life], _QUICK)),
         surge=_whole(calm([r.surge for r in life], _QUICK)),
@@ -385,7 +423,11 @@ def _moments(
     return tuple(stops)
 
 
-def _alert(fired: Fired, where: Mapping[date, int], moment: PageMoment | None) -> PageAlert:
+def _alert(
+    fired: Fired, where: Mapping[date, int], moment: PageMoment | None, read: AlertNote | None
+) -> PageAlert:
+    note = read.note if read else ""
+    weight = read.weight if read else ""
     return PageAlert(
         day=fired.day,
         week=where[fired.day],
@@ -393,9 +435,10 @@ def _alert(fired: Fired, where: Mapping[date, int], moment: PageMoment | None) -
         observed=round(fired.observed),
         normal=round(fired.expected, 1),
         kind="new" if (fired.day - fired.born).days < _NEW_BLOB_DAYS else "speeding",
-        note=moment.text if moment else "",
+        headline=read.headline if read else "",
+        note=moment.text if moment else note,
         follows=moment.follows if moment else "",
-        weight="bold" if moment else "",
+        weight="bold" if moment else weight,
     )
 
 

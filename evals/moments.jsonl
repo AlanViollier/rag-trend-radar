@@ -1,7 +1,7 @@
-{"day":"2001-02-18","blob":393,"event":"california-blackouts","text":"California's power crisis is now its own subject: {observed} emails in 4 weeks, where normal was {normal}."}
-{"day":"2001-08-26","blob":1164,"event":"skilling-leaves","text":"The resignation is already a subject of its own: {observed} emails, normal {normal}."}
-{"day":"2001-09-16","blob":1254,"event":"september-11","text":"A cluster with nothing to do with energy appears: {observed} emails, normal {normal}."}
-{"day":"2001-10-28","blob":1333,"event":"fastow-out","text":"{mail} emails this week, and nobody can read them. The radar points at one subject, Fastow's partnerships: {observed} emails where normal was {normal}."}
-{"day":"2001-11-18","blob":1505,"event":"dynegy-deal","text":"A new subject appears almost overnight: {observed} emails, normal {normal}."}
-{"day":"2002-01-13","blob":1841,"text":"The story reaches Washington. This new cluster's top words are Bush, Lay, O'Neill and Andersen: {observed} emails, normal {normal}."}
-{"day":"2002-01-27","blob":1875,"event":"bankruptcy","text":"The subject is what's left: creditors, UBS, the trading business. {observed} emails, normal {normal}."}
+{"day":"2001-02-18","blob":393,"event":"california-blackouts","text":"A month after the blackouts, California stops being background. Staff are trading daily updates and press clippings about the utilities going broke."}
+{"day":"2001-08-26","blob":1164,"event":"skilling-leaves","text":"Skilling quits after six months as CEO, and the mail fills with why. He points partly to the falling stock price."}
+{"day":"2001-09-16","blob":1254,"event":"september-11","text":"Nothing to do with energy. Five days after the attacks, people are forwarding tributes and letters about America to each other."}
+{"day":"2001-10-28","blob":1333,"event":"fastow-out","text":"{mail} emails landed this week. Three weeks ago this cluster was ordinary stock-market clips. Now it's about the CFO's partnerships."}
+{"day":"2001-11-18","blob":1505,"event":"dynegy-deal","text":"Dynegy's rescue gets its own cluster within days. Ten days after this alert, the deal is dead."}
+{"day":"2002-01-13","blob":1841,"text":"The collapse becomes a Washington story. Lay had phoned the Treasury and Commerce secretaries as Enron went under, and the papers have found out."}
+{"day":"2002-01-27","blob":1875,"event":"bankruptcy","text":"Enron is being sold for parts. The press is about creditors, and about UBS taking the trading business."}
