@@ -117,6 +117,11 @@ of the mail, so every step down buys you a pile of noise. I preferred thresholds
 mean something over trying to catch something early. It could also run day by day, about 18 hours
 on a laptop, but I didn't want to spend all that compute.
 
+My favourite alert isn't in that table. On September 24, 2000, one fired on the Raptor swaps: 140
+emails in 4 weeks where normal was 12, from staff drawing up the hedges that unravelled in the
+collapse a year later, long before any of it was news. The radar had no idea why they'd matter,
+only that a new subject had appeared in the mail.
+
 **Why these choices:**
 
 | I chose | over | because |
