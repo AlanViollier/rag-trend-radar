@@ -147,12 +147,12 @@ def _embed_missing(
     *,
     progress: bool = False,
 ) -> int:
-    ## A text embedded before, by any run in any schema, is copied from the cache; the rest
-    ## embed once per distinct text. Commits per batch, so a stopped run resumes; a text the
-    ## guard couldn't embed gets no vector and is tried again by the next run.
+    # A text embedded before, by any run in any schema, is copied from the cache; the rest
+    # embed once per distinct text. Commits per batch, so a stopped run resumes; a text the
+    # guard couldn't embed gets no vector and is tried again by the next run.
     index.from_cache(conn, model, dims)
     conn.commit()
-    ## Shortest first, so each batch holds texts of about one length (less padding).
+    # Shortest first, so each batch holds texts of about one length (less padding).
     todo = sorted(index.unembedded(conn, model, dims).items(), key=lambda item: len(item[0]))
     starts = range(0, len(todo), batch_size)
     embedded = skipped = 0

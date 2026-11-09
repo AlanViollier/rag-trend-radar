@@ -7,32 +7,30 @@ on:
     branches: [main]
 
 jobs:
-  ## No `name:` on purpose: GitHub reports the job under its name, and `make protect`
-  ## requires a check called "check".
   check:
     runs-on: ubuntu-latest
-    ## Database tests (the permission canary among them) fail here instead of skipping.
+    # Database tests (the permission canary among them) fail here instead of skipping.
     env:
       RADAR_REQUIRE_DB: "1"
     steps:
       - uses: actions/checkout@v7
 
-      ## The same Postgres image as on the laptop, with a throwaway password. --wait returns once
-      ## the healthcheck in docker-compose.yml passes.
+      # The same Postgres image as on the laptop, with a throwaway password. --wait returns once
+      # the healthcheck in docker-compose.yml passes.
       - run: echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)" > .env
       - run: docker compose up -d --wait
 
-      ## setup-uv publishes no major tag; pin the release and the uv version.
+      # setup-uv publishes no major tag; pin the release and the uv version.
       - uses: astral-sh/setup-uv@v10.2.0
         with:
           version: "0.9.27"
           enable-cache: true
 
-      ## Python comes from .python-version; the dev group installs by default.
+      # Python comes from .python-version; the dev group installs by default.
       - run: uv sync --locked
 
-      ## Every pre-commit hook, so a commit made with --no-verify still gets checked.
+      # Every pre-commit hook, so a commit made with --no-verify still gets checked.
       - run: uv run pre-commit run --all-files --show-diff-on-failure
 
-      ## Needs network, so it stays out of `make check`.
+      # Needs network, so it stays out of `make check`.
       - run: uv run pip-audit --skip-editable

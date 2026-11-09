@@ -65,8 +65,8 @@ def upsert_documents(
                     "UPDATE raw_files SET document_id = %s WHERE path = ANY(%s)",
                     (document_id, list(doc.paths)),
                 )
-            ## Only the first quote cuts a quoted message's chunks: a later one's subject or
-            ## spelling of the sender would flip them on every replay.
+            # Only the first quote cuts a quoted message's chunks: a later one's subject or
+            # spelling of the sender would flip them on every replay.
             if first_sent < doc.sent_at:
                 continue
             texts = pieces(doc)
@@ -116,8 +116,8 @@ def delete_document(conn: psycopg.Connection[TupleRow], document_id: int) -> lis
 
 
 def _upsert_document(cur: psycopg.Cursor[TupleRow], doc: Document) -> tuple[int, datetime]:
-    ## A quoted message comes back each day someone quotes it: it keeps the date and subject of
-    ## its first quote. An email's date is resolved once, so for it LEAST changes nothing.
+    # A quoted message comes back each day someone quotes it: it keeps the date and subject of
+    # its first quote. An email's date is resolved once, so for it LEAST changes nothing.
     cur.execute(
         "INSERT INTO documents (source, external_id, kind, sent_at, title, body, quoted,"
         " public) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
@@ -167,7 +167,7 @@ def _upsert_email(
 def _record_quotes(
     cur: psycopg.Cursor[TupleRow], documents: Sequence[Document], ids: dict[str, int]
 ) -> None:
-    ## The emails here quote exactly what they quote now (a deleted one quotes nothing).
+    # The emails here quote exactly what they quote now (a deleted one quotes nothing).
     emails = [ids[d.external_id] for d in documents if d.kind == "email"]
     quoted = [d for d in documents if d.kind == "quoted"]
     cur.execute("DELETE FROM quotes WHERE email_id = ANY(%s)", (emails,))
@@ -176,8 +176,8 @@ def _record_quotes(
         [([ids[e] for e in d.quoted_by if e in ids], ids[d.external_id]) for d in quoted],
     )
     _recount_access(cur, [ids[d.external_id] for d in quoted])
-    ## A quoted message no email quotes any more (a cleaner fix changed its text, so it came
-    ## back under a new id) goes: a replay after a code change leaves no stale copy behind.
+    # A quoted message no email quotes any more (a cleaner fix changed its text, so it came
+    # back under a new id) goes: a replay after a code change leaves no stale copy behind.
     cur.execute(
         "DELETE FROM documents WHERE kind = 'quoted' AND deleted_at IS NULL"
         " AND NOT EXISTS (SELECT 1 FROM quotes q WHERE q.quoted_id = documents.id)"
@@ -185,8 +185,8 @@ def _record_quotes(
 
 
 def _recount_access(cur: psycopg.Cursor[TupleRow], quoted_ids: list[int]) -> None:
-    ## A quoted message is readable by every mailbox holding an email that quotes it, from the
-    ## first of those emails on: recounted from quotes, never added to.
+    # A quoted message is readable by every mailbox holding an email that quotes it, from the
+    # first of those emails on: recounted from quotes, never added to.
     cur.execute("DELETE FROM access WHERE document_id = ANY(%s)", (quoted_ids,))
     cur.execute(
         "INSERT INTO access (document_id, mailbox, from_at)"
@@ -198,7 +198,7 @@ def _recount_access(cur: psycopg.Cursor[TupleRow], quoted_ids: list[int]) -> Non
 
 
 def _rechunk(cur: psycopg.Cursor[TupleRow], document_id: int, texts: list[str], quote: str) -> int:
-    ## Deleting the chunks takes their vectors with them (ON DELETE CASCADE).
+    # Deleting the chunks takes their vectors with them (ON DELETE CASCADE).
     cur.execute("DELETE FROM chunks WHERE document_id = %s", (document_id,))
     cur.execute(
         "INSERT INTO chunks (document_id, position, text, text_hash, quote_chars)"

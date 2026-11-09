@@ -1,12 +1,12 @@
 from datetime import date, timedelta
 
-from rag_trend_radar.trends import alerts, quiet
+from rag_trend_radar.trends import alerts, blob_kinds
 
 START = date(2001, 1, 7)
-TOPIC = quiet.Trait(chunks=200, top_sender=0.1, footers=0.0, empty_subjects=0, chatty_words=0)
-LETTER = quiet.Trait(chunks=200, top_sender=0.9, footers=0.0, empty_subjects=0, chatty_words=0)
+TOPIC = blob_kinds.Trait(chunks=200, top_sender=0.1, footers=0.0, empty_subjects=0, chatty_words=0)
+LETTER = blob_kinds.Trait(chunks=200, top_sender=0.9, footers=0.0, empty_subjects=0, chatty_words=0)
 EVERYTHING = 5000
-## 400 chunks against a normal of 50: eight times its usual, 8% of all mail.
+# 400 chunks against a normal of 50: eight times its usual, 8% of all mail.
 FAST, SLOW = 350.0, 100.0
 
 

@@ -10,10 +10,10 @@ import numpy as np
 from rag_trend_radar.trends.frames import Frame
 from rag_trend_radar.trends.topics import NOISE
 
-## Same blob: each other's biggest overlap, with this share of each side. Weaker counts as nothing:
-## seed noise alone produces links under 10 chunks.
+# Same blob: each other's biggest overlap, with this share of each side. Weaker counts as nothing:
+# seed noise alone produces links under 10 chunks.
 SHARE, MIN_SHARED = 0.3, 10
-## Eight weeks of absence at most: a blob near the size limit drops out and returns.
+# Eight weeks of absence at most: a blob near the size limit drops out and returns.
 BRIDGE = 7
 
 

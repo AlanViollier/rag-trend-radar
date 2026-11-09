@@ -16,12 +16,12 @@ if TYPE_CHECKING:
     from sentence_transformers import SentenceTransformer
 
 
-## Apple's GPU, out of memory, returns a whole batch of normalised garbage without raising
-## (2026-10-29: batch 128 on long chunks, every row off, norms 1.000, no NaN). Only a known
-## answer shows it, so every GPU batch carries this text and its vector must come back as when
-## it was embedded alone. 0.99: batch 8 against 32 gave no row below it on the longest chunks.
+# Apple's GPU, out of memory, returns a whole batch of normalised garbage without raising
+# (2026-10-29: batch 128 on long chunks, every row off, norms 1.000, no NaN). Only a known
+# answer shows it, so every GPU batch carries this text and its vector must come back as when
+# it was embedded alone. 0.99: batch 8 against 32 gave no row below it on the longest chunks.
 SENTINEL = "Subject: Sentinel\n\nThe quarterly gas storage report is attached for review."
-## Texts per GPU batch, the sentinel included. 64 and up ran out of memory on 512-token chunks.
+# Texts per GPU batch, the sentinel included. 64 and up ran out of memory on 512-token chunks.
 GPU_BATCH = 32
 _MATCH = 0.99
 
@@ -46,16 +46,16 @@ def embed(
     `EmbeddingFailed` without. When the sentinel fails alone too, the model is broken for every
     text: that always raises.
     """
-    ## Sorted by length, so a GPU batch pads to texts of its own size: unsorted, the guard's
-    ## small batches ran at half speed (6.3 texts/s against 12.7).
+    # Sorted by length, so a GPU batch pads to texts of its own size: unsorted, the guard's
+    # small batches ran at half speed (6.3 texts/s against 12.7).
     order = sorted(range(len(texts)), key=lambda i: len(texts[i]))
     ranked = [texts[i] for i in order]
     groups = [ranked[i : i + GPU_BATCH - 1] for i in range(0, len(ranked), GPU_BATCH - 1)]
     vectors = np.zeros((len(texts), dims), dtype=np.float32)
     if groups:
         vectors[order] = np.concatenate([_verified(g, model, dims, query) for g in groups])
-        ## Apple's GPU keeps each batch's memory otherwise: 6.8 GB against 1.9 over 15,000 long
-        ## texts, at the same speed (2026-11-03), and past 90% of a full embed, swapping.
+        # Apple's GPU keeps each batch's memory otherwise: 6.8 GB against 1.9 over 15,000 long
+        # texts, at the same speed (2026-11-03), and past 90% of a full embed, swapping.
         _free_gpu()
     if not skip_failed and np.isnan(vectors).any():
         raise EmbeddingFailed(f"{model}: a text failed the sentinel check even alone")
@@ -75,7 +75,7 @@ def token_counter(model: str) -> Callable[[str], int]:
 
 
 def _verified(texts: list[str], model: str, dims: int, query: bool) -> NDArray[np.float32]:
-    ## Out of memory is a batch too large, so smaller batches are the cure, not a pause.
+    # Out of memory is a batch too large, so smaller batches are the cure, not a pause.
     out = _encode([*texts, SENTINEL], model, dims, query)
     if np.isfinite(out).all() and float(out[-1] @ _sentinel(model, dims, query)) >= _MATCH:
         return out[:-1]
@@ -103,7 +103,7 @@ def _free_gpu() -> None:
 
 @cache
 def _sentinel(model: str, dims: int, query: bool) -> NDArray[np.float32]:
-    ## Alone, a batch of one: far below any memory limit.
+    # Alone, a batch of one: far below any memory limit.
     return np.asarray(_encode([SENTINEL], model, dims, query)[0], dtype=np.float32)
 
 
@@ -116,8 +116,8 @@ def _encode(texts: list[str], model: str, dims: int, query: bool) -> NDArray[np.
 
 @cache
 def _load(model: str) -> SentenceTransformer:
-    ## float32, the library default: EmbeddingGemma returns NaNs in float16, and Apple M1 has no
-    ## native bfloat16.
+    # float32, the library default: EmbeddingGemma returns NaNs in float16, and Apple M1 has no
+    # native bfloat16.
     from sentence_transformers import SentenceTransformer  # noqa: PLC0415
 
     return SentenceTransformer(model, revision=get_settings().revision(model))

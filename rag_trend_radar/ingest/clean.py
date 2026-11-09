@@ -9,8 +9,8 @@ from itertools import pairwise
 
 from rag_trend_radar.schema import QuotedBlock, SplitBody
 
-## Lines that open a quoted or forwarded message, as Outlook and Lotus Notes wrote them. Every
-## pattern allows a leading `>` so a quote inside a quote still splits.
+# Lines that open a quoted or forwarded message, as Outlook and Lotus Notes wrote them. Every
+# pattern allows a leading `>` so a quote inside a quote still splits.
 _Q = r"^[> \t]*"
 _OUTLOOK = re.compile(_Q + r"-{2,}\s*Original Message\s*-{2,}[ \t]*$")
 _LOTUS_FORWARD = re.compile(_Q + r"-{3,} ?Forwarded by ")
@@ -18,8 +18,8 @@ _OUTLOOK_HEADER = re.compile(
     _Q + r"From:.*\n" + _Q + r"(?:Sent|Date):.*\n" + _Q + r"To:", re.MULTILINE
 )
 _ON_WROTE = re.compile(_Q + r"On .{5,100}wrote:[ \t]*$")
-## Lotus: `Nancy Hall@ENRON` then `10/02/2000 06:42 AM`, or both on one line; `To:` follows.
-## Some add a zone: `on 10/30/2001 05:23 PM CST`.
+# Lotus: `Nancy Hall@ENRON` then `10/02/2000 06:42 AM`, or both on one line; `To:` follows.
+# Some add a zone: `on 10/30/2001 05:23 PM CST`.
 _LOTUS_DATE = re.compile(
     r"\d{1,2}/\d{1,2}/\d{2,4}\s+\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?(?:\s+[A-Z]{3})?[ \t]*$"
 )
@@ -32,15 +32,15 @@ _HEADER_FIELD = re.compile(
 )
 _SUBJECT = re.compile(_Q + r"Subject\s*:", re.I)
 _FROM = re.compile(r"^From\s*:\s*", re.I)
-## Where an author's name ends: a date, an address in brackets, or Lotus routing (`/HOU/ECT`).
+# Where an author's name ends: a date, an address in brackets, or Lotus routing (`/HOU/ECT`).
 _AUTHOR_END = re.compile(r"\s+on\s+\d|\s*\[mailto:|\s*<|/|\s+\d{1,2}/\d{1,2}/\d{2,4}")
-## The rest of a "Forwarded by" line wrapped onto the next: `PM -----` or only the dashes.
+# The rest of a "Forwarded by" line wrapped onto the next: `PM -----` or only the dashes.
 _FORWARD_WRAP = re.compile(_Q + r"(?:[\d: ]*[AP]M )?-{3,}[ \t]*$")
 _QUOTE_PREFIX = re.compile(r"^>+ ?", re.MULTILINE)
 
-## Markup some mail clients left in the plain-text body. Style and script blocks go with their
-## contents, and comments too: a browser shows none of it, and newsletters hide "your client
-## doesn't support HTML" notes there.
+# Markup some mail clients left in the plain-text body. Style and script blocks go with their
+# contents, and comments too: a browser shows none of it, and newsletters hide "your client
+# doesn't support HTML" notes there.
 _HIDDEN = re.compile(r"(?is)<(style|script)\b[^>]*>.*?</\1\s*>|<!--.*?-->|<!doctype\b[^>]*>")
 _TAG_BREAK = re.compile(r"(?i)<(?:br|/p|/div|/tr|/li)\b[^>\n]*>")
 _TAG = re.compile(
@@ -55,9 +55,9 @@ _MIME = re.compile(
 _BASE64_RUN = re.compile(
     r"^(?:[A-Za-z0-9+/]{60,}={0,2}\n){3,}(?:[A-Za-z0-9+/]*={0,2}\n)?", re.MULTILINE
 )
-## A trailing line found in at least this many distinct emails is boilerplate. Picked from the
-## inspection report (2026-10-23): at 200 the lines are signatures, footers and disclaimers; at
-## 100 they start to include form-letter sentences and newsletter text.
+# A trailing line found in at least this many distinct emails is boilerplate. Picked from the
+# inspection report (2026-10-23): at 200 the lines are signatures, footers and disclaimers; at
+# 100 they start to include form-letter sentences and newsletter text.
 BOILERPLATE_MIN_EMAILS = 200
 _SUBJECT_WITHIN = 40  # Lotus To: lists wrap over dozens of lines before the Subject
 _LOTUS_TO_WITHIN = 5  # the memo layout leaves blank lines between From and To
@@ -145,7 +145,7 @@ def block_author(header: str) -> str:
     return ""
 
 
-## Finding where quoted messages start.
+# Finding where quoted messages start.
 
 
 def _block_starts(lines: list[str]) -> list[int]:
@@ -170,7 +170,7 @@ def _opens_block(lines: list[str], i: int) -> bool:
 
 
 def _dateless_lotus_header(lines: list[str], i: int) -> bool:
-    ## Some Lotus quotes keep only `To:`, `cc:` and `Subject:`: no sender line, no date.
+    # Some Lotus quotes keep only `To:`, `cc:` and `Subject:`: no sender line, no date.
     if not _TO.match(lines[i]):
         return False
     window = lines[i + 1 : i + _SUBJECT_WITHIN]
@@ -179,7 +179,7 @@ def _dateless_lotus_header(lines: list[str], i: int) -> bool:
 
 
 def _lotus_header_start(lines: list[str], i: int) -> int | None:
-    ## A line ending in a Lotus date, with `To:` among the next two non-blank lines.
+    # A line ending in a Lotus date, with `To:` among the next two non-blank lines.
     following = [line for line in lines[i + 1 : i + 1 + _LOTUS_TO_WITHIN] if line.strip()][:2]
     if not _LOTUS_DATE.search(lines[i]) or not any(_TO.match(line) for line in following):
         return None
@@ -188,16 +188,16 @@ def _lotus_header_start(lines: list[str], i: int) -> int | None:
         start = i - 1
         if start > 0 and _SENT_BY.match(lines[start]):
             start -= 1
-    ## The memo layout indents its header with tabs, company name first: take those lines too.
+    # The memo layout indents its header with tabs, company name first: take those lines too.
     while start > 0 and lines[start - 1].startswith("\t"):
         start -= 1
     return max(start, 0)
 
 
 def _merge_adjacent(lines: list[str], starts: list[int]) -> list[int]:
-    ## "-----Original Message-----" then "From: … Sent: … To:" is one boundary, not two; so is a
-    ## Lotus "Forwarded by" line followed by the forwarded message's own Lotus header. Each
-    ## start is compared with the one just before it, kept or not, so a chain merges whole.
+    # "-----Original Message-----" then "From: … Sent: … To:" is one boundary, not two; so is a
+    # Lotus "Forwarded by" line followed by the forwarded message's own Lotus header. Each
+    # start is compared with the one just before it, kept or not, so a chain merges whole.
     merged = starts[:1]
     for previous, start in pairwise(starts):
         if not all(_is_header_line(line) for line in lines[previous + 1 : start]):
@@ -211,13 +211,13 @@ def _is_header_line(line: str) -> bool:
     )
 
 
-## Cutting one quoted message into header and text.
+# Cutting one quoted message into header and text.
 
 
 def _block(lines: list[str]) -> QuotedBlock:
-    ## With a Subject, the header runs to the first blank line after it (Lotus To: lists wrap
-    ## without indenting). Without one ("On … wrote:"), it's the opening line and any header
-    ## fields right below it.
+    # With a Subject, the header runs to the first blank line after it (Lotus To: lists wrap
+    # without indenting). Without one ("On … wrote:"), it's the opening line and any header
+    # fields right below it.
     subject = next(
         (i for i, line in enumerate(lines[:_SUBJECT_WITHIN]) if _SUBJECT.match(line)), None
     )

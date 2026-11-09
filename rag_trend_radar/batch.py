@@ -84,7 +84,7 @@ def run_day(
         DayFile(
             raw=RawFile(path=path, mailbox=mailbox, folder=folder, content=bytes(content)),
             key=key,
-            ## Chunk headers print the date, so it's read in Houston time, not the session's.
+            # Chunk headers print the date, so it's read in Houston time, not the session's.
             sent_at=sent_at.astimezone(tz),
             date_uncertain=uncertain,
         )

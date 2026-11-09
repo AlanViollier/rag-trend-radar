@@ -28,7 +28,7 @@ htmlcov/
 # Local blocklist for `make lint-slop` (one regex per line)
 .keywords
 
-# Working context stays private: llm_context/ is its own repo (`make context-repo`)
+# Working context stays private: llm_context/ is its own repo
 llm_context/
 .claude/
 CLAUDE.md

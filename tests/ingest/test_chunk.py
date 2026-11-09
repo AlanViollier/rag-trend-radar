@@ -66,7 +66,7 @@ def test_a_long_email_splits_at_paragraphs_first() -> None:
     ]
 
 
-## Property: pieces fit, carry the lead, and hold every word of the text once, in order.
+# Property: pieces fit, carry the lead, and hold every word of the text once, in order.
 
 _text = st.lists(st.text(alphabet="abcdefg", min_size=1, max_size=8), min_size=1, max_size=300).map(
     lambda words: " ".join(words)

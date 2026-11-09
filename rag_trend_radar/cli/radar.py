@@ -34,10 +34,10 @@ def radar_frames(first: str = "", last: str = "") -> None:
     log = RunLog(
         "frames", {"first": str(start), "last": str(end), "model": settings.embedding_model}
     )
-    chosen = _pool(log, end)
+    pool = _pool(log, end)
     ends = frames.week_ends(start, end)
     for seed in frames.SEEDS:
-        frames.make(chosen, ends, seed, _folder(seed), log)
+        frames.make(pool, ends, seed, _folder(seed), log)
     log.results["weeks"] = len(ends)
     path = log.save(settings.data_dir / "reports" / "radar")
     _show(log.run())
@@ -50,12 +50,12 @@ def radar_build() -> None:
     settings = get_settings()
     log = RunLog("build", {"model": settings.embedding_model})
     ends = frames.week_ends()
-    chosen = _pool(log, frames.LAST)
+    pool = _pool(log, frames.LAST)
     with log.stage("load frames") as handled:
-        first, second = (frames.load(chosen, ends, _folder(seed)) for seed in frames.SEEDS)
+        first, second = (frames.load(pool, ends, _folder(seed)) for seed in frames.SEEDS)
         handled.items = len(ends)
     with log.stage("build") as handled, db.connect() as conn:
-        log.results |= build.write(conn, chosen, first, second, settings.embedding_model)
+        log.results |= build.write(conn, pool, first, second, settings.embedding_model)
         handled.items = len(ends)
     path = log.save(settings.data_dir / "reports" / "radar")
     _show(log.run())
@@ -119,9 +119,9 @@ def _pool(log: RunLog, last: date) -> topics.Pool:
     settings = get_settings()
     since = frames.FIRST - timedelta(weeks=frames.WEEKS)
     with log.stage("read chunks") as handled, db.connect() as conn:
-        chosen = topics.pool(conn, settings.embedding_model, settings.embedding_dims, since, last)
-        handled.items = len(chosen.chunk_ids)
-    return chosen
+        pool = topics.pool(conn, settings.embedding_model, settings.embedding_dims, since, last)
+        handled.items = len(pool.chunk_ids)
+    return pool
 
 
 def _folder(seed: int) -> Path:

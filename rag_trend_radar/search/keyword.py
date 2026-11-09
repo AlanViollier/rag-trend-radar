@@ -10,9 +10,9 @@ from rag_trend_radar.days import cutoff
 from rag_trend_radar.schema import SearchHit
 from rag_trend_radar.search.ranking import hits
 
-## `|||` matches any of the words, unparsed: a question's `?` or `:` isn't query syntax.
-## Row-level security filters inside the BM25 scan, before the LIMIT (checked by EXPLAIN). It says
-## who may read a quoted message, not since when: that needs the day asked, so it's checked here.
+# `|||` matches any of the words, unparsed: a question's `?` or `:` isn't query syntax.
+# Row-level security filters inside the BM25 scan, before the LIMIT (checked by EXPLAIN). It says
+# who may read a quoted message, not since when: that needs the day asked, so it's checked here.
 RANKED = sql.SQL(
     "SELECT c.id, paradedb.score(c.id) AS score FROM chunks c"
     " JOIN documents d ON d.id = c.document_id"

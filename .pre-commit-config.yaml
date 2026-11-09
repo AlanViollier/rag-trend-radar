@@ -1,4 +1,4 @@
-## Revs are set by `pre-commit autoupdate` at bootstrap (`make new`), so they start current.
+# Revs are set by `pre-commit autoupdate` at bootstrap (`make new`), so they start current.
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -14,7 +14,7 @@ repos:
       - id: trailing-whitespace
         args: ['--markdown-linebreak-ext=md']
 
-  ## API keys, tokens and cloud credentials, before they leave the laptop.
+  # API keys, tokens and cloud credentials, before they leave the laptop.
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0
     hooks:
@@ -22,8 +22,8 @@ repos:
 
   - repo: local
     hooks:
-      ## The working context lives in its own private repo inside llm_context/.
-      ## .gitignore keeps it out; this catches a `git add -f`.
+      # The working context lives in its own private repo inside llm_context/.
+      # .gitignore keeps it out; this catches a `git add -f`.
       - id: private-context
         name: block private working context
         entry: bash -c 'if git diff --cached --name-only | grep -E "^(llm_context|\.claude|CLAUDE\.md)(/|$)"; then echo "private working context must stay out of this repo"; exit 1; fi'

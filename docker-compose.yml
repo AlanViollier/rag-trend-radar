@@ -1,5 +1,5 @@
-## Postgres 18 with pgvector (nearest-meaning search) and pg_search (BM25 keyword search).
-## `docker compose up -d`, then `rag-trend-radar db-reset`. Data survives restarts in the volume.
+# Postgres 18 with pgvector (nearest-meaning search) and pg_search (BM25 keyword search).
+# `docker compose up -d`, then `rag-trend-radar db-reset`. Data survives restarts in the volume.
 services:
   db:
     build: .
@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
     ports:
       - "127.0.0.1:5432:5432"
-    ## `docker compose up -d --wait` returns once Postgres accepts connections (CI relies on it).
+    # `docker compose up -d --wait` returns once Postgres accepts connections (CI relies on it).
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "radar", "-d", "radar"]
       interval: 2s

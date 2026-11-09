@@ -9,14 +9,14 @@ from semchunk.semchunk import chunk as split
 from rag_trend_radar.ingest.clean import split_quoted, strip_boilerplate
 from rag_trend_radar.schema import Document
 
-## 90% of own texts are under ~400 tokens, so most emails stay whole. 256 and 1,024 are rival
-## rows in the M1 recall table. No overlap between pieces: semchunk's overlap adds a piece that
-## straddles the paragraph break, mixing the two topics the split had just separated.
+# 90% of own texts are under ~400 tokens, so most emails stay whole. 256 and 1,024 are rival
+# rows in the M1 recall table. No overlap between pieces: semchunk's overlap adds a piece that
+# straddles the paragraph break, mixing the two topics the split had just separated.
 MAX_TOKENS = 512
-## A reply this short says little alone: its vector is mostly its subject, and "i sent it today"
-## can't be found by the judge named in the message it answers. 22 questions from a sample of such
-## replies, investigator top 10: 14 → 20 with the quote searched too, other question sets flat
-## (2026-11-03). Longer mail keeps its own text alone, so a thread doesn't repeat itself.
+# A reply this short says little alone: its vector is mostly its subject, and "i sent it today"
+# can't be found by the judge named in the message it answers. 22 questions from a sample of such
+# replies, investigator top 10: 14 → 20 with the quote searched too, other question sets flat
+# (2026-11-03). Longer mail keeps its own text alone, so a thread doesn't repeat itself.
 SHORT_REPLY = 200
 QUOTE_CHARS = 600
 
@@ -79,7 +79,7 @@ def chunk(
     budget = max_tokens - count_tokens(prefix)
     if count_tokens(text) <= budget:
         return [prefix + text]
-    ## semchunk returns (pieces, spans) when asked for offsets; its annotation doesn't say so.
+    # semchunk returns (pieces, spans) when asked for offsets; its annotation doesn't say so.
     _pieces, spans = cast(
         "tuple[list[str], list[tuple[int, int]]]",
         split(text, budget, count_tokens, offsets=True),

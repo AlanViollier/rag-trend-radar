@@ -135,7 +135,7 @@ def write_vectors(
 
 def ensure_vectors(conn: psycopg.Connection[TupleRow], model: str, dims: int) -> sql.Identifier:
     """The vectors table of `model` at `dims`, created with its index and policy on first use."""
-    ## Readers see a vector only when they see its chunk; the grant is by name like every table.
+    # Readers see a vector only when they see its chunk; the grant is by name like every table.
     table = vectors_identifier(model, dims)
     exists = conn.execute("SELECT to_regclass(%s)", (table.as_string(conn),)).fetchall()[0][0]
     if exists is None:

@@ -1,7 +1,8 @@
 """Enron's mail: which blobs are newsletters, footers or chatter rather than a subject.
 
 The one file here that knows this corpus. `blobs.kind` is judged over a blob's whole life, with
-hindsight; an alert judges a blob on its weeks so far. The word list goes when the naming pass marks each blob by reading it.
+hindsight; an alert judges a blob on its weeks so far. The naming pass's reading replaces this on
+the page, never for alerts: what's read with hindsight can't decide what fires.
 """
 
 import re
@@ -28,7 +29,7 @@ _CHATTY_WORDS = (
 )
 _CHATTY = set(_CHATTY_WORDS.split())
 ONE_SENDER, EMPTY_SUBJECTS = 0.8, 0.15
-## Set on a blob's top 6 keywords; a blob-week stores 10.
+# Set on a blob's top 6 keywords; a blob-week stores 10.
 CHATTY_KEYWORDS = 6
 
 

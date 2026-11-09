@@ -16,10 +16,10 @@ from rag_trend_radar import claude
 from rag_trend_radar.days import cutoff
 from rag_trend_radar.schema import EvalQuestion, Record
 
-## Bump on any change to the prompt or the sample: cached questions are keyed by it.
+# Bump on any change to the prompt or the sample: cached questions are keyed by it.
 PROMPT_VERSION = 4
-## Too short and there's no fact to ask about; too long and many facts compete, so a question
-## about one of them is answered as well by other emails in the same digest.
+# Too short and there's no fact to ask about; too long and many facts compete, so a question
+# about one of them is answered as well by other emails in the same digest.
 MIN_CHARS, MAX_CHARS = 200, 4000
 SYSTEM = """You write test questions for a search engine over Enron's email from 2001. Each \
 question checks whether the engine finds one email, so it must be answerable from that email \
@@ -46,13 +46,13 @@ notices, other automated messages, empty or pleasantry-only mail."""
 class Style(StrEnum):
     """What a question may borrow from its email: the three sets test different searches."""
 
-    ## Names allowed: the everyday question.
+    # Names allowed: the everyday question.
     NAMES = "names"
-    ## Meaning over matching: without exact names, keyword search loses its edge, and what's
-    ## left is how well vectors capture what a question means.
+    # Meaning over matching: without exact names, keyword search loses its edge, and what's
+    # left is how well vectors capture what a question means.
     NO_NAMES = "no-names"
-    ## One identifier quoted as written: the case vectors blur ("617161" near any number) and
-    ## keyword search is there for.
+    # One identifier quoted as written: the case vectors blur ("617161" near any number) and
+    # keyword search is there for.
     CODES = "codes"
 
 
@@ -71,28 +71,28 @@ WORDS_RULES = {
     "words. Phone numbers, zip codes, dates and amounts aren't identifiers: if the email holds "
     "none, set usable to false.",
 }
-## A code-style source must name an identifier: a record word, then a run of five or more
-## digits close after it ("deal #143709", "contract 96003435"). Five digits alone drew zip codes,
-## phone numbers and URL fragments: Claude found 1 usable code in 12 (2026-10-30). Matched
-## without regard to case.
+# A code-style source must name an identifier: a record word, then a run of five or more
+# digits close after it ("deal #143709", "contract 96003435"). Five digits alone drew zip codes,
+# phone numbers and URL fragments: Claude found 1 usable code in 12 (2026-10-30). Matched
+# without regard to case.
 CODE_PATTERN = (
     r"\m(deals?|contracts?|tickets?|invoices?|confirmation|orders?|trades?|agreement|tracking"
     r"|account)\M[^0-9\n]{0,12}[A-Za-z]{0,4}-?[0-9]{5,}"
 )
 DIGITS = "[0-9]{5,}"
 SECOND_ASK = re.compile(r"\b(and|or) (what|how|who|when|where|why|which)\b", re.IGNORECASE)
-## A code held by more documents than this has no single answer: a deal number repeated in
-## every daily report. Up to it, the other holders are fair candidates the judge reads.
+# A code held by more documents than this has no single answer: a deal number repeated in
+# every daily report. Up to it, the other holders are fair candidates the judge reads.
 MAX_CODE_HOLDERS = 5
 
 
 class Retype(StrEnum):
     """Ways to type a question's identifier other than as written."""
 
-    ## 617-161 and 617 161: the tokenizer splits them in two, so keyword search loses the match.
+    # 617-161 and 617 161: the tokenizer splits them in two, so keyword search loses the match.
     DASH = "dash"
     SPACE = "space"
-    ## #617161: the tokenizer drops the #, so nothing should change. The control.
+    # #617161: the tokenizer drops the #, so nothing should change. The control.
     HASH = "hash"
 
 
@@ -153,8 +153,8 @@ def write(
 ) -> Iterator[EvalQuestion]:
     """A question per usable source; unusable ones are skipped. Cached per source (rule 6)."""
     client = claude.client()
-    ## Calls run 8 at a time and come back in source order, so the set reproduces. Every source
-    ## is asked, even past the ones the caller keeps: the spares are cached for the next run.
+    # Calls run 8 at a time and come back in source order, so the set reproduces. Every source
+    # is asked, even past the ones the caller keeps: the spares are cached for the next run.
     with ThreadPoolExecutor(max_workers=8) as pool:
         answers = list(
             pool.map(lambda s: _cached(s, model, style) or _ask(client, s, model, style), sources)
@@ -207,9 +207,9 @@ def retyped(question: EvalQuestion, how: Retype) -> EvalQuestion:
 
 
 def _one_question(text: str) -> bool:
-    ## 4 of the first 200 broke "one fact, one question": two questions in one, or a rewrite
-    ## after "Actually, simplified:". A spare source takes their place.
-    ## "..., and what was the day total?" asks two facts behind one question mark.
+    # 4 of the first 200 broke "one fact, one question": two questions in one, or a rewrite
+    # after "Actually, simplified:". A spare source takes their place.
+    # "..., and what was the day total?" asks two facts behind one question mark.
     text = text.strip()
     return (
         text.endswith("?")

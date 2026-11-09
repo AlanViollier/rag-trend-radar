@@ -13,7 +13,7 @@ from rag_trend_radar.ingest.clean import (
     strip_boilerplate,
 )
 
-## Hand-written in the shapes the Enron export uses; no text copied from the corpus.
+# Hand-written in the shapes the Enron export uses; no text copied from the corpus.
 
 OUTLOOK_REPLY = """Sounds good, see you Thursday.
 
@@ -239,7 +239,7 @@ def _frequent(texts: list[str], min_emails: int) -> frozenset[str]:
     return frozenset(frequent_lines(((date(2001, 9, 1), t) for t in texts), min_emails))
 
 
-## Property: build an email from known parts, split it, get the parts back.
+# Property: build an email from known parts, split it, get the parts back.
 
 _words = st.text(alphabet="abcdefghij KLMNO.,!?'", min_size=1, max_size=40).filter(str.strip)
 _paragraph = st.lists(_words, min_size=1, max_size=4).map(
@@ -288,7 +288,7 @@ def test_boilerplate_keeps_a_prefix_and_never_returns_nothing(
     assert trimmed.strip()
 
 
-## Who wrote a quoted message, in each header layout.
+# Who wrote a quoted message, in each header layout.
 
 
 @pytest.mark.parametrize(

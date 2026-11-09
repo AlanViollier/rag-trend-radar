@@ -19,12 +19,12 @@ RADAR_TABLES = (
     "blobs",
 )
 INVESTIGATOR = "investigator"
-## The graph walk keeps this many candidates (default 40). A filter drops most of them, so at 40
-## the right email was missing from the top 50 for 13% of questions; at 1,000 (the maximum)
-## recall matched exact search, at the same ~40 ms (2026-10-27, Sep 2001).
+# The graph walk keeps this many candidates (default 40). A filter drops most of them, so at 40
+# the right email was missing from the top 50 for 13% of questions; at 1,000 (the maximum)
+# recall matched exact search, at the same ~40 ms (2026-10-27, Sep 2001).
 EF_SEARCH = 1000
-## A filtered walk stops here even with too few rows (default 20,000): the investigator asking
-## as of mid-1999, when ~1% of the mail exists, got 33 of 50 (2026-11-02).
+# A filtered walk stops here even with too few rows (default 20,000): the investigator asking
+# as of mid-1999, when ~1% of the mail exists, got 33 of 50 (2026-11-02).
 MAX_SCAN_TUPLES = 100_000
 
 
@@ -45,9 +45,9 @@ def connect(person: str | None = None, ef_search: int = EF_SEARCH) -> psycopg.Co
     if person is not None:
         conn.execute("SET ROLE radar_reader")
         conn.execute("SELECT set_config('app.person', %s, false)", (person,))
-        ## An HNSW scan returns its ~40 nearest vectors, then the filters drop most of them.
-        ## Iterative scans keep walking the graph until enough rows pass, in exact distance
-        ## order (pgvector 0.8).
+        # An HNSW scan returns its ~40 nearest vectors, then the filters drop most of them.
+        # Iterative scans keep walking the graph until enough rows pass, in exact distance
+        # order (pgvector 0.8).
         conn.execute("SET hnsw.iterative_scan = strict_order")
         conn.execute(sql.SQL("SET hnsw.ef_search = {}").format(sql.Literal(ef_search)))
         conn.execute(sql.SQL("SET hnsw.max_scan_tuples = {}").format(sql.Literal(MAX_SCAN_TUPLES)))
@@ -96,6 +96,6 @@ def _open() -> psycopg.Connection[TupleRow]:
         dbname=settings.db_name,
         user=settings.db_user,
         password=settings.postgres_password.get_secret_value(),
-        ## Unqualified names resolve in the configured schema first; public keeps the extensions.
+        # Unqualified names resolve in the configured schema first; public keeps the extensions.
         options=f"-c search_path={settings.db_schema},public",
     )

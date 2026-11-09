@@ -9,7 +9,7 @@ from rag_trend_radar.db import connect as db
 from rag_trend_radar.trends import topics
 
 MODEL, DIMS = "test/pool", 4
-## Chicago: 23:30 on the last day of March is already April in UTC, and still counts as March.
+# Chicago: 23:30 on the last day of March is already April in UTC, and still counts as March.
 ROWS = [
     ("kept", "2000-03-15 12:00-06", "Subject: Gas\n\nPrices rose.", 0),
     ("late-evening", "2000-03-31 23:30-06", "Subject: Gas\n\nPrices fell.", 0),

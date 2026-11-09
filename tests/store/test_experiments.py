@@ -43,7 +43,7 @@ def test_readers_can_search_inside_an_experiment() -> None:
 @pytest.mark.usefixtures("experiment")
 def test_vectors_go_to_the_experiment_even_when_the_store_has_the_table() -> None:
     with db.connect() as conn:
-        ## The store has one already: an unqualified name would resolve to it and skip creation.
+        # The store has one already: an unqualified name would resolve to it and skip creation.
         conn.execute("CREATE TABLE IF NOT EXISTS public.vectors_fake_8 (chunk_id bigint)")
         index.write_vectors(conn, "test/fake", [], np.zeros((0, 8), dtype=np.float32))
         tables = conn.execute(
@@ -91,7 +91,7 @@ def _chunk(conn: psycopg.Connection[TupleRow], schema: str, text: str) -> int:
 
 @pytest.mark.usefixtures("store")
 def test_a_reset_leaves_tables_an_extension_owns() -> None:
-    ## A fresh image installs PostGIS in every new database: `db-reset` crashed on its table.
+    # A fresh image installs PostGIS in every new database: `db-reset` crashed on its table.
     with db.connect() as conn:
         had_it = conn.execute("SELECT to_regclass('public.spatial_ref_sys')").fetchall()[0][0]
         conn.execute("CREATE EXTENSION IF NOT EXISTS postgis")

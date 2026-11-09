@@ -173,7 +173,7 @@ def test_a_delete_then_a_rebuild_takes_the_chunk_out_and_leaves_other_blobs_thei
         held = conn.execute("SELECT count(*) FROM blob_chunks WHERE chunk_id = %s", (gone,))
         sizes = conn.execute("SELECT DISTINCT chunks FROM blob_weeks WHERE blob_id = 0")
         assert (held.fetchall(), sizes.fetchall()) == ([(0,)], [(SIZE - 1,)])
-    ## Surge moves a little: it compares each blob against all mail, now one chunk less.
+    # Surge moves a little: it compares each blob against all mail, now one chunk less.
     assert _without_surge(_dump("blob_weeks")[len(WEEKS) :]) == letters
 
 

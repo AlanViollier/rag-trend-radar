@@ -1,4 +1,4 @@
--- The store, as of milestone 2. `rag-trend-radar db-reset` drops the configured schema's tables and runs
+-- The store. `rag-trend-radar db-reset` drops the configured schema's tables and runs
 -- this file; every row is rebuilt from the Enron files, so there are no migrations.
 -- The radar's tables are in radar.sql, which db-reset also runs.
 
@@ -160,7 +160,7 @@ CREATE INDEX chunks_bm25 ON chunks USING bm25
     (id, (text::pdb.unicode_words('stemmer=english', 'stopwords_language=english')))
     WITH (key_field = 'id');
 
--- One vectors table per embedding model, created by index.py when a model is first used:
+-- One vectors table per embedding model, created by index/vectors.py when a model is first used:
 --   CREATE TABLE vectors_<model> (
 --       chunk_id  bigint PRIMARY KEY REFERENCES chunks (id) ON DELETE CASCADE,
 --       embedding halfvec(<dims>) NOT NULL
@@ -192,7 +192,7 @@ END $$;
 
 -- Readers get tables by name, never by default: a new table stays invisible until it's granted
 -- here with a policy. raw_files and quarantine hold every email whole, so they're never granted.
--- index.py grants each vectors_<model> table with a policy through chunks.
+-- index/vectors.py grants each vectors_<model> table with a policy through chunks.
 GRANT SELECT ON documents, emails, access, employees, chunks, batches TO radar_reader;
 
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;

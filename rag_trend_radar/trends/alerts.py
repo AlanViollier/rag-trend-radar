@@ -8,11 +8,11 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 
-from rag_trend_radar.trends import quiet
+from rag_trend_radar.trends import blob_kinds
 
-## Times its own normal: a blob that doubles is busy, one that quadruples is news.
+# Times its own normal: a blob that doubles is busy, one that quadruples is news.
 GROWTH = 4
-## Share of all the radar's mail in the same 4 weeks, so the bar follows how busy the company is.
+# Share of all the radar's mail in the same 4 weeks, so the bar follows how busy the company is.
 FLOOR = 0.01
 QUIET_WEEKS = 8
 
@@ -26,7 +26,7 @@ class Week:
     recent: int
     surge: float
     other_seed: bool
-    trait: quiet.Trait
+    trait: blob_kinds.Trait
 
 
 @dataclass(frozen=True)
@@ -54,7 +54,7 @@ def surges(lives: Mapping[int, Sequence[Week]], everything: Mapping[date, int]) 
                 and w.recent >= FLOOR * everything[w.week]
                 and w.other_seed
                 and w.index - fired > QUIET_WEEKS
-                and quiet.kind([x.trait for x in weeks[: seen + 1]]) is quiet.Kind.TOPIC
+                and blob_kinds.kind([x.trait for x in weeks[: seen + 1]]) is blob_kinds.Kind.TOPIC
             ):
                 raised.append(Alert(w.week, blob, w.recent, normal))
                 fired = w.index

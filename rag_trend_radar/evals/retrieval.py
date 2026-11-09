@@ -14,7 +14,7 @@ from rag_trend_radar.db import connect as db
 from rag_trend_radar.schema import EvalQuestion, SearchHit
 from rag_trend_radar.search import hybrid, keyword, vector
 from rag_trend_radar.search.collapse import collapse
-from rag_trend_radar.search.mix import RESULTS, mix
+from rag_trend_radar.search.pipeline import final
 from rag_trend_radar.search.rerank import rerank
 
 
@@ -25,7 +25,7 @@ def score(
 ) -> dict[str, float]:
     """Score each question's ranked documents against its relevant ones, averaged over questions."""
     scores = evaluate(_qrels(relevant), _run(relevant, ranked, "run"), list(metrics))
-    ## ranx returns a bare float when asked for a single metric.
+    # ranx returns a bare float when asked for a single metric.
     if isinstance(scores, float):
         return {metrics[0]: scores}
     return {name: float(value) for name, value in scores.items()}
@@ -84,9 +84,7 @@ def rankings(
             with _clock(latency["hybrid + rerank + collapse"]):
                 lists["hybrid + rerank + collapse"] = collapse(lists["hybrid + rerank"], depth)
             with _clock(latency["what ask uses (+ press cap)"]):
-                lists["what ask uses (+ press cap)"] = mix(
-                    lists["hybrid + rerank + collapse"], RESULTS
-                )
+                lists["what ask uses (+ press cap)"] = final(lists["hybrid + rerank"], depth)
         for method, hits in lists.items():
             ranked[method][q.id] = documents(hits)
     return dict(ranked), dict(latency)
@@ -108,9 +106,9 @@ def _run(
     ranked: Mapping[str, Sequence[Hashable]],
     name: str,
 ) -> Run:
-    ## Scores handed to ranx are 1 / rank, so methods with incomparable raw scores (BM25,
-    ## cosine, RRF) are scored alike. ranx needs every question in the run; one that found
-    ## nothing scores 0, as it should.
+    # Scores handed to ranx are 1 / rank, so methods with incomparable raw scores (BM25,
+    # cosine, RRF) are scored alike. ranx needs every question in the run; one that found
+    # nothing scores 0, as it should.
     run = {
         qid: {str(d): 1 / rank for rank, d in enumerate(ranked.get(qid, ()), 1)} or {"none": 0.0}
         for qid in relevant

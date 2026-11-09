@@ -70,7 +70,7 @@ def test_copies_merge_into_one_email_readable_from_every_mailbox(
 def test_a_day_holds_the_emails_whose_resolved_date_falls_on_it(
     conn: Connection, tmp_path: Path
 ) -> None:
-    ## 23:30 on Aug 31 in Chicago by one export, 06:30:12 Sep 1 by the server copy, which wins.
+    # 23:30 on Aug 31 in Chicago by one export, 06:30:12 Sep 1 by the server copy, which wins.
     _write(tmp_path, "kim-d/inbox/2.", "Fri, 31 Aug 2001 23:30 -0500", "edge", "x")
     _write(tmp_path, "rowe-p/inbox/2.", "Sat, 1 Sep 2001 06:30:12 -0500", "edge", "x")
     _write(tmp_path, "kim-d/inbox/3.", "Fri, 31 Aug 2001 22:00:00 -0500", "august", "y")

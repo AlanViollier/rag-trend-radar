@@ -61,7 +61,7 @@ def main(root: Path) -> None:
     print(_page(meta, body))
 
 
-## Worker: one file to its dedup key and own text.
+# Worker: one file to its dedup key and own text.
 
 
 def _own(job: tuple[Path, Path]) -> tuple[str, str, str, int] | None:
@@ -91,7 +91,7 @@ def _collapse(text: str) -> str:
     return " ".join(text.split())
 
 
-## HTML.
+# HTML.
 
 
 def _card(root: Path, rel: str, frequent: frozenset[str], known: set[str]) -> str:

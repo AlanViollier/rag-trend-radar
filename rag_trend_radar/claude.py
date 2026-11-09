@@ -7,7 +7,7 @@ import anthropic
 
 from rag_trend_radar.config import get_settings
 
-## US dollars per million tokens (Claude API, 2026-10-06), input then output.
+# US dollars per million tokens (Claude API, 2026-10-06), input then output.
 PRICES = {"claude-sonnet-5-5": (2.0, 10.0), "claude-opus-5-5": (4.0, 20.0)}
 
 

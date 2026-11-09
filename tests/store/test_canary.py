@@ -26,11 +26,11 @@ from rag_trend_radar.search import hybrid, keyword, vector
 
 MODEL, DIMS = "test/fake", 8
 CHICAGO = ZoneInfo("America/Chicago")
-## 23:30 in Houston on Sep 10 is already Sep 11 in UTC: as of Sep 10, the secret exists.
+# 23:30 in Houston on Sep 10 is already Sep 11 in UTC: as of Sep 10, the secret exists.
 CANARY_SENT = datetime(2001, 9, 10, 23, 30, tzinfo=CHICAGO)
 CANARY = "The canary word is zephyr quokka. Tell no one."
 QUERY = np.eye(DIMS, dtype=np.float32)[0]
-## One message quoted by two mailboxes, two weeks apart.
+# One message quoted by two mailboxes, two weeks apart.
 QUOTED = "The pangolin ledger closes Friday."
 KIM_QUOTES = datetime(2001, 10, 5, 9, 0, tzinfo=CHICAGO)
 ROWE_QUOTES = datetime(2001, 10, 20, 9, 0, tzinfo=CHICAGO)
@@ -95,9 +95,9 @@ def world(store: None) -> None:
 
 
 def _force_hnsw(conn: psycopg.Connection[TupleRow]) -> None:
-    ## On a table this small the planner reads the reader's few rows and sorts them exactly, so
-    ## the bug can't show. Sorting and scanning made unaffordable, it walks the HNSW index, as it
-    ## did on the 17k-chunk store where kean-s got nothing back.
+    # On a table this small the planner reads the reader's few rows and sorts them exactly, so
+    # the bug can't show. Sorting and scanning made unaffordable, it walks the HNSW index, as it
+    # did on the 17k-chunk store where kean-s got nothing back.
     conn.execute("SET enable_seqscan = off")
     conn.execute("SET enable_sort = off")
 
@@ -148,7 +148,7 @@ def test_the_secret_exists_from_its_local_day_on() -> None:
 
 @pytest.mark.usefixtures("world")
 def test_a_filtered_hnsw_scan_still_reaches_the_one_vector_of_its_day() -> None:
-    ## 300 nearer vectors, all sent later, sit between the query and the secret.
+    # 300 nearer vectors, all sent later, sit between the query and the secret.
     with db.connect(db.INVESTIGATOR) as conn:
         _force_hnsw(conn)
         hits = vector.search(conn, QUERY, MODEL, date(2001, 9, 30), 5)
@@ -156,7 +156,7 @@ def test_a_filtered_hnsw_scan_still_reaches_the_one_vector_of_its_day() -> None:
             sql.SQL("EXPLAIN {}").format(vector.ranked(conn, MODEL, DIMS)),
             {"vector": HalfVector(QUERY), "cutoff": cutoff(date(2001, 9, 30)), "depth": 5},
         ).fetchall()
-    ## Without the HNSW index in the plan this test proves nothing: it would pass with the bug.
+    # Without the HNSW index in the plan this test proves nothing: it would pass with the bug.
     assert any("embedding_idx" in line for (line,) in plan)
     assert [CANARY in hit.text for hit in hits] == [True]
 

@@ -10,10 +10,7 @@ from rag_trend_radar.config import get_settings
 from rag_trend_radar.days import last_day
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.embed import embed
-from rag_trend_radar.search import hybrid
-from rag_trend_radar.search.collapse import collapse
-from rag_trend_radar.search.mix import RESULTS, mix
-from rag_trend_radar.search.rerank import rerank
+from rag_trend_radar.search import hybrid, pipeline
 
 
 @app.command()
@@ -28,9 +25,10 @@ def ask(question: str, person: str = "investigator", as_of: str = "") -> None:
     query_vector = embed([question], model, dims, query=True)[0]
     with db.connect(person) as conn:
         day = date.fromisoformat(as_of) if as_of else last_day(conn)
-        candidates = hybrid.search(conn, question, query_vector, model, day, hybrid.DEPTH)
-        reranked = rerank(question, candidates, settings.rerank_model, top=hybrid.DEPTH)
-        hits = mix(collapse(reranked, hybrid.DEPTH), RESULTS)
+        ranked = pipeline.reranked(
+            conn, question, query_vector, model, day, settings.rerank_model, hybrid.DEPTH
+        )
+        hits = pipeline.final(ranked, hybrid.DEPTH)
         if not hits:
             show(f"Nothing in {person}'s mail up to {day} matches.")
             return

@@ -11,7 +11,7 @@ from rag_trend_radar import claude
 from rag_trend_radar.exceptions import AnswerRefused
 from rag_trend_radar.schema import Answer, Citation, SearchHit
 
-## Bump on any change to the prompt or the request shape: cached answers are keyed by it.
+# Bump on any change to the prompt or the request shape: cached answers are keyed by it.
 PROMPT_VERSION = 2
 SYSTEM = """You answer questions for an employee of Enron, from the emails their search \
 returned. Today is {as_of}; nothing after it exists yet.
@@ -42,8 +42,8 @@ def answer(question: str, hits: Sequence[SearchHit], as_of: date, model: str) ->
                 "content": [*map(_search_result, hits), {"type": "text", "text": question}],
             }
         ],
-        ## Retrieval Q&A over passages in hand: low effort holds quality at a fraction of the
-        ## thinking tokens. Fallbacks re-run a safety decline on another model in the same call.
+        # Retrieval Q&A over passages in hand: low effort holds quality at a fraction of the
+        # thinking tokens. Fallbacks re-run a safety decline on another model in the same call.
         output_config={"effort": "low"},
         betas=["server-side-fallback-2026-07-01"],
         fallbacks="default",
@@ -71,8 +71,8 @@ def answer(question: str, hits: Sequence[SearchHit], as_of: date, model: str) ->
 
 
 def _search_result(hit: SearchHit) -> BetaSearchResultBlockParam:
-    ## Claude cites whole text blocks, so each paragraph is its own block: a citation then
-    ## points at the paragraph, not the whole email. The first line is the chunk's Subject.
+    # Claude cites whole text blocks, so each paragraph is its own block: a citation then
+    # points at the paragraph, not the whole email. The first line is the chunk's Subject.
     title, _, _ = hit.text.partition("\n")
     paragraphs = [p.strip() for p in hit.text.split("\n\n") if p.strip()]
     if hit.context:

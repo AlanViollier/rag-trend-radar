@@ -20,7 +20,7 @@ class _Model:
     def encode_document(self, texts: list[str], **_: object) -> NDArray[np.float32]:
         self.calls.append(len(texts))
         if len(texts) > self.broken_past or "poison" in texts:
-            ## Out of memory: normalised, finite, and wrong.
+            # Out of memory: normalised, finite, and wrong.
             rng = np.random.default_rng(len(self.calls))
             return _unit(rng.normal(size=(len(texts), DIMS)))
         return np.stack([_vector(t) for t in texts])
@@ -51,7 +51,7 @@ def test_every_gpu_batch_carries_the_sentinel_and_returns_only_the_texts(model: 
     texts = [f"email {n}" for n in range(70)]
     vectors = embedding.embed(texts, "test/fake", DIMS)
     assert np.allclose(vectors, np.stack([_vector(t) for t in texts]))
-    ## 31 + 31 + 8 texts, each with the sentinel; after the first, the sentinel alone once.
+    # 31 + 31 + 8 texts, each with the sentinel; after the first, the sentinel alone once.
     assert model.calls == [32, 1, 32, 9]
 
 

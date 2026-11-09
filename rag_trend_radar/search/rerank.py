@@ -28,8 +28,8 @@ def rerank(query: str, hits: Sequence[SearchHit], model: str, top: int) -> list[
     revision = get_settings().revision(model)
     key = (model, revision, text_hash(query))
     texts = {text_hash(hit.full_text): hit.full_text for hit in hits}
-    ## The owner's connection, on a table that holds hashes and scores, never mail: readers have
-    ## no grant on it, so the agent's SQL can't plant a score.
+    # The owner's connection, on a table that holds hashes and scores, never mail: readers have
+    # no grant on it, so the agent's SQL can't plant a score.
     with db.connect() as conn:
         scores: dict[str, float] = dict(
             conn.execute(

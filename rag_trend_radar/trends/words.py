@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 
 TOP_WORDS = 10
-## Words and years: "1997" names the restatement, other numbers are deal and phone numbers.
+# Words and years: "1997" names the restatement, other numbers are deal and phone numbers.
 _WORD = r"\b(?:[a-z][a-z'-]+|\d{4})\b"
 
 

@@ -14,10 +14,10 @@ from psycopg.rows import TupleRow
 from rag_trend_radar.ingest.dedup import numbers, words
 from rag_trend_radar.schema import EvalQuestion
 
-## Shared words over all words (Jaccard) from which two texts are the same message re-sent.
-## The judge's verdicts (2026-10-30) put real re-sends well above it and look-alikes below.
+# Shared words over all words (Jaccard) from which two texts are the same message re-sent.
+# The judge's verdicts (2026-10-30) put real re-sends well above it and look-alikes below.
 SHARED = 0.5
-## A label shorter than this ("Thanks, see you there") is contained in too many emails to count.
+# A label shorter than this ("Thanks, see you there") is contained in too many emails to count.
 MIN_CONTAINED = 100
 
 
@@ -58,9 +58,9 @@ def is_copy(label: tuple[str, str], other: tuple[str, str]) -> bool:
     flat = _flat(own)
     if len(flat) >= MIN_CONTAINED and flat in _flat(" ".join(other)):
         return True
-    ## Shared words alone take templates for copies (NYISO notices, calendar entries, one
-    ## disclaimer under different notes); the part that differs is the numbers, so a re-send
-    ## must carry every number the label does.
+    # Shared words alone take templates for copies (NYISO notices, calendar entries, one
+    # disclaimer under different notes); the part that differs is the numbers, so a re-send
+    # must carry every number the label does.
     a, b = words(own), words(other[0])
     shared = bool(a and b) and len(a & b) / len(a | b) >= SHARED
     return shared and numbers(own) <= numbers(other[0])

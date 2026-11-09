@@ -88,7 +88,7 @@ def documents(
     return (*(doc for doc, _ in emails), *_orphans(emails, held(quoted)))
 
 
-## Scanning, one file per worker call.
+# Scanning, one file per worker call.
 
 
 def _scan(path: Path, root: Path) -> Copy | Rejected:
@@ -105,7 +105,7 @@ def _scan(path: Path, root: Path) -> Copy | Rejected:
     )
 
 
-## Building documents.
+# Building documents.
 
 
 def _email(group: list[DayFile]) -> tuple[Document, SplitBody]:
@@ -132,7 +132,7 @@ def _email(group: list[DayFile]) -> tuple[Document, SplitBody]:
 
 
 def _orphans(emails: list[tuple[Document, SplitBody]], held: set[str]) -> list[Document]:
-    ## Emails arrive in (sent_at, key) order, so a quoted message is dated by its first quote.
+    # Emails arrive in (sent_at, key) order, so a quoted message is dated by its first quote.
     first: dict[str, tuple[Document, QuotedBlock]] = {}
     quoted_by: dict[str, list[str]] = defaultdict(list)
     for doc, split in emails:

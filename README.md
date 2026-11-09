@@ -7,9 +7,9 @@ inside the company in 2001. Every day the store takes in that day's mail. Employ
 and ask questions about their own mail, enforced by Postgres row-level security. An
 investigator sees the whole corpus: what's rising, what's new, and alerts when a subject grows fast.
 
-**Status:** milestone 2 of 5. The whole corpus is in, replayed day by day: 244,534 emails and
+**Status:** milestone 3 of 5. The whole corpus is in, replayed day by day: 244,534 emails and
 84,358 quoted messages, 464,603 chunks. Questions get hybrid search, a reranker and answers from
-Claude that cite the emails they come from. The radar and the agent come with milestones 3 and 4.
+Claude that cite the emails they come from. The radar is built and its page comes next; the agent comes with milestone 4.
 
 ## Ask it something
 

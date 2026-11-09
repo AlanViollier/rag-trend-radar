@@ -9,8 +9,8 @@ _PRESS_SUBJECT = re.compile(
     r"|article from|e-journal|hot today|issuealert|the world this week|headlines",
     re.IGNORECASE,
 )
-## A forwarded article carries its wire's mark. "Bloomberg" alone won't do: traders' own mail
-## names the terminal.
+# A forwarded article carries its wire's mark. "Bloomberg" alone won't do: traders' own mail
+# names the terminal.
 _PRESS_BODY = re.compile(
     r"\(Dow Jones\)|\(AP\)|\(Bloomberg\)|\(Reuters\)|Associated Press|Copyright (\(c\)|\?|©)"
 )

@@ -70,7 +70,7 @@ class Document(Record):
     public: bool
     readers: tuple[str, ...]
     paths: tuple[str, ...] = ()
-    ## A quoted message's readers are recounted from the emails quoting it (external ids).
+    # A quoted message's readers are recounted from the emails quoting it (external ids).
     quoted_by: tuple[str, ...] = ()
     email: EmailHeaders | None = None
     date_uncertain: bool = False
@@ -154,7 +154,7 @@ class EvalQuestion(Record):
     as_of: date
     person: str
     relevant: tuple[str, ...]
-    ## The identifier a codes-style question quotes, as written; empty for the other styles.
+    # The identifier a codes-style question quotes, as written; empty for the other styles.
     code: str = ""
 
 

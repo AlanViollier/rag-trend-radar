@@ -9,14 +9,14 @@ from numpy.typing import NDArray
 from rag_trend_radar.trends.frames import Frame
 from rag_trend_radar.trends.topics import NOISE, Pool
 
-## A chunk in no blob counts for one when it's closer than the blob's own loosest tenth, and clearly
-## nearer than the runner-up. For counting only: linking with them lowers seed agreement.
+# A chunk in no blob counts for one when it's closer than the blob's own loosest tenth, and clearly
+# nearer than the runner-up. For counting only: linking with them lowers seed agreement.
 NEAR_PERCENTILE, NEAR_MARGIN = 10, 0.01
 RECENT_DAYS = 28
-## Keeps a blob with almost no older mail from dividing by nothing's worth of history.
+# Keeps a blob with almost no older mail from dividing by nothing's worth of history.
 _PRIOR = 5
-## Half-lives in weeks. Centres wobble about as much as they move in one week, so raw weekly steps
-## or a blob's speed find mostly noise; two averages apart find a direction it's been holding.
+# Half-lives in weeks. Centres wobble about as much as they move in one week, so raw weekly steps
+# or a blob's speed find mostly noise; two averages apart find a direction it's been holding.
 FAST, SLOW = 2, 8
 
 
@@ -63,10 +63,10 @@ def counted(frame: Frame, vectors: NDArray[np.float32]) -> NDArray[np.int64]:
     return labels
 
 
-def counts(frame: Frame, chosen: Pool, near: NDArray[np.int64]) -> dict[int, Counts]:
+def counts(frame: Frame, pool: Pool, near: NDArray[np.int64]) -> dict[int, Counts]:
     """Every blob's counts in this week; `near` is `counted`'s labels."""
-    days = np.array([d.toordinal() for d in chosen.days])[frame.rows]
-    press = np.array(chosen.press, dtype=bool)[frame.rows]
+    days = np.array([d.toordinal() for d in pool.days])[frame.rows]
+    press = np.array(pool.press, dtype=bool)[frame.rows]
     recent = days > frame.end.toordinal() - RECENT_DAYS
     found = {}
     for label in sorted(set(frame.labels.tolist()) - {NOISE}):

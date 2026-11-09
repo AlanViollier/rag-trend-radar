@@ -95,6 +95,6 @@ def commit() -> str:
 
 
 def _peak_memory_mb() -> float:
-    ## ru_maxrss is bytes on macOS, kilobytes on Linux.
+    # ru_maxrss is bytes on macOS, kilobytes on Linux.
     peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     return peak / 1e6 if sys.platform == "darwin" else peak / 1e3

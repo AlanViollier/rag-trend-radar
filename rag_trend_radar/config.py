@@ -13,7 +13,7 @@ from rag_trend_radar.exceptions import ConfigError
 class AppSettings(BaseSettings):
     """Typed settings. Built by `get_settings()`; tests construct it directly."""
 
-    ## A misspelt key in config.yaml or .env fails at startup instead of being ignored.
+    # A misspelt key in config.yaml or .env fails at startup instead of being ignored.
     model_config = SettingsConfigDict(env_file=".env", extra="forbid")
 
     data_dir: Path = Path("data")
@@ -22,8 +22,8 @@ class AppSettings(BaseSettings):
     db_port: int = 5432
     db_name: str = "radar"
     db_user: str = "radar"
-    ## Experiments get their own schema (exp_bare): the whole app runs against it, the store in
-    ## public stays as it is. Interpolated into SQL, hence the pattern.
+    # Experiments get their own schema (exp_bare): the whole app runs against it, the store in
+    # public stays as it is. Interpolated into SQL, hence the pattern.
     db_schema: str = Field("public", pattern=r"^[a-z_][a-z0-9_]*$")
     postgres_password: SecretStr = SecretStr("")
 
@@ -31,11 +31,11 @@ class AppSettings(BaseSettings):
 
     embedding_model: str = "google/embeddinggemma-2"
     embedding_dims: int = 768
-    ## The model's commit on the Hugging Face Hub. Unpinned, a load fetches the latest, and an
-    ## update between two runs would mix two models in one vectors table.
+    # The model's commit on the Hugging Face Hub. Unpinned, a load fetches the latest, and an
+    # update between two runs would mix two models in one vectors table.
     embedding_revision: str = Field("main", pattern=r"^(?:main|[0-9a-f]{40})$")
     rerank_model: str = "BAAI/bge-reranker-v2-m3"
-    ## Pinned for the same reason: cached rerank scores are keyed by it.
+    # Pinned for the same reason: cached rerank scores are keyed by it.
     rerank_revision: str = Field("main", pattern=r"^(?:main|[0-9a-f]{40})$")
 
     answer_model: str = "claude-sonnet-5-5"
@@ -44,7 +44,7 @@ class AppSettings(BaseSettings):
     @field_validator("db_schema")
     @classmethod
     def _not_kept_schema(cls, schema: str) -> str:
-        ## A reset drops the configured schema's tables: the cache must outlive every reset.
+        # A reset drops the configured schema's tables: the cache must outlive every reset.
         if schema == "cache":
             raise ValueError("cache is kept across resets and can't be a store's schema")
         return schema

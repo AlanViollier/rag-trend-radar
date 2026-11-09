@@ -14,12 +14,12 @@ from typing import cast
 from rag_trend_radar.exceptions import ParseError
 from rag_trend_radar.schema import ParsedEmail, RawFile
 
-## 1997–2002 holds real mail. Outside it: the 1979-12-31 "no date" placeholder, a few 1986
-## stragglers, and 2004+ stamps from when CMU processed the files.
+# 1997–2002 holds real mail. Outside it: the 1979-12-31 "no date" placeholder, a few 1986
+# stragglers, and 2004+ stamps from when CMU processed the files.
 FIRST_YEAR, LAST_YEAR = 1997, 2002
 
-## Machine-written files with nothing to search: bounces paste back the failed message and its
-## attachments, and <OMNI> files are address books sent to the Outlook migration.
+# Machine-written files with nothing to search: bounces paste back the failed message and its
+# attachments, and <OMNI> files are address books sent to the Outlook migration.
 _BOUNCE_SENDERS = ("postmaster@", "mailer-daemon@")
 _BOUNCE_SUBJECTS = re.compile(
     r"(?i)^(?:undeliverable|returned mail|delivery status notification|failure notice"
@@ -77,9 +77,9 @@ def _sent_at(msg: Message) -> datetime:
 
 
 def _sender(msg: Message) -> str:
-    ## The export dropped the first name from some addresses (`.williams@enron.com` for
-    ## "Williams, Jason (Trading)", 1,352 emails), merging different people. X-From keeps the
-    ## name the mail client showed; the routing part after it (`</O=ENRON/...>`) goes.
+    # The export dropped the first name from some addresses (`.williams@enron.com` for
+    # "Williams, Jason (Trading)", 1,352 emails), merging different people. X-From keeps the
+    # name the mail client showed; the routing part after it (`</O=ENRON/...>`) goes.
     address = email.utils.parseaddr(msg["From"])[1].lower()
     if not address.startswith("."):
         return address
@@ -93,9 +93,9 @@ def _addresses(msg: Message, header: str) -> tuple[str, ...]:
 
 
 def _subject(msg: Message) -> str:
-    ## Encoded words (`=?cp1252?Q?...?=`) come back as bytes, sometimes with no charset at all.
-    ## A long subject is folded over lines (a line break, then a space or tab); compat32 keeps
-    ## the fold, so it's unfolded here.
+    # Encoded words (`=?cp1252?Q?...?=`) come back as bytes, sometimes with no charset at all.
+    # A long subject is folded over lines (a line break, then a space or tab); compat32 keeps
+    # the fold, so it's unfolded here.
     parts = decode_header(_FOLD.sub(" ", msg["Subject"] or ""))
     return "".join(
         part if isinstance(part, str) else _text(part, charset) for part, charset in parts
@@ -103,8 +103,8 @@ def _subject(msg: Message) -> str:
 
 
 def _body(msg: Message) -> str:
-    ## Every CMU file is single-part text/plain, so the payload is bytes. decode=True undoes
-    ## quoted-printable (`=20`, soft `=` line breaks).
+    # Every CMU file is single-part text/plain, so the payload is bytes. decode=True undoes
+    # quoted-printable (`=20`, soft `=` line breaks).
     payload = cast(bytes, msg.get_payload(decode=True))
     return _text(payload, msg.get_content_charset()).replace("\r\n", "\n")
 
@@ -113,5 +113,5 @@ def _text(data: bytes, charset: str | None) -> str:
     try:
         return data.decode(charset or "us-ascii")
     except UnicodeDecodeError, LookupError:
-        ## Mislabelled mail is mostly Windows-1252 (Outlook's curly quotes, dashes).
+        # Mislabelled mail is mostly Windows-1252 (Outlook's curly quotes, dashes).
         return data.decode("cp1252", errors="replace")

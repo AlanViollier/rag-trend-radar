@@ -21,7 +21,7 @@ from rag_trend_radar.ingest.dedup import content_hash, resolve_sent_at
 from rag_trend_radar.schema import ParsedEmail, RawFile, SplitBody
 from rag_trend_radar.sources import enron
 
-## Each detector is one kind of leftover. A hit means the text still carries it.
+# Each detector is one kind of leftover. A hit means the text still carries it.
 DETECTORS = {
     name: re.compile(pattern, re.MULTILINE)
     for name, pattern in {
@@ -197,7 +197,7 @@ def main(root: Path) -> None:
     print(out.text())
 
 
-## Pass 1 runs in worker processes: parse, clean, detect, hash.
+# Pass 1 runs in worker processes: parse, clean, detect, hash.
 
 
 def _profile(job: tuple[Path, Path]) -> Profile | str:
@@ -283,7 +283,7 @@ def _date_outcome(copies: list[datetime]) -> str:
     return "one date"
 
 
-## Pass 2: recover line texts from hashes, then trim boilerplate at each threshold.
+# Pass 2: recover line texts from hashes, then trim boilerplate at each threshold.
 
 
 def _line_texts(root: Path, unique: list[Profile], wanted: set[int]) -> dict[int, str]:
@@ -304,12 +304,12 @@ _FREQUENT: list[frozenset[str]] = []
 
 
 def _init_trim(counts: dict[str, int]) -> None:
-    ## frequent_lines() would recount the corpus; the counts are already here, so build the sets.
+    # frequent_lines() would recount the corpus; the counts are already here, so build the sets.
     _FREQUENT.extend(frozenset(line for line, n in counts.items() if n >= t) for t in THRESHOLDS)
 
 
 def _trim(job: tuple[Path, str]) -> list[tuple[int, int]]:
-    ## Per threshold: chars trimmed, and 1 when every line was frequent and the guard kept it whole.
+    # Per threshold: chars trimmed, and 1 when every line was frequent and the guard kept it whole.
     root, rel = job
     own = _split(_parse(root, rel)).own
     keys = _lines(own)
@@ -323,7 +323,7 @@ def _first_own_line(root: Path, rel: str) -> str:
     return next((line for line in _split(_parse(root, rel)).own.split("\n") if line.strip()), "")
 
 
-## Markdown output.
+# Markdown output.
 
 
 class _Report:

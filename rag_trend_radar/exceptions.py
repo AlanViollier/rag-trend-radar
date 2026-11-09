@@ -29,3 +29,7 @@ class NoDaysLoaded(AppError):
 
 class EmbeddingFailed(AppError):
     """The model returned vectors that fail the sentinel check; nothing from that batch is kept."""
+
+
+class OtherStore(AppError):
+    """Saved weeks from another store: their chunk ids would name other mail here."""

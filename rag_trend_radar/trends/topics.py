@@ -17,14 +17,14 @@ from rag_trend_radar.days import cutoff
 from rag_trend_radar.ingest.kinds import Source, source
 
 NOISE = -1
-## Squashing picked on Jan–Jun 2000 (89% noise and near-copies without it); 15 neighbours and size
-## 100 on the weekly windows (2026-11-05): 50 neighbours moved the map more and broke a frame.
+# Squashing picked on Jan–Jun 2000 (89% noise and near-copies without it); 15 neighbours and size
+# 100 on the weekly windows (2026-11-05): 50 neighbours moved the map more and broke a frame.
 SQUASH, NEIGHBORS, MIN_SIZE, MIN_SAMPLES = 5, 15, 100, 5
 MIN_DOCUMENTS = 5
-## HDBSCAN can keep one blob of 95% of a frame at cohesion .837, which `drop_loose` then dumps whole.
-## A cap on every frame costs 2.5 points of noise, so only a frame that would break gets one.
+# HDBSCAN can keep one blob of 95% of a frame at cohesion .837, which `drop_loose` then dumps whole.
+# A cap on every frame costs 2.5 points of noise, so only a frame that would break gets one.
 GIANT, CAP = 0.3, 0.05
-## Topics from Jan–Jun 2000 start at about .86 (5th percentile); the one that swallowed the mail, .83.
+# Topics from Jan–Jun 2000 start at about .86 (5th percentile); the one that swallowed the mail, .83.
 MIN_COHESION = 0.84
 
 

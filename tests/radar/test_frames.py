@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
+from rag_trend_radar.exceptions import OtherStore
 from rag_trend_radar.run_log import RunLog
 from rag_trend_radar.trends import build, frames
 from rag_trend_radar.trends.topics import Pool
@@ -120,10 +121,10 @@ def test_blobs_made_after_a_delete_still_line_up_with_the_saved_chunks(tmp_path:
 def test_saved_weeks_refuse_to_load_against_a_rebuilt_store(tmp_path: Path) -> None:
     chosen = _world(0)
     frames.make(chosen, [D], 1, tmp_path, RunLog("test", {}), min_size=20)
-    ## Same chunk ids, but a rebuild could have handed them to other mail.
-    with pytest.raises(frames.OtherStore, match="store-a, the store is now store-b"):
+    # Same chunk ids, but a rebuild could have handed them to other mail.
+    with pytest.raises(OtherStore, match="store-a, the store is now store-b"):
         frames.load(replace(chosen, store="store-b"), [D], tmp_path)
-    with pytest.raises(frames.OtherStore):
+    with pytest.raises(OtherStore):
         frames.make(
             replace(chosen, store="store-b"), [D], 1, tmp_path, RunLog("test", {}), min_size=20
         )
@@ -133,5 +134,5 @@ def test_saved_weeks_with_no_store_recorded_refuse_to_load(tmp_path: Path) -> No
     chosen = _world(0)
     frames.make(chosen, [D], 1, tmp_path, RunLog("test", {}), min_size=20)
     (tmp_path / frames.STAMP).unlink()
-    with pytest.raises(frames.OtherStore, match="unknown store"):
+    with pytest.raises(OtherStore, match="unknown store"):
         frames.load(chosen, [D], tmp_path)

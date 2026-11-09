@@ -14,10 +14,10 @@ from rag_trend_radar.schema import SearchHit
 from rag_trend_radar.search import keyword, vector
 from rag_trend_radar.search.ranking import hits
 
-## RRF fuses ranks, not scores: BM25 scores are unbounded and cosine sits in [-1, 1], so they
-## can't be added. 60 is the constant from the original paper (Cormack et al., 2009); it keeps
-## rank 1 from drowning out ranks 2–10. Each list is cut at DEPTH first: deep enough that a
-## chunk one list ranks 30th still counts.
+# RRF fuses ranks, not scores: BM25 scores are unbounded and cosine sits in [-1, 1], so they
+# can't be added. 60 is the constant from the original paper (Cormack et al., 2009); it keeps
+# rank 1 from drowning out ranks 2–10. Each list is cut at DEPTH first: deep enough that a
+# chunk one list ranks 30th still counts.
 RRF_K = 60
 DEPTH = 50
 

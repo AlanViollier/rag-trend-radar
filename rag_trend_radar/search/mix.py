@@ -5,14 +5,14 @@ from collections.abc import Iterable
 from rag_trend_radar.ingest.kinds import Source, source
 from rag_trend_radar.schema import SearchHit
 
-## An investigator's top 10 was 91% press on story questions (109 of 120, 2026-11-02), with press
-## about 6% of the chunks. At most this many of a list are press or bulk mail, unless nothing
-## else is left.
+# An investigator's top 10 was 91% press on story questions (109 of 120, 2026-11-02), with press
+# about 6% of the chunks. At most this many of a list are press or bulk mail, unless nothing
+# else is left.
 RESULTS = 10
 MAX_PRESS = 3
 MAX_BULK = 1
-## A rerank score under this is noise ("UNBELIEVABLE", "FYI"): such a chunk never takes the place
-## of a press article.
+# A rerank score under this is noise ("UNBELIEVABLE", "FYI"): such a chunk never takes the place
+# of a press article.
 MIN_SCORE = 0.05
 
 

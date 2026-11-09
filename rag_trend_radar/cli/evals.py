@@ -21,16 +21,14 @@ from rag_trend_radar.evals.questions import Retype, Style, code_holds, retyped, 
 from rag_trend_radar.evals.retrieval import rankings, report
 from rag_trend_radar.run_log import commit
 from rag_trend_radar.schema import EvalQuestion, FactQuestion, RecallRun, RunManifest
-from rag_trend_radar.search import hybrid
-from rag_trend_radar.search.collapse import collapse
-from rag_trend_radar.search.mix import RESULTS, mix
-from rag_trend_radar.search.rerank import rerank
+from rag_trend_radar.search import hybrid, pipeline
+from rag_trend_radar.search.mix import RESULTS
 
 QUESTIONS = Path("evals/questions.jsonl")
 HARD_QUESTIONS = Path("evals/questions_hard.jsonl")
-## hit_rate@1: an answer is first. @10: Claude gets to read one. @50: the reranker gets to see
-## one. MRR@10: 1 / the first answer's rank, so second place counts half. Not recall@k: with
-## judged labels a question can have several answers, and recall would count the share found.
+# hit_rate@1: an answer is first. @10: Claude gets to read one. @50: the reranker gets to see
+# one. MRR@10: 1 / the first answer's rank, so second place counts half. Not recall@k: with
+# judged labels a question can have several answers, and recall would count the share found.
 METRICS = ("hit_rate@1", "hit_rate@10", "hit_rate@50", "mrr@10")
 
 
@@ -49,8 +47,8 @@ def questions(
     the case keyword search is there for. A different `--seed` samples different documents.
     """
     settings = get_settings()
-    ## Spare sources: Claude marks some unusable (automated notices; for codes, mail whose only
-    ## long numbers are phone numbers or zip codes, or codes too many documents hold).
+    # Spare sources: Claude marks some unusable (automated notices; for codes, mail whose only
+    # long numbers are phone numbers or zip codes, or codes too many documents hold).
     spare = 3 if style is Style.CODES else 3 / 2
     with db.connect() as conn:
         day = last_day(conn)
@@ -204,10 +202,11 @@ def facts(path: Path = HARD_QUESTIONS, depth: int = hybrid.DEPTH) -> None:
     passed = {"raw": 0, "ask": 0}
     for q, vector_ in zip(questions, vectors, strict=True):
         with db.connect(q.person) as conn:
-            candidates = hybrid.search(conn, q.question, vector_, model, q.as_of, depth)
-        reranked = rerank(q.question, candidates, settings.rerank_model, top=depth)
-        raw = check_facts(q, reranked[:RESULTS])
-        ask_ = check_facts(q, mix(collapse(reranked, depth), RESULTS))
+            ranked = pipeline.reranked(
+                conn, q.question, vector_, model, q.as_of, settings.rerank_model, depth
+            )
+        raw = check_facts(q, ranked[:RESULTS])
+        ask_ = check_facts(q, pipeline.final(ranked, depth))
         for name, result in (("raw", raw), ("ask", ask_)):
             passed[name] += not (q.absent or result.missing or result.leaked)
         table.add_row(

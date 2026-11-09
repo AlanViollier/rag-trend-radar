@@ -6,8 +6,8 @@ import psycopg
 import pytest
 from psycopg import sql
 
-## Before any settings load: the environment beats config.yaml, so every connection a test
-## opens goes to radar_test. db.reset() wipes it, and the real store must never be in reach.
+# Before any settings load: the environment beats config.yaml, so every connection a test
+# opens goes to radar_test. db.reset() wipes it, and the real store must never be in reach.
 os.environ["DB_NAME"] = "radar_test"
 os.environ["DB_SCHEMA"] = "public"
 
