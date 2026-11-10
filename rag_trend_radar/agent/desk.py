@@ -47,6 +47,13 @@ class ToolResult:
     summary: str
     documents: tuple[int, ...] = ()
 
+    def __post_init__(self) -> None:
+        # The API refuses a tool result mixing search results with anything else (400, found on
+        # the first smoke run, 2026-11-10): caught here, in tests, instead.
+        kinds = {block["type"] for block in self.blocks}
+        if "search_result" in kinds and len(kinds) > 1:
+            raise ValueError(f"a tool result mixes {sorted(kinds)}")
+
 
 class ToolInput(Record):
     """A tool's arguments as Claude sends them; anything not declared is refused."""

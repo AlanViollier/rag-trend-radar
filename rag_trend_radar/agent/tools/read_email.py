@@ -46,9 +46,11 @@ def run(desk: Desk, given: Input) -> ToolResult:
         f"Date: {local_day(sent_at)}",
     ]
     full = "\n".join(header) + "\n\n" + _cut(body, MAX_BODY)
-    notes = f"document {given.document_id} ({kind})"
+    block = cited(given.document_id, full, _cut(quoted, MAX_QUOTED))
+    if kind == "quoted":
+        block["title"] = f"{block['title']} (known only from replies quoting it)"
     return ToolResult(
-        [text(notes), cited(given.document_id, full, _cut(quoted, MAX_QUOTED))],
+        [block],
         f"read document {given.document_id}, {local_day(sent_at)}",
         (given.document_id,),
     )

@@ -92,9 +92,12 @@ def run(
         )
         turn = _turn(model, response, time.perf_counter() - begun)
         cost += turn.cost_usd
+        calling = response.stop_reason == "tool_use"
         for block in response.content:
             if block.type == "thinking" and block.thinking:
                 record(AgentStep(kind="thinking", text=block.thinking))
+            elif block.type == "text" and calling and block.text.strip():
+                record(AgentStep(kind="note", text=block.text.strip()))
         record(turn)
         if response.stop_reason == "refusal":
             raise AnswerRefused(f"{model} declined: {response.stop_details}")

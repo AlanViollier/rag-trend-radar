@@ -146,12 +146,13 @@ class Answer(Record):
 class AgentStep(Record):
     """One thing the agent did, in order: a thought, a tool call, or a call to Claude coming back.
 
-    `thinking` holds Claude's summarised reasoning (the raw reasoning never leaves the API).
+    `thinking` holds Claude's summarised reasoning (the raw reasoning never leaves the API);
+    `note` what it wrote between tool calls.
     `tool` holds its name, the arguments as Claude sent them (JSON), the one-line summary and the
     documents it returned. `turn` holds one API call's tokens and cost.
     """
 
-    kind: Literal["thinking", "tool", "turn"]
+    kind: Literal["thinking", "note", "tool", "turn"]
     text: str = ""
     tool: str = ""
     arguments: str = ""

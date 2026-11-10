@@ -84,7 +84,7 @@ def agent(question: str, person: str = "investigator", as_of: str = "", name: st
 
 
 def _step(step: AgentStep) -> None:
-    if step.kind == "thinking":
+    if step.kind in ("thinking", "note"):
         thought = " ".join(step.text.split())
         cut = thought[:SHOWN_THINKING] + ("…" if len(thought) > SHOWN_THINKING else "")
         STEPS.print(f"[dim italic]{escape(cut)}[/dim italic]")

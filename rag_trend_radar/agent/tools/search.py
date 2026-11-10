@@ -13,8 +13,9 @@ from rag_trend_radar.ingest.kinds import Source, source
 from rag_trend_radar.search import hybrid, pipeline
 
 DESCRIPTION = """Search the mail this person can read: keyword and meaning search, reranked, the \
-best 10 chunks back as citable results. Use it to find what someone wrote or said. Each result \
-names its document id; read_email gives the whole email. Narrow with `since` / `until` when the \
+best 10 chunks back as citable results, best first. Use it to find what someone wrote or said. \
+Each result's title starts with its date and source (mail, press or bulk); its source names its \
+document id, and read_email gives the whole email. Narrow with `since` / `until` when the \
 question is about a time, and `source` "mail" for what people wrote themselves rather than \
 forwarded press."""
 
@@ -56,14 +57,15 @@ def run(desk: Desk, given: Input) -> ToolResult:
             ([hit.document_id for hit in hits],),
         ).fetchall()
     )
-    lines = [
-        f"document {hit.document_id}, {local_day(sent[hit.document_id])}, {source(hit.text)}"
-        for hit in hits
-    ]
+    blocks = []
+    for hit in hits:
+        # The API takes a tool result of search results only, no text beside them: the date and
+        # source ride in each title, the document id in its `source`.
+        block = search_result(hit)
+        block["title"] = (
+            f"{local_day(sent[hit.document_id])} · {source(hit.text)} · {block['title']}"
+        )
+        blocks.append(block)
     kinds = [source(hit.text) for hit in hits]
     summary = f"{len(hits)} results, {kinds.count(Source.MAIL)} of them people's own mail"
-    return ToolResult(
-        [text("Results, best first:\n" + "\n".join(lines)), *map(search_result, hits)],
-        summary,
-        tuple(dict.fromkeys(hit.document_id for hit in hits)),
-    )
+    return ToolResult(blocks, summary, tuple(dict.fromkeys(hit.document_id for hit in hits)))

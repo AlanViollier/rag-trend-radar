@@ -184,3 +184,10 @@ def test_the_verdict_is_read_off_the_last_line(
     answer: str, expected: tuple[str, str | None]
 ) -> None:
     assert prompt.verdict(answer) == expected
+
+
+def test_a_tool_result_never_mixes_search_results_with_text() -> None:
+    passage = {"type": "search_result", "source": "document 1", "title": "T", "content": []}
+    ToolResult([passage, passage], "two passages")  # type: ignore[list-item]
+    with pytest.raises(ValueError, match="mixes"):
+        ToolResult([text("Results:"), passage], "mixed")  # type: ignore[list-item]

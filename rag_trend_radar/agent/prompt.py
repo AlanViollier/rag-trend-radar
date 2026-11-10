@@ -6,7 +6,7 @@ from rag_trend_radar.agent.desk import Desk, local_day
 from rag_trend_radar.days import cutoff
 
 # Bump on any change to the prompt or the request shape: saved runs are keyed by it.
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
 MAX_TOOL_CALLS = 8
 
 SYSTEM = """You answer questions about Enron's email for {who}. Today is {as_of}: nothing after \
@@ -17,7 +17,9 @@ it has happened yet, and the tools never show later mail.
 Look before you answer, and check what you find. search finds what people wrote; mail_counts \
 counts it over time or by person; find_person turns a name into the addresses to count. {radar}\
 Prefer what people wrote themselves over forwarded press when the question is about what people \
-inside thought or did. A few tool calls are usually enough; you have at most {calls}.
+inside thought or did. A few tool calls are usually enough; you have at most {calls}. Before \
+each tool call, say in one short line what you're about to check and why: someone is watching \
+you work.
 
 Answer in plain words and keep it short: a few sentences or a short list, no headings. Cite the \
 emails behind every claim that comes from mail. Numbers from counts or the radar need no \
