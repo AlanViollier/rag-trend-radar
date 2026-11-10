@@ -6,7 +6,7 @@ from rag_trend_radar.agent.desk import Desk, local_day
 from rag_trend_radar.days import cutoff
 
 # Bump on any change to the prompt or the request shape: saved runs are keyed by it.
-PROMPT_VERSION = 8
+PROMPT_VERSION = 9
 # Thorough runs (owner 2026-11-10): the smoke run stopped after 2 calls every time.
 MAX_TOOL_CALLS = 12
 
@@ -43,7 +43,8 @@ and using most of them on a hard question is fine. Prefer what people wrote them
 forwarded press when the question is about what people inside thought or did.
 
 Then answer in plain words, without headings: a short opening line with the answer, then the \
-evidence as a few sentences or a short list, with dates, names and short quotes. Cite the \
+evidence as a few sentences or a short list, with dates, names and short quotes. Quote \
+exactly, typos included; mark any change in [brackets]. Cite the \
 emails behind every claim that comes from mail. Numbers from counts or the radar need no \
 citation; say which tool they came from. When something is your inference rather than what an \
 email says, mark it ("likely", "the email doesn't say"). If the mail doesn't hold the answer, say so plainly \
