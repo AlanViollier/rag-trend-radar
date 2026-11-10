@@ -15,7 +15,7 @@ from rag_trend_radar.days import cutoff, opening
 from rag_trend_radar.ingest.kinds import Source, source
 
 DESCRIPTION = """Count emails (not forwards of the same one) by week, month or sender, filtered by \
-a phrase, senders, recipients, source and dates. Use it for when something started or peaked, \
+phrases, senders, recipients, source and dates. Use it for when something started or peaked, \
 who wrote about it most, or who wrote to whom. Weeks are named by their last day, a Sunday, as \
 on the radar. Get addresses from find_person first. Counts people's emails, each once."""
 # Telling mail from press reads each email's first chunk; past this many the phrase or dates
@@ -30,8 +30,10 @@ BASE = sql.SQL(
 LEAD = sql.SQL(
     "(SELECT c.text FROM chunks c WHERE c.document_id = d.id ORDER BY c.position LIMIT 1)"
 )
-# `###` is pg_search's phrase match, on the same tokens the BM25 index keeps.
-PHRASE = sql.SQL(" AND d.id IN (SELECT c.document_id FROM chunks c WHERE c.text ### %(words)s)")
+# `###` is pg_search's phrase match, on the same tokens the BM25 index keeps: "LJM2" is its own
+# word, so "LJM" alone missed 3 of Kean's 30 emails (2026-11-10). An email holding any phrase
+# counts once.
+PHRASES = " AND d.id IN (SELECT c.document_id FROM chunks c WHERE {})"
 SENDERS = sql.SQL(" AND lower(e.sender) = ANY(%(senders)s)")
 RECIPIENTS = sql.SQL(
     " AND (e.to_addrs && %(recipients)s OR e.cc_addrs && %(recipients)s"
@@ -42,7 +44,11 @@ RECIPIENTS = sql.SQL(
 class Input(ToolInput):
     """What Claude passes; field descriptions become the tool's schema."""
 
-    words: str | None = Field(None, description="A word or phrase the email must contain.")
+    words: list[str] = Field(
+        [],
+        description="Phrases, any of which the email must contain, each email counted once: "
+        '["LJM", "LJM2"]. A word with a number or suffix ("LJM2") is a different word.',
+    )
     senders: list[str] = Field([], description="Sent from any of these addresses.")
     recipients: list[str] = Field([], description="Sent to, cc or bcc any of these addresses.")
     source: Literal["any", "mail", "press", "bulk"] = Field(
@@ -53,11 +59,12 @@ class Input(ToolInput):
     until: date | None = Field(None, description="Only mail sent on or before this day.")
     by: Literal["week", "month", "sender", "total"] = Field("week", description="How to group.")
 
-    @field_validator("senders", "recipients", mode="before")
+    @field_validator("words", "senders", "recipients", mode="before")
     @classmethod
     def _split(cls, value: object) -> object:
         # Claude sometimes sends "a@x.com,b@x.com" for a list (smoke run 2026-11-10): refused,
-        # it didn't retry, and a count its answer needed was never made.
+        # it didn't retry, and a count its answer needed was never made. One phrase alone may
+        # come as a string too.
         return (
             [part.strip() for part in value.split(",") if part.strip()]
             if isinstance(value, str)
@@ -69,7 +76,10 @@ def run(desk: Desk, given: Input) -> ToolResult:
     """The matching emails counted in Python, after one query fetches when and who."""
     query = BASE.format(lead=LEAD if given.source != "any" else sql.SQL("NULL"))
     if given.words:
-        query += PHRASE
+        matches = sql.SQL(" OR ").join(
+            sql.SQL("c.text ### {}").format(sql.Literal(phrase)) for phrase in given.words
+        )
+        query += sql.SQL(PHRASES).format(matches)
     if given.senders:
         query += SENDERS
     if given.recipients:
@@ -79,7 +89,6 @@ def run(desk: Desk, given: Input) -> ToolResult:
     params = {
         "since": opening(given.since),
         "cutoff": cutoff(desk.until(given.until)),
-        "words": given.words,
         "senders": [a.lower() for a in given.senders],
         "recipients": [a.lower() for a in given.recipients],
     }

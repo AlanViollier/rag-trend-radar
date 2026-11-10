@@ -260,3 +260,13 @@ def test_a_lookup_passes_when_a_cited_email_is_a_labelled_one(world: dict[str, i
     with db.connect() as conn:
         assert checks.score(conn, question, cites(world["rowe-0"])).passed
         assert not checks.score(conn, question, cites(world["rowe-late"])).passed
+
+
+@pytest.mark.usefixtures("world")
+def test_several_phrases_count_each_email_once() -> None:
+    def total(words: list[str]) -> str:
+        return _run("investigator", "mail_counts", {"words": words, "by": "total"}).summary
+
+    assert total(["lookalike", "note 0"]).startswith("2 emails")
+    # Every email holds both words: counted once each, not twice.
+    assert total(["quokka", "ledger"]).startswith("4 emails")
