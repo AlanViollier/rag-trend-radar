@@ -282,9 +282,9 @@ def test_a_phrase_with_small_words_still_counts() -> None:
 
 
 @pytest.mark.usefixtures("world")
-def test_a_one_week_range_grows_from_the_week_before() -> None:
-    # The topic has a week ending Oct 7 (2) and Oct 28 (40); the week before Oct 28 had none.
+def test_a_one_week_range_grows_from_the_last_week_before_it() -> None:
+    # The topic has weeks ending Oct 7 (2) and Oct 28 (40) only: Oct 28 alone grows from Oct 7.
     one_week = _text(
         _run("investigator", "top_topics", {"since": "2001-10-22", "until": "2001-10-28"})
     )
-    assert "0 → 40 (+40)" in one_week
+    assert "2 → 40 (+38)" in one_week

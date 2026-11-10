@@ -16,6 +16,7 @@ the 4 weeks up to a week. Newsletters, footers and chatter are left out. Then to
 one topic, or search for its mail. Investigator only."""
 MAX_TOPICS = 25
 DEFAULT_SPAN = timedelta(weeks=4)
+LOOK_BACK = timedelta(weeks=8)
 
 ROWS = (
     "SELECT bw.blob_id, b.kind, bw.week, bw.recent, bw.mail, bw.keywords FROM blob_weeks bw"
@@ -42,12 +43,13 @@ def run(desk: Desk, given: Input) -> ToolResult:
     """Each shown topic's recent mail the week before the range and at its last week, ranked.
 
     Growth counts from the week before the first: a one-week range measured from its own first
-    week gave every topic +0 and hid the Dynegy merger the week it fell apart (2026-11-10).
+    week gave every topic +0 and hid the Dynegy merger the week it fell apart (2026-11-10). A
+    topic missing that week (blobs skip weeks) takes its last week before it, up to `LOOK_BACK`.
     """
     until = desk.until(given.until)
     first, last = topics.weeks(given.since or until - DEFAULT_SPAN, until)
     before = first - timedelta(weeks=1)
-    rows = desk.conn.execute(ROWS, (before, last)).fetchall()
+    rows = desk.conn.execute(ROWS, (before - LOOK_BACK, last)).fetchall()
     if not rows:
         return ToolResult([text(f"No radar weeks between {first} and {last}.")], "no weeks")
     weeks: dict[int, dict[date, tuple[int, int, list[str]]]] = defaultdict(dict)
@@ -55,8 +57,8 @@ def run(desk: Desk, given: Input) -> ToolResult:
     for blob, built, week, recent, mail, keywords in rows:
         if topics.kind(blob, built) != "topic":
             continue
-        if week == before:
-            baseline[blob] = recent
+        if week <= before:
+            baseline[blob] = recent  # rows come oldest first: the last one before the range wins
         else:
             weeks[blob][week] = (recent, mail, keywords)
     alerts: dict[int, int] = dict(
