@@ -9,6 +9,8 @@ from rag_trend_radar.exceptions import ConfigError
 def test_every_command_is_registered() -> None:
     assert set(get_command(app).commands) == {  # type: ignore[attr-defined]
         "agent",
+        "agent-evals",
+        "agent-scores",
         "ask",
         "db-reset",
         "delete",

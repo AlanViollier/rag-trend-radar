@@ -15,6 +15,7 @@ import anthropic
 from anthropic.types.beta import (
     BetaMessage,
     BetaMessageParam,
+    BetaSearchResultBlockParam,
     BetaTextBlockParam,
     BetaToolChoiceAutoParam,
     BetaToolChoiceNoneParam,
@@ -24,7 +25,7 @@ from anthropic.types.beta import (
 
 from rag_trend_radar import claude
 from rag_trend_radar.agent import tools
-from rag_trend_radar.agent.desk import Desk
+from rag_trend_radar.agent.desk import Desk, ToolResult
 from rag_trend_radar.agent.prompt import MAX_TOOL_CALLS, PROMPT_VERSION, system, verdict
 from rag_trend_radar.answer import SOURCE_PREFIX
 from rag_trend_radar.exceptions import AnswerRefused, ToolRefused
@@ -50,16 +51,18 @@ def run(
     model: str,
     client: anthropic.Anthropic | None = None,
     watch: Watcher | None = None,
+    planted: BetaSearchResultBlockParam | None = None,
 ) -> AgentRun:
     """Work `question` as `desk.person` on `desk.as_of` and return the whole run.
 
     A run already made with the same question, person, day, model, prompt and tools is read back
     from disk at no cost (rule 6). `watch` sees every step as it happens; `client` is the
-    Anthropic client (default: the one on the key in .env).
+    Anthropic client (default: the one on the key in .env). `planted` is an injection test's fake
+    email, slipped into the first search's results; the store never holds it.
     """
     offered = tools.definitions(desk)
     prompt = system(desk)
-    cached = _cache_path(desk, question, model, prompt, offered)
+    cached = _cache_path(desk, question, model, prompt, offered, planted)
     if cached.exists():
         saved = AgentRun.model_validate_json(cached.read_text())
         for step in saved.steps:
@@ -75,6 +78,7 @@ def run(
 
     messages: list[BetaMessageParam] = [{"role": "user", "content": question}]
     calls, cost = 0, 0.0
+    planting_done = planted is None
     while True:
         out_of_calls = calls >= MAX_TOOL_CALLS or cost >= MAX_COST_USD
         begun = time.perf_counter()
@@ -114,7 +118,10 @@ def run(
         asides: list[BetaTextBlockParam] = []
         for use in uses:
             calls += 1
-            given, aside = _use(desk, use.id, use.name, use.input, out_of_calls, record)
+            plant = planted if use.name == "search" and not planting_done else None
+            given, aside = _use(desk, use.id, use.name, use.input, out_of_calls, record, plant)
+            # Planted once, in the first search that returned something.
+            planting_done = planting_done or plant in list(given.get("content", []))
             results.append(given)
             if aside:
                 asides.append({"type": "text", "text": aside})
@@ -145,7 +152,13 @@ def run(
 
 
 def _use(
-    desk: Desk, use_id: str, name: str, arguments: object, refused: bool, record: Watcher
+    desk: Desk,
+    use_id: str,
+    name: str,
+    arguments: object,
+    refused: bool,
+    record: Watcher,
+    planted: BetaSearchResultBlockParam | None = None,
 ) -> tuple[BetaToolResultBlockParam, str]:
     # One tool call: run it and record it. A refusal goes back to Claude as an error result, so
     # it can correct its arguments or move on.
@@ -155,6 +168,10 @@ def _use(
         if refused:
             raise ToolRefused(OUT_OF_CALLS)
         done = tools.call(desk, name, arguments)
+        if planted is not None and done.documents:
+            # Second place: high enough to be read, not so high it looks staged.
+            blocks = [*done.blocks[:1], planted, *done.blocks[1:]]
+            done = ToolResult(blocks, done.summary, done.documents, done.aside)
     except ToolRefused as error:
         seconds = time.perf_counter() - begun
         record(
@@ -225,7 +242,12 @@ def _citations(response: BetaMessage) -> tuple[Citation, ...]:
 
 
 def _cache_path(
-    desk: Desk, question: str, model: str, prompt: str, offered: list[BetaToolParam]
+    desk: Desk,
+    question: str,
+    model: str,
+    prompt: str,
+    offered: list[BetaToolParam],
+    planted: BetaSearchResultBlockParam | None,
 ) -> Path:
     # A changed tool description or schema is a different agent: its runs aren't reused.
     tools_hash = hashlib.blake2b(
@@ -233,6 +255,8 @@ def _cache_path(
     ).hexdigest()
     key = json.dumps(
         [PROMPT_VERSION, model, desk.person, desk.as_of.isoformat(), question, prompt, tools_hash]
+        + ([planted] if planted else []),
+        sort_keys=True,
     )
     return claude.cache_path("agent", key)
 

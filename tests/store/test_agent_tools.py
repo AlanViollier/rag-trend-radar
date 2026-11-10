@@ -239,3 +239,24 @@ def test_addresses_may_come_as_one_comma_separated_string() -> None:
         "investigator", "mail_counts", {"senders": "rowe@enron.com, x@y.com", "by": "total"}
     )
     assert listed.summary == joined.summary
+
+
+@pytest.mark.usefixtures("world")
+def test_a_lookup_passes_when_a_cited_email_is_a_labelled_one(world: dict[str, int]) -> None:
+    from rag_trend_radar.evals import agent as checks
+    from rag_trend_radar.schema import AgentQuestion, AgentRun, Citation
+
+    question = AgentQuestion(
+        id="l", kind="lookup", question="Q", person="rowe-p", relevant=("rowe-0",)
+    )
+
+    def cites(document: int) -> AgentRun:
+        return AgentRun(
+            question="Q", person="rowe-p", as_of=AS_OF, model="m", prompt_version=5, steps=(),
+            answer="A", found="yes", citations=(Citation(document_id=document, cited_text="x"),),
+            cost_usd=0, seconds=0, started=datetime(2026, 11, 10, tzinfo=CHICAGO), commit="c",
+        )  # fmt: skip
+
+    with db.connect() as conn:
+        assert checks.score(conn, question, cites(world["rowe-0"])).passed
+        assert not checks.score(conn, question, cites(world["rowe-late"])).passed

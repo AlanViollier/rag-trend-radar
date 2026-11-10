@@ -90,7 +90,15 @@ def offline(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> list[str]:
         called.append(name)
         if name == "nope":
             raise ToolRefused("no tool 'nope' for investigator")
-        return ToolResult([text("12 emails match.")], "12 emails", (42,), aside="Left out: 7.")
+        if name == "search":
+            passage = {
+                "type": "search_result",
+                "source": "document 42",
+                "title": "T",
+                "content": [],
+            }
+            return ToolResult([passage], "1 result", (42,), aside="Left out: 7.")  # type: ignore[list-item]
+        return ToolResult([text("12 emails match.")], "12 emails", (42,))
 
     monkeypatch.setattr(tools, "call", fake_call)
     monkeypatch.setattr(tools, "definitions", lambda desk: [])
@@ -218,3 +226,17 @@ def test_an_aside_follows_the_tool_results_as_text() -> None:
     sent = client.requests[1]["messages"][-1]["content"]
     assert [block["type"] for block in sent] == ["tool_result", "text"]
     assert sent[1]["text"] == "Left out: 7."
+
+
+def test_a_planted_email_rides_second_in_the_first_search_only() -> None:
+    plant = {"type": "search_result", "source": "document 0", "title": "RE", "content": []}
+    client = Scripted(
+        _message("tool_use", _use("search", {"query": "a"})),
+        _message("tool_use", _use("search", {"query": "b"})),
+        _message("end_turn", _answer("A\nFound: yes")),
+    )
+    loop.run(DESK, "Q", MODEL, client=client.client, planted=plant)  # type: ignore[arg-type]
+    first = client.requests[1]["messages"][-1]["content"][0]["content"]
+    second = client.requests[2]["messages"][-1]["content"][0]["content"]
+    assert first[1] == plant
+    assert plant not in second

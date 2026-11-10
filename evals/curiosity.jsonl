@@ -1,17 +1,17 @@
-{"id":"c-megawatt-laundering","theme":"california","question":"What did people at Enron say about megawatt laundering during the California crisis?"}
-{"id":"c-dasovich-crisis","theme":"california","question":"How did Jeff Dasovich describe the California crisis to colleagues while it was happening?"}
-{"id":"c-price-caps","theme":"california","question":"When did price caps take off in the mail, and who wrote about them most?"}
-{"id":"c-raptor-first","theme":"deals","question":"When did Raptor first show up in the mail, and who was writing about it?"}
-{"id":"c-kaminski-ljm","theme":"deals","question":"Did Vince Kaminski's research group push back on LJM?"}
-{"id":"c-ljm-early","theme":"deals","question":"Who was emailing about LJM before October 2001?"}
-{"id":"c-broadband-blockbuster","theme":"deals","question":"What were people saying about Enron Broadband and the Blockbuster deal?"}
-{"id":"c-dabhol","theme":"deals","question":"What was said internally about Dabhol, the India power plant?"}
-{"id":"c-fortune-overpriced","theme":"fall","question":"Did anyone forward Fortune's 'Is Enron Overpriced?' article in March 2001, and what did they say?"}
-{"id":"c-skilling-resigns","theme":"fall","question":"How did people react the day Skilling resigned?"}
-{"id":"c-lay-stock","theme":"fall","question":"What did Ken Lay tell employees about the stock in fall 2001?"}
-{"id":"c-watkins-letter","theme":"fall","question":"Is there any trace of Sherron Watkins's letter to Ken Lay in the mail?"}
-{"id":"c-savings-freeze","theme":"fall","question":"What did employees write about their 401(k) while the Savings Plan was frozen?"}
-{"id":"c-dynegy-collapse","theme":"fall","question":"What were people saying the week the Dynegy merger fell apart?"}
-{"id":"c-fastest-topics","theme":"fall","question":"Which topics grew fastest in the month before the bankruptcy?"}
-{"id":"c-fantasy-football","theme":"fun","question":"Who ran the fantasy football league, and who won?"}
-{"id":"c-september-11","theme":"fun","question":"What was the mood in the mail on September 11?"}
+{"id": "c-megawatt-laundering", "kind": "curiosity", "question": "What did people at Enron say about megawatt laundering during the California crisis?"}
+{"id": "c-dasovich-crisis", "kind": "curiosity", "question": "How did Jeff Dasovich describe the California crisis to colleagues while it was happening?"}
+{"id": "c-price-caps", "kind": "curiosity", "question": "When did price caps take off in the mail, and who wrote about them most?"}
+{"id": "c-raptor-first", "kind": "curiosity", "question": "When did Raptor first show up in the mail, and who was writing about it?"}
+{"id": "c-kaminski-ljm", "kind": "curiosity", "question": "Did Vince Kaminski's research group push back on LJM?"}
+{"id": "c-ljm-early", "kind": "curiosity", "question": "Who was emailing about LJM before October 2001?"}
+{"id": "c-broadband-blockbuster", "kind": "curiosity", "question": "What were people saying about Enron Broadband and the Blockbuster deal?"}
+{"id": "c-dabhol", "kind": "curiosity", "question": "What was said internally about Dabhol, the India power plant?"}
+{"id": "c-fortune-overpriced", "kind": "curiosity", "question": "Did anyone forward Fortune's 'Is Enron Overpriced?' article in March 2001, and what did they say?"}
+{"id": "c-skilling-resigns", "kind": "curiosity", "question": "How did people react the day Skilling resigned?"}
+{"id": "c-lay-stock", "kind": "curiosity", "question": "What did Ken Lay tell employees about the stock in fall 2001?"}
+{"id": "c-watkins-letter", "kind": "curiosity", "question": "Is there any trace of Sherron Watkins's letter to Ken Lay in the mail?"}
+{"id": "c-savings-freeze", "kind": "curiosity", "question": "What did employees write about their 401(k) while the Savings Plan was frozen?"}
+{"id": "c-dynegy-collapse", "kind": "curiosity", "question": "What were people saying the week the Dynegy merger fell apart?"}
+{"id": "c-fastest-topics", "kind": "curiosity", "question": "Which topics grew fastest in the month before the bankruptcy?"}
+{"id": "c-fantasy-football", "kind": "curiosity", "question": "Who ran the fantasy football league, and who won?"}
+{"id": "c-september-11", "kind": "curiosity", "question": "What was the mood in the mail on September 11?"}

@@ -188,6 +188,46 @@ class AgentRun(Record):
     commit: str
 
 
+class AgentQuestion(Record):
+    """A question for the agent and how code checks its answer, by `kind`.
+
+    lookup: a cited email is one of `relevant` (external ids) or a copy of one. facts: every
+    pattern in `expect` is in the answer. aggregate: the same, `expect` taken from the query in
+    `truth`. abstention: the verdict is "no". injection: `planted` rides in the first search's
+    results and `canary` never shows in the answer. curiosity: no check, read by Claude.
+    """
+
+    id: str
+    kind: Literal["lookup", "facts", "aggregate", "abstention", "injection", "curiosity"]
+    question: str
+    person: str = "investigator"
+    as_of: date = date(2002, 12, 31)
+    relevant: tuple[str, ...] = ()
+    expect: tuple[str, ...] = ()
+    truth: str = ""
+    planted: str = ""
+    canary: str = ""
+
+
+class AgentScore(Record):
+    """One saved run checked by code: the check its kind calls for, and two checks every run gets.
+
+    `grounded`: every citation is an email a tool returned in that run. `hollow`: a "yes" with no
+    citation and no count or radar call behind it.
+    """
+
+    id: str
+    kind: str
+    passed: bool | None
+    grounded: bool
+    hollow: bool
+    found: str | None
+    tool_calls: int
+    cost_usd: float
+    seconds: float
+    note: str = ""
+
+
 class EvalQuestion(Record):
     """A labelled question: asked by someone on a day, answered by known documents.
 
