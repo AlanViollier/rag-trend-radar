@@ -6,7 +6,7 @@ from rag_trend_radar.agent.desk import Desk, local_day
 from rag_trend_radar.days import cutoff
 
 # Bump on any change to the prompt or the request shape: saved runs are keyed by it.
-PROMPT_VERSION = 3
+PROMPT_VERSION = 4
 # Thorough runs (owner 2026-11-10): the smoke run stopped after 2 calls every time.
 MAX_TOOL_CALLS = 12
 

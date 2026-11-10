@@ -191,3 +191,19 @@ def test_a_tool_result_never_mixes_search_results_with_text() -> None:
     ToolResult([passage, passage], "two passages")  # type: ignore[list-item]
     with pytest.raises(ValueError, match="mixes"):
         ToolResult([text("Results:"), passage], "mixed")  # type: ignore[list-item]
+
+
+def test_near_the_limit_claude_is_told_and_at_it_asked_to_answer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(loop, "MAX_TOOL_CALLS", 2)
+    client = Scripted(
+        _message("tool_use", _use("search", {"query": "a"})),
+        _message("tool_use", _use("search", {"query": "b"})),
+        _message("end_turn", _answer("Done.\nFound: yes")),
+    )
+    run = loop.run(DESK, "Q", MODEL, client=client.client)
+    told = [r["messages"][-1]["content"][-1].get("text", "") for r in client.requests[1:]]
+    assert told == ["1 tool calls left: start wrapping up.", loop._reminder(0)]
+    assert client.requests[2]["tool_choice"]["type"] == "none"
+    assert run.found == "yes"

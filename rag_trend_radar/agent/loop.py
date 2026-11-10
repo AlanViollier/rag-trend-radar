@@ -15,6 +15,7 @@ import anthropic
 from anthropic.types.beta import (
     BetaMessage,
     BetaMessageParam,
+    BetaTextBlockParam,
     BetaToolChoiceAutoParam,
     BetaToolChoiceNoneParam,
     BetaToolParam,
@@ -34,6 +35,9 @@ from rag_trend_radar.schema import AgentRun, AgentStep, Citation
 # averaged 4 cents at medium effort and 2 tool calls (2026-11-10); thorough runs cost more.
 MAX_COST_USD = 0.60
 OUT_OF_CALLS = "No more tool calls: answer now from what you already have."
+# Told with the tool results once this few calls are left, so a thorough run wraps up instead of
+# being cut off mid-search (the first thorough run ended with no answer, 2026-11-10).
+WARN_AT = 3
 NO_TOOLS: BetaToolChoiceNoneParam = {"type": "none"}
 ANY_TOOL: BetaToolChoiceAutoParam = {"type": "auto"}
 
@@ -106,10 +110,12 @@ def run(
         uses = [block for block in response.content if block.type == "tool_use"]
         if response.stop_reason != "tool_use" or not uses:
             break
-        results: list[BetaToolResultBlockParam] = []
+        results: list[BetaToolResultBlockParam | BetaTextBlockParam] = []
         for use in uses:
             calls += 1
             results.append(_use(desk, use.id, use.name, use.input, out_of_calls, record))
+        if (left := _left(calls, cost)) <= WARN_AT:
+            results.append({"type": "text", "text": _reminder(left)})
         messages.append({"role": "user", "content": results})
     answer, found = verdict("".join(b.text for b in response.content if b.type == "text"))
     result = AgentRun(
@@ -172,6 +178,17 @@ def _use(
         )
     )
     return {"type": "tool_result", "tool_use_id": use_id, "content": list(done.blocks)}
+
+
+def _left(calls: int, cost: float) -> int:
+    # Calls still allowed; none once the cost cap is reached.
+    return 0 if cost >= MAX_COST_USD else max(MAX_TOOL_CALLS - calls, 0)
+
+
+def _reminder(left: int) -> str:
+    if left == 0:
+        return "You have no tool calls left. Write your final answer now from what you found."
+    return f"{left} tool calls left: start wrapping up."
 
 
 def _turn(model: str, response: BetaMessage, seconds: float) -> AgentStep:
