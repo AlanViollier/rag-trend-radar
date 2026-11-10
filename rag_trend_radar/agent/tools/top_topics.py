@@ -39,15 +39,25 @@ class Input(ToolInput):
 
 
 def run(desk: Desk, given: Input) -> ToolResult:
-    """Each shown topic's recent mail at the first and last week of the range, ranked."""
+    """Each shown topic's recent mail the week before the range and at its last week, ranked.
+
+    Growth counts from the week before the first: a one-week range measured from its own first
+    week gave every topic +0 and hid the Dynegy merger the week it fell apart (2026-11-10).
+    """
     until = desk.until(given.until)
     first, last = topics.weeks(given.since or until - DEFAULT_SPAN, until)
-    rows = desk.conn.execute(ROWS, (first, last)).fetchall()
+    before = first - timedelta(weeks=1)
+    rows = desk.conn.execute(ROWS, (before, last)).fetchall()
     if not rows:
         return ToolResult([text(f"No radar weeks between {first} and {last}.")], "no weeks")
     weeks: dict[int, dict[date, tuple[int, int, list[str]]]] = defaultdict(dict)
+    baseline: dict[int, int] = {}
     for blob, built, week, recent, mail, keywords in rows:
-        if topics.kind(blob, built) == "topic":
+        if topics.kind(blob, built) != "topic":
+            continue
+        if week == before:
+            baseline[blob] = recent
+        else:
             weeks[blob][week] = (recent, mail, keywords)
     alerts: dict[int, int] = dict(
         desk.conn.execute(
@@ -62,17 +72,16 @@ def run(desk: Desk, given: Input) -> ToolResult:
         wanted = f"{label} {' '.join(w for row in seen.values() for w in row[2])}".lower()
         if given.words and not all(word in wanted for word in given.words.lower().split()):
             continue
-        start, end = (
-            (seen[first][0] if first in seen else 0),
-            (seen[last][0] if last in seen else 0),
-        )
+        start, end = baseline.get(blob, 0), (seen[last][0] if last in seen else 0)
         size = sum(mail for _, mail, _ in seen.values()) / len(seen)
         found.append(
             (blob, label, start, end, max(r for r, _, _ in seen.values()), size, seen[latest][2])
         )
     key = (lambda t: t[3] - t[2]) if given.order == "growth" else (lambda t: t[5])
     found.sort(key=key, reverse=True)
-    lines = [f"Topics, weeks ending {first} to {last}, by {given.order}:"] + [
+    lines = [
+        f"Topics, weeks ending {first} to {last}, by {given.order} since week ending {before}:"
+    ] + [
         f"topic {blob} · {label} · recent mail {start} → {end} ({end - start:+}) · peak {peak}"
         f" · {size:.0f} mail a week · {alerts.get(blob, 0)} alerts · keywords: {', '.join(kw[:6])}"
         for blob, label, start, end, peak, size, kw in found[: min(given.limit, MAX_TOPICS)]

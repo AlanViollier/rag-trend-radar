@@ -22,7 +22,7 @@ from rag_trend_radar.exceptions import ToolRefused
 
 # Bump when any tool's behaviour changes without its description changing: saved runs are keyed
 # by it (a fixed mail_counts was read back as the broken run's answer, 2026-11-10).
-TOOLS_VERSION = 2
+TOOLS_VERSION = 3
 
 
 @dataclass(frozen=True)

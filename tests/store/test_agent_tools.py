@@ -194,7 +194,7 @@ def test_the_radar_is_for_the_investigator_only() -> None:
 
 @pytest.mark.usefixtures("world")
 def test_the_investigator_reads_topics_and_alerts() -> None:
-    top = _text(_run("investigator", "top_topics", {"since": "2001-10-01", "words": "quokka"}))
+    top = _text(_run("investigator", "top_topics", {"since": "2001-10-08", "words": "quokka"}))
     assert "topic 900001" in top
     assert "2 → 40" in top
     assert "topic 900001" in _text(_run("investigator", "alerts", {"since": "2001-10-01"}))
@@ -279,3 +279,12 @@ def test_a_phrase_with_small_words_still_counts() -> None:
         "investigator", "mail_counts", {"words": ["ledger from a lookalike"], "by": "total"}
     )
     assert found.summary.startswith("1 emails")
+
+
+@pytest.mark.usefixtures("world")
+def test_a_one_week_range_grows_from_the_week_before() -> None:
+    # The topic has a week ending Oct 7 (2) and Oct 28 (40); the week before Oct 28 had none.
+    one_week = _text(
+        _run("investigator", "top_topics", {"since": "2001-10-22", "until": "2001-10-28"})
+    )
+    assert "0 → 40 (+40)" in one_week
