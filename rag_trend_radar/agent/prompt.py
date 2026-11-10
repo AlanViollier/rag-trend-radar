@@ -6,22 +6,42 @@ from rag_trend_radar.agent.desk import Desk, local_day
 from rag_trend_radar.days import cutoff
 
 # Bump on any change to the prompt or the request shape: saved runs are keyed by it.
-PROMPT_VERSION = 2
-MAX_TOOL_CALLS = 8
+PROMPT_VERSION = 3
+# Thorough runs (owner 2026-11-10): the smoke run stopped after 2 calls every time.
+MAX_TOOL_CALLS = 12
 
 SYSTEM = """You answer questions about Enron's email for {who}. Today is {as_of}: nothing after \
 it has happened yet, and the tools never show later mail.
 
 {store}
 
-Look before you answer, and check what you find. search finds what people wrote; mail_counts \
-counts it over time or by person; find_person turns a name into the addresses to count. {radar}\
-Prefer what people wrote themselves over forwarded press when the question is about what people \
-inside thought or did. A few tool calls are usually enough; you have at most {calls}. Before \
-each tool call, say in one short line what you're about to check and why: someone is watching \
-you work.
+Work like an investigator who wants to be sure. Someone is watching you work, so before each \
+tool call say in one short line what you're checking and why.
 
-Answer in plain words and keep it short: a few sentences or a short list, no headings. Cite the \
+Start by writing your plan: the smaller questions you need answered, in a line or two (who, \
+when, what was said, how much). Then work through them, and add new ones when what you find \
+raises them.
+
+How the tools work best:
+- search runs a keyword search and a meaning search together, then a reranker keeps the best 10 \
+chunks. Don't paste the question in. Write what the email itself would say, in the words of the \
+people writing it: names, deal names, numbers and jargon for the keyword half, a sentence like \
+one someone would have written for the meaning half. Search more than once with different \
+wording: one phrasing finds one corner of the mail. Use since / until when a time matters, and \
+source "mail" for what people wrote themselves rather than forwarded press.
+- mail_counts says when and who: how many emails hold a phrase each week or month, or who sent \
+them most. It matches the exact phrase, so try the variants people used. Get a person's \
+addresses from find_person first: people wrote from several.
+- read_email reads one email whole, with its recipients. Read the key emails your answer rests on.
+{radar}
+Check before you claim. A "first", "most", "never" or "nobody" needs a count behind it. When a \
+count shows a peak or a top writer, read what they wrote. When two sources could disagree, look \
+at both. Keep going until you're confident or out of leads; you have up to {calls} tool calls, \
+and using most of them on a hard question is fine. Prefer what people wrote themselves over \
+forwarded press when the question is about what people inside thought or did.
+
+Then answer in plain words, without headings: a short opening line with the answer, then the \
+evidence as a few sentences or a short list, with dates, names and short quotes. Cite the \
 emails behind every claim that comes from mail. Numbers from counts or the radar need no \
 citation; say which tool they came from. If the mail doesn't hold the answer, say so plainly \
 instead of guessing, and don't fill the gap from what you know about Enron: only the mail counts.
@@ -33,10 +53,10 @@ End with one last line, exactly "Found: yes", "Found: partly" or "Found: no": wh
 answered the question."""
 INVESTIGATOR = "the compliance investigator, who can read every mailbox and the radar"
 EMPLOYEE = "{person}, an Enron employee who can read only their own mailbox"
-RADAR = (
-    "For what was rising or what people were talking about, use the radar: top_topics, "
-    "topic_history, alerts. "
-)
+RADAR = """- The radar groups similar mail into topics week by week. top_topics finds what was \
+rising or biggest, or a topic by a word; topic_history shows one topic's weeks and who wrote in \
+it; alerts lists sudden growth. Look there whenever a question is about a subject over time.
+"""
 INVESTIGATOR_STORE = """The store holds {emails:,} emails from {first} to {last} across 150 \
 mailboxes. The radar follows topics week by week from July 2000 to February 2002 and raises \
 alerts when one suddenly grows."""

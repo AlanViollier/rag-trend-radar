@@ -30,9 +30,9 @@ from rag_trend_radar.exceptions import AnswerRefused, ToolRefused
 from rag_trend_radar.run_log import commit
 from rag_trend_radar.schema import AgentRun, AgentStep, Citation
 
-# A question that runs past this stops calling tools and answers with what it has. A normal
-# question is expected at 5 to 8 cents (2026-11-10 estimate, before the smoke run).
-MAX_COST_USD = 0.40
+# A question that runs past this stops calling tools and answers with what it has. The smoke run
+# averaged 4 cents at medium effort and 2 tool calls (2026-11-10); thorough runs cost more.
+MAX_COST_USD = 0.60
 OUT_OF_CALLS = "No more tool calls: answer now from what you already have."
 NO_TOOLS: BetaToolChoiceNoneParam = {"type": "none"}
 ANY_TOOL: BetaToolChoiceAutoParam = {"type": "auto"}
@@ -82,9 +82,9 @@ def run(
             tool_choice=NO_TOOLS if out_of_calls else ANY_TOOL,
             messages=messages,
             thinking={"type": "adaptive", "display": "summarized"},
-            # Multi-step tool use: medium keeps the thinking short between calls (claude-api
-            # guidance for Sonnet 5.5); the summaries are what page 2 shows.
-            output_config={"effort": "medium"},
+            # High (owner 2026-11-10): at medium the smoke run stopped at the first plausible
+            # result; page 2 wants answers that checked.
+            output_config={"effort": "high"},
             # The history only grows, so each call reads the last one's prefix from the cache.
             cache_control={"type": "ephemeral"},
             betas=["server-side-fallback-2026-07-01"],
