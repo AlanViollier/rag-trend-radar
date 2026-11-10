@@ -111,9 +111,15 @@ def run(
         if response.stop_reason != "tool_use" or not uses:
             break
         results: list[BetaToolResultBlockParam | BetaTextBlockParam] = []
+        asides: list[BetaTextBlockParam] = []
         for use in uses:
             calls += 1
-            results.append(_use(desk, use.id, use.name, use.input, out_of_calls, record))
+            given, aside = _use(desk, use.id, use.name, use.input, out_of_calls, record)
+            results.append(given)
+            if aside:
+                asides.append({"type": "text", "text": aside})
+        # Tool results first: the API wants every result before any text in the message.
+        results += asides
         if (left := _left(calls, cost)) <= WARN_AT:
             results.append({"type": "text", "text": _reminder(left)})
         messages.append({"role": "user", "content": results})
@@ -140,7 +146,7 @@ def run(
 
 def _use(
     desk: Desk, use_id: str, name: str, arguments: object, refused: bool, record: Watcher
-) -> BetaToolResultBlockParam:
+) -> tuple[BetaToolResultBlockParam, str]:
     # One tool call: run it and record it. A refusal goes back to Claude as an error result, so
     # it can correct its arguments or move on.
     begun = time.perf_counter()
@@ -161,12 +167,13 @@ def _use(
                 seconds=seconds,
             )
         )
-        return {
+        refusal: BetaToolResultBlockParam = {
             "type": "tool_result",
             "tool_use_id": use_id,
             "content": str(error),
             "is_error": True,
         }
+        return refusal, ""
     record(
         AgentStep(
             kind="tool",
@@ -177,7 +184,7 @@ def _use(
             seconds=time.perf_counter() - begun,
         )
     )
-    return {"type": "tool_result", "tool_use_id": use_id, "content": list(done.blocks)}
+    return {"type": "tool_result", "tool_use_id": use_id, "content": list(done.blocks)}, done.aside
 
 
 def _left(calls: int, cost: float) -> int:

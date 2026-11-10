@@ -1,7 +1,7 @@
 """What every tool shares: who is asking as of which day, and what a tool hands back."""
 
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -22,12 +22,16 @@ class Desk:
     """One run of the agent: a connection already set to `person`, and the day it's asked on.
 
     Every tool reads through `conn`, so row-level security decides what it sees (rule 3), and
-    stops at `as_of` (rule 2): a date Claude asks for past it is pulled back to it.
+    stops at `as_of` (rule 2): a date Claude asks for past it is pulled back to it. `shown` and
+    `read` are the chunks and whole emails this run has already handed Claude, so search sends
+    new ones instead (a fifth to a quarter of results were repeats, 2026-11-10).
     """
 
     conn: psycopg.Connection[TupleRow]
     person: str
     as_of: date
+    shown: set[int] = field(default_factory=set)
+    read: set[int] = field(default_factory=set)
 
     @property
     def investigator(self) -> bool:
@@ -41,11 +45,16 @@ class Desk:
 
 @dataclass(frozen=True)
 class ToolResult:
-    """What a tool returns: blocks for Claude, one line for the person watching, its documents."""
+    """What a tool returns: blocks for Claude, one line for the person watching, its documents.
+
+    `aside` is text for Claude that can't sit in the result itself (a result of search results
+    takes nothing else): the loop sends it right after.
+    """
 
     blocks: Sequence[Block]
     summary: str
     documents: tuple[int, ...] = ()
+    aside: str = ""
 
     def __post_init__(self) -> None:
         # The API refuses a tool result mixing search results with anything else (400, found on

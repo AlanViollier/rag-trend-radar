@@ -15,7 +15,8 @@ from rag_trend_radar.search import hybrid, pipeline
 DESCRIPTION = """Search the mail this person can read: keyword and meaning search, reranked, the \
 best 10 chunks back as citable results, best first. Use it to find what someone wrote or said. \
 Each result's title starts with its date and source (mail, press or bulk); its source names its \
-document id, and read_email gives the whole email. Narrow with `since` / `until` when the \
+document id, and read_email gives the whole email. A run never gets the same chunk twice: \
+results already shown are left out and named, and newer ones take their place. Narrow with `since` / `until` when the \
 question is about a time, and `source` "mail" for what people wrote themselves rather than \
 forwarded press."""
 
@@ -48,9 +49,18 @@ def run(desk: Desk, given: Input) -> ToolResult:
         since=given.since,
         keep=keep,
     )
-    hits = pipeline.final(ranked, hybrid.DEPTH)
+    fresh = [h for h in ranked if h.chunk_id not in desk.shown and h.document_id not in desk.read]
+    hits = pipeline.final(fresh, hybrid.DEPTH)
+    again = [h.document_id for h in pipeline.final(ranked, hybrid.DEPTH) if h not in fresh]
+    aside = (
+        f"Left out, already shown in this run: documents {', '.join(map(str, dict.fromkeys(again)))}."
+        if again
+        else ""
+    )
     if not hits:
-        return ToolResult([text("Nothing matches in the mail this person can read.")], "0 results")
+        nothing = "Nothing new matches in the mail this person can read."
+        return ToolResult([text(f"{nothing} {aside}".strip())], "0 new results")
+    desk.shown.update(hit.chunk_id for hit in hits)
     sent: dict[int, datetime] = dict(
         desk.conn.execute(
             "SELECT id, sent_at FROM documents WHERE id = ANY(%s)",
@@ -68,4 +78,6 @@ def run(desk: Desk, given: Input) -> ToolResult:
         blocks.append(block)
     kinds = [source(hit.text) for hit in hits]
     summary = f"{len(hits)} results, {kinds.count(Source.MAIL)} of them people's own mail"
-    return ToolResult(blocks, summary, tuple(dict.fromkeys(hit.document_id for hit in hits)))
+    if again:
+        summary += f", {len(again)} repeats left out"
+    return ToolResult(blocks, summary, tuple(dict.fromkeys(h.document_id for h in hits)), aside)

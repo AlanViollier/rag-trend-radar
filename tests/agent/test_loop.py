@@ -90,7 +90,7 @@ def offline(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> list[str]:
         called.append(name)
         if name == "nope":
             raise ToolRefused("no tool 'nope' for investigator")
-        return ToolResult([text("12 emails match.")], "12 emails", (42,))
+        return ToolResult([text("12 emails match.")], "12 emails", (42,), aside="Left out: 7.")
 
     monkeypatch.setattr(tools, "call", fake_call)
     monkeypatch.setattr(tools, "definitions", lambda desk: [])
@@ -207,3 +207,14 @@ def test_near_the_limit_claude_is_told_and_at_it_asked_to_answer(
     assert told == ["1 tool calls left: start wrapping up.", loop._reminder(0)]
     assert client.requests[2]["tool_choice"]["type"] == "none"
     assert run.found == "yes"
+
+
+def test_an_aside_follows_the_tool_results_as_text() -> None:
+    client = Scripted(
+        _message("tool_use", _use("search", {"query": "a"})),
+        _message("end_turn", _answer("A\nFound: yes")),
+    )
+    loop.run(DESK, "Q", MODEL, client=client.client)
+    sent = client.requests[1]["messages"][-1]["content"]
+    assert [block["type"] for block in sent] == ["tool_result", "text"]
+    assert sent[1]["text"] == "Left out: 7."

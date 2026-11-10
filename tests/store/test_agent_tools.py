@@ -207,3 +207,35 @@ def test_arguments_outside_the_schema_are_refused() -> None:
         _run("investigator", "mail_counts", {"words": "quokka", "sql": "DROP TABLE documents"})
     with pytest.raises(ToolRefused):
         _run("investigator", "search", {})
+
+
+@pytest.mark.usefixtures("world", "no_models")
+def test_a_run_never_gets_the_same_chunk_twice(world: dict[str, int]) -> None:
+    with db.connect("rowe-p") as conn:
+        desk = Desk(conn, "rowe-p", AS_OF)
+        first = call(desk, "search", {"query": "quokka ledger"})
+        again = call(desk, "search", {"query": "quokka ledger"})
+    assert len(first.documents) == 3
+    assert again.documents == ()
+    assert again.summary == "0 new results"
+    assert all(str(d) in again.aside or str(d) in _text(again) for d in first.documents)
+
+
+@pytest.mark.usefixtures("world", "no_models")
+def test_an_email_read_whole_leaves_later_searches(world: dict[str, int]) -> None:
+    with db.connect("rowe-p") as conn:
+        desk = Desk(conn, "rowe-p", AS_OF)
+        call(desk, "read_email", {"document_id": world["rowe-0"]})
+        found = call(desk, "search", {"query": "quokka ledger"})
+    assert world["rowe-0"] not in found.documents
+    assert len(found.documents) == 2
+    assert str(world["rowe-0"]) in found.aside
+
+
+@pytest.mark.usefixtures("world")
+def test_addresses_may_come_as_one_comma_separated_string() -> None:
+    listed = _run("investigator", "mail_counts", {"senders": ["rowe@enron.com"], "by": "total"})
+    joined = _run(
+        "investigator", "mail_counts", {"senders": "rowe@enron.com, x@y.com", "by": "total"}
+    )
+    assert listed.summary == joined.summary

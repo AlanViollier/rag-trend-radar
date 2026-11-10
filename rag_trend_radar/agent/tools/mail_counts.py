@@ -8,7 +8,7 @@ from datetime import date, datetime
 from typing import Literal
 
 from psycopg import sql
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from rag_trend_radar.agent.desk import Desk, ToolInput, ToolResult, local_day, text, week_of
 from rag_trend_radar.days import cutoff, opening
@@ -52,6 +52,17 @@ class Input(ToolInput):
     since: date | None = Field(None, description="Only mail sent on or after this day.")
     until: date | None = Field(None, description="Only mail sent on or before this day.")
     by: Literal["week", "month", "sender", "total"] = Field("week", description="How to group.")
+
+    @field_validator("senders", "recipients", mode="before")
+    @classmethod
+    def _split(cls, value: object) -> object:
+        # Claude sometimes sends "a@x.com,b@x.com" for a list (smoke run 2026-11-10): refused,
+        # it didn't retry, and a count its answer needed was never made.
+        return (
+            [part.strip() for part in value.split(",") if part.strip()]
+            if isinstance(value, str)
+            else value
+        )
 
 
 def run(desk: Desk, given: Input) -> ToolResult:
