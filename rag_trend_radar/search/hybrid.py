@@ -9,7 +9,7 @@ from pgvector import HalfVector
 from psycopg import sql
 from psycopg.rows import TupleRow
 
-from rag_trend_radar.days import cutoff
+from rag_trend_radar.days import cutoff, opening
 from rag_trend_radar.schema import SearchHit
 from rag_trend_radar.search import keyword, vector
 from rag_trend_radar.search.ranking import hits
@@ -29,8 +29,12 @@ def search(
     model: str,
     as_of: date,
     k: int,
+    since: date | None = None,
 ) -> list[SearchHit]:
-    """Top `k` chunks by RRF: each list scores 1 / (60 + rank), summed per chunk."""
+    """Top `k` chunks by RRF: each list scores 1 / (60 + rank), summed per chunk.
+
+    Only mail sent from `since` (default: any time) through `as_of` takes part.
+    """
     fused = sql.SQL(
         "SELECT id, sum(1.0 / (%(rrf_k)s + rank)) AS score FROM ("
         " SELECT id, row_number() OVER (ORDER BY score DESC) AS rank FROM ({keyword}) kw"
@@ -41,6 +45,7 @@ def search(
     params = {
         "query": query,
         "vector": HalfVector(query_vector),
+        "since": opening(since),
         "cutoff": cutoff(as_of),
         "depth": DEPTH,
         "rrf_k": RRF_K,

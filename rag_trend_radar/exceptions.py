@@ -37,3 +37,7 @@ class ExportRefused(AppError):
 
 class OtherStore(AppError):
     """Saved weeks from another store: their chunk ids would name other mail here."""
+
+
+class ToolRefused(AppError):
+    """The agent asked for a tool its person isn't offered, or with arguments that don't fit."""

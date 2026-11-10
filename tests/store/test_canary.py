@@ -17,7 +17,7 @@ from psycopg import sql
 from psycopg.rows import TupleRow
 
 from rag_trend_radar import index
-from rag_trend_radar.days import cutoff
+from rag_trend_radar.days import EARLIEST, cutoff
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.evals import leaks
 from rag_trend_radar.evals.retrieval import rankings
@@ -154,7 +154,12 @@ def test_a_filtered_hnsw_scan_still_reaches_the_one_vector_of_its_day() -> None:
         hits = vector.search(conn, QUERY, MODEL, date(2001, 9, 30), 5)
         plan = conn.execute(
             sql.SQL("EXPLAIN {}").format(vector.ranked(conn, MODEL, DIMS)),
-            {"vector": HalfVector(QUERY), "cutoff": cutoff(date(2001, 9, 30)), "depth": 5},
+            {
+                "vector": HalfVector(QUERY),
+                "since": EARLIEST,
+                "cutoff": cutoff(date(2001, 9, 30)),
+                "depth": 5,
+            },
         ).fetchall()
     # Without the HNSW index in the plan this test proves nothing: it would pass with the bug.
     assert any("embedding_idx" in line for (line,) in plan)
@@ -167,7 +172,12 @@ def test_an_employee_gets_all_their_vectors_and_only_theirs_without_the_index() 
         hits = vector.search(conn, QUERY, MODEL, date(2001, 9, 30), 5)
         plan = conn.execute(
             sql.SQL("EXPLAIN {}").format(vector.ranked(conn, MODEL, DIMS)),
-            {"vector": HalfVector(QUERY), "cutoff": cutoff(date(2001, 9, 30)), "depth": 5},
+            {
+                "vector": HalfVector(QUERY),
+                "since": EARLIEST,
+                "cutoff": cutoff(date(2001, 9, 30)),
+                "depth": 5,
+            },
         ).fetchall()
     assert not any("embedding_idx" in line for (line,) in plan)
     assert [CANARY in hit.text for hit in hits] == [True]

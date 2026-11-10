@@ -13,12 +13,11 @@ from rag_trend_radar.db import connect as db
 from rag_trend_radar.run_log import RunLog, summarise
 from rag_trend_radar.schema import RadarRun
 from rag_trend_radar.site import export
-from rag_trend_radar.site.records import AlertNote, Moment, Naming, PageEvent
+from rag_trend_radar.site.records import NAMES, AlertNote, Moment, Naming, PageEvent
 from rag_trend_radar.trends import build, frames, topics
 
 EVENTS = Path("evals/events.jsonl")
 MOMENTS = Path("evals/moments.jsonl")
-NAMES = Path("evals/blob_names.jsonl")
 ALERT_NOTES = Path("evals/alert_notes.jsonl")
 PAGE = Path("docs/radar/index.html")
 

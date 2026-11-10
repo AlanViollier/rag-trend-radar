@@ -1,6 +1,7 @@
 """The data inside the page. A blob's lists run week by week from its `first` week."""
 
 from datetime import date
+from pathlib import Path
 from typing import Literal
 
 from rag_trend_radar.schema import Record
@@ -57,6 +58,10 @@ class PageEvent(Record):
     id: str
     day: date
     title: str
+
+
+# Every blob as the naming pass read it, one Naming a line.
+NAMES = Path("evals/blob_names.jsonl")
 
 
 class Naming(Record):

@@ -10,10 +10,18 @@ from psycopg.rows import TupleRow
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.exceptions import NoDaysLoaded
 
+# A search with no start date: earlier than any mail (junk dates are quarantined at staging).
+EARLIEST = datetime(1900, 1, 1, tzinfo=ZoneInfo("UTC"))
+
 
 def cutoff(as_of: date) -> datetime:
     """The instant `as_of` ends in the store's local days: a search sees only mail sent before."""
     return datetime.combine(as_of + timedelta(days=1), time(), ZoneInfo(get_settings().timezone))
+
+
+def opening(day: date | None) -> datetime:
+    """The instant `day` starts in the store's local days; with no day, before any mail."""
+    return EARLIEST if day is None else cutoff(day - timedelta(days=1))
 
 
 def last_day(conn: psycopg.Connection[TupleRow]) -> date:

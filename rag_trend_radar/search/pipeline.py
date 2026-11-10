@@ -8,6 +8,7 @@ import psycopg
 from numpy.typing import NDArray
 from psycopg.rows import TupleRow
 
+from rag_trend_radar.ingest.kinds import Source, source
 from rag_trend_radar.schema import SearchHit
 from rag_trend_radar.search import hybrid
 from rag_trend_radar.search.collapse import collapse
@@ -23,9 +24,17 @@ def reranked(
     as_of: date,
     reranker: str,
     depth: int,
+    since: date | None = None,
+    keep: Source | None = None,
 ) -> list[SearchHit]:
-    """Hybrid search's `depth` best chunks, reordered by the cross-encoder."""
-    candidates = hybrid.search(conn, question, query_vector, model, as_of, depth)
+    """Hybrid search's `depth` best chunks, reordered by the cross-encoder.
+
+    `since` and `keep` narrow the candidates before the rerank, which is the slow part: mail from
+    that day on, chunks of that source only. The agent narrows; `ask` and the evals don't.
+    """
+    candidates = hybrid.search(conn, question, query_vector, model, as_of, depth, since)
+    if keep is not None:
+        candidates = [hit for hit in candidates if source(hit.text) is keep]
     return rerank(question, candidates, reranker, top=depth)
 
 

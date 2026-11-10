@@ -1,6 +1,7 @@
 """Every record that crosses a module boundary."""
 
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -140,6 +141,50 @@ class Answer(Record):
     text: str
     citations: tuple[Citation, ...]
     cost_usd: float
+
+
+class AgentStep(Record):
+    """One thing the agent did, in order: a thought, a tool call, or a call to Claude coming back.
+
+    `thinking` holds Claude's summarised reasoning (the raw reasoning never leaves the API).
+    `tool` holds its name, the arguments as Claude sent them (JSON), the one-line summary and the
+    documents it returned. `turn` holds one API call's tokens and cost.
+    """
+
+    kind: Literal["thinking", "tool", "turn"]
+    text: str = ""
+    tool: str = ""
+    arguments: str = ""
+    summary: str = ""
+    documents: tuple[int, ...] = ()
+    error: bool = False
+    seconds: float = 0.0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cache_read: int = 0
+    cache_write: int = 0
+    cost_usd: float = 0.0
+
+
+class AgentRun(Record):
+    """One question worked by the agent, whole: the trace page 2 replays and the evals score.
+
+    `found` is the verdict Claude ends on: yes, no or partly; None when it gave none.
+    """
+
+    question: str
+    person: str
+    as_of: date
+    model: str
+    prompt_version: int
+    steps: tuple[AgentStep, ...]
+    answer: str
+    found: Literal["yes", "no", "partly"] | None
+    citations: tuple[Citation, ...]
+    cost_usd: float
+    seconds: float
+    started: datetime
+    commit: str
 
 
 class EvalQuestion(Record):
