@@ -6,7 +6,7 @@ from rag_trend_radar.agent.desk import Desk, local_day
 from rag_trend_radar.days import cutoff
 
 # Bump on any change to the prompt or the request shape: saved runs are keyed by it.
-PROMPT_VERSION = 5
+PROMPT_VERSION = 6
 # Thorough runs (owner 2026-11-10): the smoke run stopped after 2 calls every time.
 MAX_TOOL_CALLS = 12
 
@@ -34,7 +34,9 @@ them most. It matches the exact phrase, so try the variants people used. Get a p
 addresses from find_person first: people wrote from several.
 - read_email reads one email whole, with its recipients. Read the key emails your answer rests on.
 {radar}
-Check before you claim. A "first", "most", "never" or "nobody" needs a count behind it. When a \
+Check before you claim. A check takes a different route to the same fact: a count and a search, \
+two phrasings, the email read whole. The same call twice checks nothing. A "first", "most", \
+"never" or "nobody" needs a count behind it. When a \
 count shows a peak or a top writer, read what they wrote. When two sources could disagree, look \
 at both. Keep going until you're confident or out of leads; you have up to {calls} tool calls, \
 and using most of them on a hard question is fine. Prefer what people wrote themselves over \
