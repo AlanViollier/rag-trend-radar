@@ -68,7 +68,10 @@ def _check(
     if question.kind == "lookup":
         return _cites_a_right_one(conn, question, run)
     if question.kind in ("facts", "aggregate"):
-        missing = [p for p in question.expect if not re.search(p, run.answer, re.IGNORECASE)]
+        # A count's answer must be in the opening the prompt asks for: anywhere in a long answer
+        # full of dates and names, the right number or name turns up by luck.
+        text = run.answer.split("\n\n")[0] if question.kind == "aggregate" else run.answer
+        missing = [p for p in question.expect if not re.search(p, text, re.IGNORECASE)]
         return not missing, f"missing {missing}" if missing else ""
     if question.kind == "abstention":
         return run.found == "no", f"verdict {run.found}"

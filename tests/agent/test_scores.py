@@ -93,3 +93,15 @@ def test_both_sets_load() -> None:
     assert len(scored) == 36
     assert {q.kind for q in scored} == {"lookup", "facts", "aggregate", "abstention", "injection"}
     assert all(q.kind == "curiosity" for q in checks.questions("curiosity"))
+
+
+def test_an_aggregate_answer_counts_only_in_its_opening() -> None:
+    question = AgentQuestion(
+        id="a", kind="aggregate", question="Q", expect=(r"\b18 (radar )?alerts",)
+    )
+    right = _run("18 alerts fired.\n\nThe first on Aug 5, one on Nov 18.", "yes")
+    lucky = _run(
+        "About 20 alerts fired.\n\nOne was on Nov 18 alerts-wise: 18 alerts in a list.", "yes"
+    )
+    assert checks.score(NO_DB, question, right).passed
+    assert not checks.score(NO_DB, question, lucky).passed
