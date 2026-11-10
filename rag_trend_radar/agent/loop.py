@@ -254,7 +254,8 @@ def _cache_path(
         json.dumps(offered, sort_keys=True).encode(), digest_size=8
     ).hexdigest()
     key = json.dumps(
-        [PROMPT_VERSION, model, desk.person, desk.as_of.isoformat(), question, prompt, tools_hash]
+        [PROMPT_VERSION, tools.TOOLS_VERSION, model, desk.person, desk.as_of.isoformat()]
+        + [question, prompt, tools_hash]
         + ([planted] if planted else []),
         sort_keys=True,
     )
