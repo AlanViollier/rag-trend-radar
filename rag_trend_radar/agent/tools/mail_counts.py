@@ -3,6 +3,7 @@
 Fixed SQL with Claude's values as parameters, never SQL Claude writes (STATE, 2026-11-09).
 """
 
+import re
 from collections import Counter
 from datetime import date, datetime
 from typing import Literal
@@ -34,6 +35,47 @@ LEAD = sql.SQL(
 # word, so "LJM" alone missed 3 of Kean's 30 emails (2026-11-10). An email holding any phrase
 # counts once.
 PHRASES = " AND d.id IN (SELECT c.document_id FROM chunks c WHERE {})"
+# The index drops these (stopwords_language=english, the Lucene list) but keeps their positions,
+# so "implode in a wave" matched nothing as a plain phrase, against 53 chunks by text (2026-11-10).
+# A phrase holding them may skip that many positions plus one: 53 of 53 on that phrase, 11 of 11
+# on "layman on the street". A phrase without them stays exact.
+STOP_WORDS = frozenset(
+    [
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "be",
+        "but",
+        "by",
+        "for",
+        "if",
+        "in",
+        "into",
+        "is",
+        "it",
+        "no",
+        "not",
+        "of",
+        "on",
+        "or",
+        "such",
+        "that",
+        "the",
+        "their",
+        "then",
+        "there",
+        "these",
+        "they",
+        "this",
+        "to",
+        "was",
+        "will",
+        "with",
+    ]
+)
 SENDERS = sql.SQL(" AND lower(e.sender) = ANY(%(senders)s)")
 RECIPIENTS = sql.SQL(
     " AND (e.to_addrs && %(recipients)s OR e.cc_addrs && %(recipients)s"
@@ -76,9 +118,7 @@ def run(desk: Desk, given: Input) -> ToolResult:
     """The matching emails counted in Python, after one query fetches when and who."""
     query = BASE.format(lead=LEAD if given.source != "any" else sql.SQL("NULL"))
     if given.words:
-        matches = sql.SQL(" OR ").join(
-            sql.SQL("c.text ### {}").format(sql.Literal(phrase)) for phrase in given.words
-        )
+        matches = sql.SQL(" OR ").join(_phrase(phrase) for phrase in given.words)
         query += sql.SQL(PHRASES).format(matches)
     if given.senders:
         query += SENDERS
@@ -110,6 +150,15 @@ def run(desk: Desk, given: Input) -> ToolResult:
     lines = [f"{len(rows):,} emails match. First {days[0]}, last {days[-1]}."]
     lines += _grouped(given.by, days, [sender for _, sender, _ in rows])
     return ToolResult([text("\n".join(lines))], f"{len(rows):,} emails, {days[0]} to {days[-1]}")
+
+
+def _phrase(phrase: str) -> sql.Composable:
+    dropped = sum(word in STOP_WORDS for word in re.findall(r"[a-z0-9']+", phrase.lower()))
+    if not dropped:
+        return sql.SQL("c.text ### {}").format(sql.Literal(phrase))
+    return sql.SQL("c.text ### {}::pdb.slop({})").format(
+        sql.Literal(phrase), sql.Literal(dropped + 1)
+    )
 
 
 def _grouped(by: str, days: list[date], senders: list[str]) -> list[str]:

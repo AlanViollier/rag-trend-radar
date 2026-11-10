@@ -270,3 +270,12 @@ def test_several_phrases_count_each_email_once() -> None:
     assert total(["lookalike", "note 0"]).startswith("2 emails")
     # Every email holds both words: counted once each, not twice.
     assert total(["quokka", "ledger"]).startswith("4 emails")
+
+
+@pytest.mark.usefixtures("world")
+def test_a_phrase_with_small_words_still_counts() -> None:
+    # "from a" are words the index drops: as a plain phrase this matched nothing.
+    found = _run(
+        "investigator", "mail_counts", {"words": ["ledger from a lookalike"], "by": "total"}
+    )
+    assert found.summary.startswith("1 emails")
