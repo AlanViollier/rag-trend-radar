@@ -12,7 +12,7 @@ from rag_trend_radar.cli.app import app
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.evals import agent as checks
-from rag_trend_radar.schema import AgentQuestion, AgentRun, AgentScore
+from rag_trend_radar.schema import AgentQuestion, AgentScore
 
 # The thorough runs of 2026-11-10 averaged about 15 cents a question; shown before a paid run.
 CENTS_EACH = 15
@@ -49,13 +49,10 @@ def agent_scores(name: str = "scored") -> None:
 
 
 def _report(name: str, asked: list[AgentQuestion]) -> None:
-    folder = get_settings().data_dir / "reports" / "agent"
     scores: list[AgentScore] = []
     with db.connect() as conn:
         for question in asked:
-            saved = sorted(folder.glob(f"{question.id}@*.json"))
-            if saved:
-                run = AgentRun.model_validate_json(saved[-1].read_text())
+            if (run := agents.latest(question.id)) is not None:
                 scores.append(checks.score(conn, question, run))
     table = Table("question", "kind", "passed", "found", "calls", "cents", "s", "note")
     for s in scores:

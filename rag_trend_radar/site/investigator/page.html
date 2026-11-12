@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Recorded Investigator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #FBF8F3; --ink: #1C1A17; --muted: #97907F; --soft: #6B655A; --line: #E8E2D6; --raise: #F4EFE6;
+  --ember: #C2410C; --ember-soft: #F7E3D7; --gold: #A16207; --teal: #0F766E;
+  --font: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --rail: 300px;
+}
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--ink); font: 400 13px/1.6 var(--font); overflow: hidden; }
+button { all: unset; cursor: pointer; font: inherit; }
+button:focus-visible { outline: 1px solid var(--ember); outline-offset: 2px; }
+
+aside { position: fixed; left: 0; top: 0; bottom: 0; width: var(--rail); border-right: 1px solid var(--line); padding: 22px 18px 18px 22px; overflow-y: auto; }
+aside .tick { height: 3px; width: 40px; background: var(--ember); margin-bottom: 12px; }
+aside h1 { font-size: 13px; font-weight: 600; }
+aside .hint { color: var(--muted); font-size: 11.5px; margin: 2px 0 6px; }
+aside h2 { font-size: 10.5px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin: 14px 0 3px; }
+.card { display: block; width: 100%; padding: 3px 8px; margin-left: -8px; color: var(--soft); font-size: 12px; line-height: 1.5; border-left: 2px solid transparent; }
+.card:hover { color: var(--ink); }
+.card[aria-current="true"] { color: var(--ink); border-left-color: var(--ember); background: var(--raise); }
+
+main { margin-left: var(--rail); height: 100vh; display: flex; flex-direction: column; }
+.top { display: flex; flex-direction: column; align-items: center; padding: 14px 24px 10px; border-bottom: 1px solid var(--line); }
+.mark { display: inline-flex; flex-direction: column; align-items: center; }
+.mark .e { font-size: 34px; font-weight: 600; line-height: 1; color: var(--ember); transform: rotate(-16deg); display: inline-block; }
+.mark .rag { font-size: 10px; font-weight: 600; letter-spacing: .5em; padding-left: .5em; margin-top: 3px; }
+.controls { display: flex; gap: 8px 16px; align-items: center; flex-wrap: wrap; justify-content: center; margin-top: 10px; color: var(--muted); font-size: 11.5px; }
+.seg { display: inline-flex; border: 1px solid var(--line); }
+.seg button { padding: 1px 8px; color: var(--soft); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.btn { padding: 1px 9px; border: 1px solid var(--line); color: var(--soft); }
+.btn:hover { color: var(--ink); border-color: var(--muted); }
+#play { background: var(--ember); border-color: var(--ember); color: var(--paper); min-width: 6ch; text-align: center; }
+.clock { font-variant-numeric: tabular-nums; min-width: 13ch; }
+
+.chat { flex: 1; overflow-y: auto; padding: 24px 24px 12px; }
+.thread { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.user { align-self: flex-end; max-width: 78%; }
+.user .bubble { background: var(--raise); border: 1px solid var(--line); padding: 10px 14px; font-size: 13.5px; }
+.user .as { text-align: right; color: var(--muted); font-size: 11px; margin-top: 4px; }
+.user .as b { font-weight: 500; color: var(--soft); }
+.user .as b.emp { color: var(--teal); }
+.staged { border: 1px solid var(--gold); color: var(--gold); padding: 7px 11px; font-size: 12px; }
+
+.work { display: flex; flex-direction: column; gap: 9px; }
+.line { animation: in .22s ease-out; }
+@keyframes in { from { opacity: 0; transform: translateY(3px); } }
+.think { font-size: 12px; color: var(--muted); }
+.think .label { display: flex; gap: 8px; align-items: baseline; }
+.think .text { margin-top: 3px; padding-left: 12px; border-left: 2px solid var(--line); color: var(--soft); font-style: italic; white-space: pre-wrap; }
+.think.folded .text { display: none; }
+.think .label.fold { cursor: pointer; } .think .label.fold:hover { color: var(--ink); }
+.think .label.fold::after { content: " · hide"; } .think.folded .label.fold::after { content: " · show"; }
+.shimmer { background: linear-gradient(90deg, var(--muted) 0%, var(--ink) 50%, var(--muted) 100%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: sh 1.6s linear infinite; }
+@keyframes sh { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+.note { color: var(--ink); padding-left: 12px; border-left: 2px solid var(--ember); }
+
+.tool { border: 1px solid var(--line); padding: 8px 12px; font-size: 12px; }
+.tool .head { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.tool .name { color: var(--ember); font-weight: 500; }
+.tool .args { color: var(--ink); word-break: break-word; }
+.tool .chip { color: var(--soft); border: 1px solid var(--line); padding: 0 5px; font-size: 11px; }
+.tool .t { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stages { margin-top: 6px; display: flex; flex-direction: column; gap: 3px; color: var(--soft); }
+.stage .row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.stage .s { color: var(--muted); font-variant-numeric: tabular-nums; }
+.stage.live .row { color: var(--ink); }
+.bar { height: 2px; background: var(--line); margin-top: 3px; }
+.bar i { display: block; height: 100%; width: 0; background: var(--ember); }
+.stage:not(.live) .bar { display: none; }
+.hits { margin-top: 6px; border-top: 1px dashed var(--line); padding-top: 5px; }
+.hit { display: grid; grid-template-columns: 11ch minmax(0, 17ch) minmax(0, 1fr); gap: 10px; color: var(--soft); animation: in .2s ease-out; }
+.hit span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hit .subj { color: var(--ink); }
+.hit.press .subj { color: var(--soft); }
+.hit.planted, .hit.planted .subj { color: var(--gold); }
+.more { color: var(--muted); }
+.email { margin-top: 6px; display: grid; grid-template-columns: 8ch 1fr; color: var(--soft); }
+.email b { font-weight: 400; color: var(--muted); }
+.email span { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.out { margin-top: 6px; }
+.out .first { color: var(--ink); }
+.out .ln { color: var(--soft); white-space: pre-wrap; animation: in .2s ease-out; }
+.rows { margin-top: 4px; display: grid; grid-template-columns: auto 1fr auto; gap: 2px 10px; align-items: center; }
+.rows .lab { color: var(--soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 30ch; }
+.rows .b { display: block; height: 8px; background: var(--ember); opacity: .75; width: 0; transition: width .4s ease-out; }
+.rows .n { color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; }
+
+.answer { border-top: 1px solid var(--line); padding-top: 14px; font-size: 13.5px; }
+.answer p { margin-bottom: 9px; }
+.answer ul { padding-left: 18px; margin-bottom: 9px; list-style: none; }
+.answer li { position: relative; margin-bottom: 3px; }
+.answer li::before { content: "→"; position: absolute; left: -18px; color: var(--ember); }
+.answer code { color: var(--gold); }
+.q { background: var(--ember-soft); cursor: pointer; }
+.q:hover, .q.lit { background: #F2CDB6; }
+.meta { display: flex; gap: 6px 16px; flex-wrap: wrap; color: var(--muted); font-size: 11.5px; }
+.meta b { color: var(--ink); font-weight: 500; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.sources h3 { font-size: 11.5px; font-weight: 500; color: var(--muted); display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.sources h3::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.src { border-left: 2px solid transparent; padding-left: 8px; margin-left: -10px; }
+.src.open { border-left-color: var(--ember); }
+.src > button { display: grid; grid-template-columns: 3.5ch 11ch minmax(0, 1fr); gap: 8px; width: 100%; padding: 3px 0; font-size: 12px; color: var(--soft); }
+.src > button:hover, .src.open > button { color: var(--ink); }
+.src .who { display: block; color: var(--muted); }
+.src .subj { color: var(--ink); }
+.passages { display: none; padding: 0 0 8px calc(3.5ch + 8px); }
+.src.open .passages { display: block; }
+.passage { white-space: pre-wrap; font-size: 12px; background: var(--raise); padding: 8px 10px; margin-top: 5px; border-left: 2px solid var(--line); }
+.passage { position: relative; }
+.passage.long { max-height: 9.6em; overflow: hidden; }
+.passage .toggle { display: block; width: max-content; margin: 4px 0 0 auto; color: var(--ember); }
+.passage.long .toggle { position: absolute; right: 0; bottom: 0; margin: 0; padding: 0 8px; background: var(--raise); }
+.passage.lit { border-left-color: var(--ember); }
+.docref { border-bottom: 1px dotted var(--ember); cursor: pointer; }
+.next { color: var(--muted); font-size: 12px; }
+
+.composer { padding: 10px 24px 14px; }
+.box { max-width: 760px; margin: 0 auto; display: flex; gap: 10px; align-items: flex-end; border: 1px solid var(--line); background: #fff; padding: 10px 12px; min-height: 46px; }
+.box .text { flex: 1; font-size: 13.5px; color: var(--ink); }
+.box .text.empty { color: var(--muted); }
+.caret { display: inline-block; width: 7px; height: 15px; background: var(--ember); vertical-align: -2px; margin-left: 1px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.send { color: var(--paper); background: var(--line); padding: 2px 10px; font-weight: 500; transition: background .2s; }
+.send.on { background: var(--ember); }
+.foot { max-width: 760px; margin: 6px auto 0; color: var(--muted); font-size: 10.5px; text-align: center; }
+
+.sheet { position: fixed; inset: 0; background: rgba(28,26,23,.32); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 5; }
+.sheet.open { display: flex; }
+.sheet .panel { background: var(--paper); border: 1px solid var(--line); max-width: 720px; width: 100%; max-height: 82vh; overflow-y: auto; padding: 20px 22px; box-shadow: 0 10px 40px rgba(28,26,23,.18); }
+.sheet .panel h3 { font-size: 13px; font-weight: 600; }
+.sheet .panel .why { color: var(--muted); font-size: 12px; margin: 3px 0 12px; }
+
+@media (max-width: 860px) {
+  body { overflow: auto; }
+  aside { position: static; width: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 16px; }
+  main { margin-left: 0; height: auto; min-height: 100vh; }
+  .chat { padding: 16px; }
+  .composer { position: sticky; bottom: 0; background: var(--paper); padding: 8px 16px 10px; }
+  .hit { grid-template-columns: 11ch minmax(0, 1fr); } .hit .from { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .line, .hit, .caret, .shimmer, .ln { animation: none; } }
+</style>
+</head>
+<body>
+<aside>
+  <div class="tick"></div>
+  <h1>Questions you can ask</h1>
+  <p class="hint">Real runs of the agent over Enron's mail, recorded once and replayed here. Pick one.</p>
+  <nav id="nav"></nav>
+</aside>
+<main>
+  <div class="top">
+    <div class="mark" aria-label="RAG"><span class="e">E</span><span class="rag">RAG</span></div>
+    <div class="controls">
+      <button class="btn" id="play">pause</button>
+      <button class="btn" id="skip">skip to answer</button>
+      <span class="seg" id="timing"><button data-t="server" aria-pressed="true">server GPU, est.</button><button data-t="laptop">laptop</button></span>
+      <span class="seg" id="speed"><button data-x="1" aria-pressed="true">1x</button><button data-x="2">2x</button><button data-x="4">4x</button></span>
+      <span class="seg" id="auto"><button aria-pressed="false">autoplay</button></span>
+      <span class="clock" id="clock"></span>
+    </div>
+  </div>
+  <div class="chat" id="chat"><div class="thread" id="thread"></div></div>
+  <div class="composer">
+    <div class="box"><div class="text" id="qtext"></div><span class="send" id="send">ask</span></div>
+    <p class="foot">Replayed, not live: these runs were recorded once and nothing here calls the API. Claude's turns play at their recorded speed. The searches ran on an Apple M1 Pro laptop; "server GPU" swaps their rerank step for an estimated 0.5 s on a cloud GPU. The emails come from the public Enron corpus, released by FERC in 2003; if you appear here and want something taken down, open an issue on GitHub.</p>
+  </div>
+</main>
+<div class="sheet" id="sheet"><div class="panel" id="panel"></div></div>
+<script>
+const DATA = __DATA__;
+const RUNS = DATA.groups.flatMap(g => g.runs);
+const DOCS = DATA.emails;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const norm = s => s.replace(/\s+/g, " ").trim().toLowerCase();
+const list = v => Array.isArray(v) ? v : [v];
+const SERVER_RERANK = 500;   // ms: bge-reranker-v2-m3 on 50 chunks, an L4-class cloud GPU (estimate)
+const HITS_SHOWN = 5, LINE_MS = 45;
+
+let speed = 1, timing = "server", paused = false, instant = false, autoplay = false;
+let token = 0, clock = 0, total = 0, current = null, autoNext = null, stick = true, finished = false;
+
+// "vince.kaminski@enron.com" → "Vince Kaminski"; outside addresses stay as they are.
+function person(addr) {
+  if (!addr || addr.startsWith("unknown")) return "";
+  const m = addr.match(/^([^@]+)@enron\.com$/i);
+  if (!m) return addr;
+  return m[1].split(/[._]/).filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
+}
+
+function nav() {
+  $("nav").innerHTML = DATA.groups.map(g => `<h2>${esc(g.title)}</h2>` +
+    g.runs.map(r => `<button class="card" data-id="${r.id}" title="${esc(r.question)}">${esc(r.label)}</button>`).join("")).join("");
+  $("nav").onclick = e => { const b = e.target.closest(".card"); if (b) play(RUNS.find(r => r.id === b.dataset.id)); };
+}
+
+// How long a step lasts in this replay: as recorded, or with the estimated server rerank.
+const rerankMs = s => timing === "server" ? SERVER_RERANK : Math.max(100, s.seconds * 1000 - (st(s, "embed").seconds + st(s, "search").seconds) * 1000);
+const isSearch = s => s.kind === "tool" && s.tool === "search" && s.stages.length > 0;
+// A search stage's time and count: embed, search (candidates found), rerank (candidates scored).
+const st = (s, name) => s.stages.find(x => x.name === name) || { seconds: 0, items: 0 };
+function stepMs(s) {
+  if (s.kind === "turn") return s.seconds * 1000;
+  if (isSearch(s)) return (st(s, "embed").seconds + st(s, "search").seconds) * 1000 + rerankMs(s);
+  return s.kind === "tool" ? s.seconds * 1000 : 0;
+}
+const runMs = r => r.steps.reduce((a, s) => a + stepMs(s), 0);
+
+// Waits `ms` of replay time: scaled by speed, frozen while paused, at once when skipping.
+function wait(ms, t, tick) {
+  return new Promise((done, quit) => {
+    if (t !== token) return quit("stale");
+    if (instant) { clock += ms; tick && tick(ms); showClock(); return done(); }
+    let left = ms, last = performance.now();
+    const step = now => {
+      if (t !== token) return quit("stale");
+      if (instant) { clock += left; tick && tick(ms); showClock(); return done(); }
+      const d = now - last; last = now;
+      if (!paused) { const used = Math.min(left, d * speed); left -= used; clock += used; tick && tick(ms - left); showClock(); }
+      left <= 0 ? done() : requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+}
+// A short pause for the eye, not part of the recorded time.
+const beat = (ms, t) => instant ? Promise.resolve() : new Promise((ok, quit) => setTimeout(() => t === token ? ok() : quit("stale"), ms / speed));
+const showClock = () => { $("clock").textContent = `${(clock / 1000).toFixed(1)} / ${(total / 1000).toFixed(1)} s`; };
+
+function el(html, cls = "line") { const d = document.createElement("div"); d.className = cls; d.innerHTML = html; return d; }
+function put(node, into = $("work")) { into.appendChild(node); follow(); return node; }
+function follow() { if (stick) $("chat").scrollTop = $("chat").scrollHeight; }
+$("chat").addEventListener("scroll", () => { const c = $("chat"); stick = c.scrollHeight - c.scrollTop - c.clientHeight < 40; });
+
+function args(s) {
+  const a = s.arguments, chips = [];
+  let main = "";
+  if (a.query) main = `"${esc(a.query)}"`;
+  else if (a.words) main = list(a.words).map(w => `"${esc(w)}"`).join(" or ");
+  else if (a.name) main = esc(a.name);
+  else if (a.document_id !== undefined) main = `document ${a.document_id}`;
+  else if (a.topic !== undefined) main = `topic ${a.topic}`;
+  for (const [k, v] of Object.entries(a)) {
+    if (["query", "words", "name", "document_id", "topic"].includes(k)) continue;
+    chips.push(`<span class="chip">${esc(k)} ${esc(list(v).join(", "))}</span>`);
+  }
+  return `<span class="args">${main}</span>${chips.join("")}`;
+}
+const VERB = { search: "searching the mail", read_email: "opening an email", mail_counts: "counting emails", find_person: "looking up a person",
+  top_topics: "reading the radar's topics", topic_history: "reading a topic's weeks", alerts: "reading the radar's alerts" };
+const QUERYING = { read_email: "fetching it from Postgres", mail_counts: "counting matches in Postgres", find_person: "looking up their addresses",
+  top_topics: "ranking topics by growth", topic_history: "reading its weekly rows", alerts: "listing alerts in the window" };
+
+// One stage of a tool: its line, a running timer and a filling bar while it runs.
+async function stage(into, label, ms, t, onTick) {
+  const row = put(el(`<div class="row"><span class="lab">${label}</span><span class="s">0.0 s</span></div><div class="bar"><i></i></div>`, "stage live"), into);
+  const clockEl = row.querySelector(".s"), bar = row.querySelector(".bar i");
+  await wait(ms, t, done => { clockEl.textContent = (done / 1000).toFixed(ms < 1000 ? 2 : 1) + " s"; bar.style.width = (100 * done / Math.max(ms, 1)) + "%"; onTick && onTick(done, row); });
+  row.classList.remove("live");
+  return row;
+}
+
+async function tool(s, t, r) {
+  const box = put(el(`<div class="head"><span class="name">${VERB[s.tool] || s.tool}</span>${args(s)}<span class="t"></span></div>`, "line tool"));
+  const stages = put(el("", "stages"), box);
+  const tEl = box.querySelector(".t");
+  if (isSearch(s)) {
+    const total = stepMs(s);
+    await stage(stages, "turning the question into a vector", st(s, "embed").seconds * 1000, t);
+    const found = await stage(stages, "keyword + meaning search over the mail", st(s, "search").seconds * 1000, t);
+    found.querySelector(".lab").textContent = `keyword + meaning search → ${st(s, "search").items} candidates`;
+    if (st(s, "rerank").items < st(s, "search").items) put(el(`<div class="row"><span>${st(s, "rerank").items} of them are ${s.arguments.source === "press" ? "forwarded press" : "people's own mail"} (source ${esc(s.arguments.source)})</span></div>`, "stage"), stages);
+    await stage(stages, `reranking: scoring each of ${st(s, "rerank").items} candidates against the question`, rerankMs(s), t, (done, row) => {
+      row.querySelector(".lab").textContent = `reranking: scored ${Math.round(st(s, "rerank").items * done / rerankMs(s))} of ${st(s, "rerank").items} candidates`;
+    });
+    tEl.textContent = (total / 1000).toFixed(1) + " s";
+    const repeats = (s.summary.match(/(\d+) repeats? left out/) || [])[1];
+    put(el(`<div class="row"><span>kept the best ${s.hits.filter(h => h.source !== "planted").length}${repeats ? `, left out ${repeats} already seen` : ""}</span></div>`, "stage"), stages);
+    const hl = put(el("", "hits"), box);
+    const hits = s.hits;
+    for (const [i, h] of hits.entries()) {
+      if (i >= HITS_SHOWN) { put(el(`+ ${hits.length - HITS_SHOWN} more`, "more"), hl); break; }
+      const e = DOCS[h.document_id], planted = h.source === "planted";
+      const subject = (e.subject || "(no subject)") + (planted ? " · planted for this test, not Enron mail" : "");
+      put(el(`<span>${esc(e.date || "")}</span><span class="from">${esc(person(e.sender) || "quoted in replies")}</span><span class="subj">${esc(subject)}</span>`,
+        "hit" + (h.source === "press" ? " press" : "") + (planted ? " planted" : "")), hl);
+      await beat(LINE_MS, t);
+    }
+    return;
+  }
+  await stage(stages, QUERYING[s.tool] || "running", s.seconds * 1000, t);
+  tEl.textContent = s.seconds.toFixed(2) + " s";
+  if (s.read !== null) {
+    const d = DOCS[s.read], box2 = put(el("", "email"), box);
+    const quoted = d.kind === "quoted";
+    const rows = [["Subject", d.subject], ["From", quoted ? "unknown, known only from replies quoting it" : d.sender],
+      ["To", quoted ? "nobody listed" : d.to.join(", ") || "nobody listed"], ["Date", d.date]];
+    for (const [k, v] of rows) {
+      if (!v) continue;
+      box2.insertAdjacentHTML("beforeend", `<b>${k}</b><span>${esc(v)}</span>`);
+      await beat(LINE_MS, t);
+    }
+    return;
+  }
+  const lines = (s.text || s.summary).split("\n").filter(l => l.trim());
+  const out = put(el(`<div class="first">${esc(lines[0])}</div>`, "out"), box);
+  const rows = [];
+  for (const ln of lines.slice(1)) { const m = ln.match(/^(\S+)\s{2,}(\d+)/); if (m) rows.push([m[1], +m[2]]); }
+  if (rows.length >= 2 && s.tool !== "find_person") {
+    const max = Math.max(...rows.map(x => x[1])), grid = put(el("", "rows"), out);
+    for (const [l, n] of rows.slice(0, 16)) {
+      grid.insertAdjacentHTML("beforeend", `<span class="lab">${esc(l)}</span><span><span class="b"></span></span><span class="n">${n}</span>`);
+      const b = grid.lastElementChild.previousElementSibling.firstChild;
+      requestAnimationFrame(() => requestAnimationFrame(() => { b.style.width = (100 * n / max) + "%"; }));
+      await beat(LINE_MS, t);
+    }
+    if (rows.length > 16) put(el(`+ ${rows.length - 16} more rows`, "more"), out);
+  } else {
+    for (const ln of lines.slice(1, 8)) { put(el(esc(ln.replace(/ · keywords:.*$/, "")), "ln"), out); await beat(LINE_MS, t); }
+    if (lines.length > 8) put(el(`+ ${lines.length - 8} more lines`, "more"), out);
+  }
+}
+
+function md(src) {
+  const inline = s => esc(s)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+    .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<i>$2</i>");
+  let html = "", depth = 0;
+  for (const line of src.split("\n")) {
+    const h = line.match(/^#{1,4} (.*)$/);
+    const m = line.match(/^(\s*)[-*] (.*)$/);
+    const want = m ? Math.floor(m[1].length / 2) + 1 : 0;
+    while (depth < want) { html += "<ul>"; depth++; }
+    while (depth > want) { html += "</ul>"; depth--; }
+    if (h) html += `<p><b>${inline(h[1])}</b></p>`;
+    else if (m) html += `<li>${inline(m[2])}</li>`;
+    else if (line.trim()) html += `<p>${inline(line)}</p>`;
+  }
+  while (depth--) html += "</ul>";
+  return html;
+}
+
+// The trace keeps citations apart from the prose: a quote in the answer links to the passage holding it,
+// and "document 123" to that email.
+function link(html, r) {
+  html = html.replace(/(&quot;|“)([^"“”<]{8,}?)(&quot;|”)/g, (all, a, inner, b) => {
+    const plain = norm(inner.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">"));
+    const j = r.citations.findIndex(c => norm(c.cited_text).includes(plain));
+    return j < 0 ? all : `<span class="q" data-p="${j}">${a}${inner}${b}</span>`;
+  });
+  return html.replace(/\b(documents?|doc) (\d{3,})/g, (all, w, d) => r.citations.some(c => c.document_id === +d) ? `<span class="docref" data-d="${d}">${w} ${d}</span>` : all);
+}
+
+const who = r => r.asker ? `<b class="emp">${esc(r.asker)}</b>, own mailbox only` : `<b>the investigator</b>, all 150 mailboxes`;
+
+// Thinking text and notes belong to the turn that follows them in the trace. A turn's recorded
+// time is shared between its thinking, its notes and (last turn) the answer, by their length.
+async function turn(s, pending, final, t, r) {
+  const thinks = pending.filter(p => p.kind === "think").map(p => p.text).join("\n\n");
+  const parts = [...(thinks ? [{ kind: "think", text: thinks }] : []), ...pending.filter(p => p.kind === "note"), ...(final ? [{ kind: "answer", text: r.answer }] : [])];
+  const ms = s.seconds * 1000;
+  if (!parts.length) {
+    const th = put(el(`<div class="label"><span class="shimmer">thinking</span><span class="tt"></span></div>`, "line think"));
+    await wait(ms, t, done => { th.querySelector(".tt").textContent = (done / 1000).toFixed(1) + " s"; });
+    th.remove();
+    return;
+  }
+  const chars = parts.reduce((a, p) => a + p.text.length, 0);
+  for (const part of parts) {
+    const share = ms * part.text.length / chars;
+    if (part.kind === "answer") { await answer(r, share, t); continue; }
+    if (part.kind === "note") {
+      const n = put(el("", "line note"));
+      await wait(share, t, done => { n.textContent = part.text.slice(0, Math.ceil(part.text.length * done / Math.max(share, 1))); follow(); });
+      continue;
+    }
+    const th = put(el(`<div class="label"><span class="shimmer">thinking</span><span class="tt"></span></div><div class="text"></div>`, "line think"));
+    const txt = th.querySelector(".text");
+    await wait(share, t, done => {
+      th.querySelector(".tt").textContent = (done / 1000).toFixed(1) + " s";
+      txt.textContent = part.text.slice(0, Math.ceil(part.text.length * done / Math.max(share, 1))); follow();
+    });
+    const label = th.querySelector(".label");
+    label.innerHTML = `thought for ${(share / 1000).toFixed(1)} s`;
+    label.classList.add("fold");
+    label.onclick = () => th.classList.toggle("folded");
+  }
+}
+
+async function answer(r, ms, t) {
+  const ans = $("thread").appendChild(el("", "answer")), n = r.answer.length;
+  await wait(ms, t, done => { ans.innerHTML = md(r.answer.slice(0, Math.floor(n * done / Math.max(ms, 1)))); follow(); });
+}
+
+async function play(r) {
+  const t = ++token; current = r; clock = 0; paused = false; instant = false; stick = true; finished = false; clearInterval(autoNext);
+  total = runMs(r);
+  $("play").textContent = "pause"; showClock();
+  document.querySelectorAll(".card").forEach(c => c.setAttribute("aria-current", c.dataset.id === r.id));
+  $("thread").innerHTML = ""; $("send").classList.remove("on");
+  try {
+    for (let i = 0; i <= r.question.length; i += 2) {
+      $("qtext").className = "text"; $("qtext").innerHTML = esc(r.question.slice(0, i)) + '<span class="caret"></span>';
+      await beat(22, t);
+    }
+    $("send").classList.add("on");
+    await beat(350, t);
+    $("send").classList.remove("on"); $("qtext").className = "text empty"; $("qtext").textContent = "Pick a question on the left";
+    if (r.staged) $("thread").appendChild(el("Staged test: one email in this mailbox was planted before the run, with an instruction aimed at the AI. It is not real Enron mail.", "staged"));
+    $("thread").appendChild(el(`<div class="bubble">${esc(r.question)}</div><div class="as">asking as ${who(r)}</div>`, "user"));
+    $("thread").appendChild(el("", "work")).id = "work";
+    const lastTurn = r.steps.map(s => s.kind).lastIndexOf("turn");
+    let pending = [];
+    for (const [i, s] of r.steps.entries()) {
+      if (s.kind === "note" || s.kind === "think") { pending.push(s); continue; }
+      if (s.kind === "turn") { await turn(s, pending, i === lastTurn, t, r); pending = []; continue; }
+      await tool(s, t, r);
+    }
+    finish(r);
+  } catch (e) { if (e !== "stale") throw e; }
+}
+
+function source(d, i, r) {
+  const info = DOCS[d] || {};
+  const ps = r.citations.map((c, j) => [c, j]).filter(([c]) => c.document_id === d);
+  // A passage that is only the header (subject, from, to, date) repeats the line above it.
+  const body = ps.filter(([c], k) => !c.cited_text.split("\n").every(l => /^(Subject|From|To|Cc|Date):/.test(l.trim()) || !l.trim())
+    && ps.findIndex(([o]) => o.cited_text === c.cited_text) === k);
+  const to = (info.to || []).map(person).filter(Boolean);
+  const people = info.kind === "quoted" ? "sender unknown: known only from replies quoting it"
+    : `${esc(person(info.sender) || info.sender || "")}${to.length ? " → " + esc(to.slice(0, 2).join(", ")) + (to.length + (info.cc || 0) > 2 ? ` +${to.length + (info.cc || 0) - 2}` : "") : ""}`;
+  return `<div class="src" id="src-${d}"><button><span>[${i + 1}]</span><span>${esc(info.date || "")}</span>` +
+    `<span><span class="subj">${esc(info.subject || "(no subject)")}</span><span class="who">${people}</span></span></button>` +
+    `<div class="passages">${ps.filter(p => !body.includes(p)).map(([, j]) => `<span id="p-${j}"></span>`).join("")}` +
+    `${body.length ? body.map(([c, j]) => `<div class="passage" id="p-${j}">${esc(c.cited_text.replace(/^Quoted in this reply: /, ""))}</div>`).join("")
+      : '<div class="passage">cited for who sent it, to whom and when</div>'}</div></div>`;
+}
+
+function finish(r) {
+  instant = false; finished = true; $("play").textContent = "replay";
+  const docs = [...new Set(r.citations.map(c => c.document_id))];
+  const ans = $("thread").querySelector(".answer");
+  ans.innerHTML = link(md(r.answer), r);
+  ans.querySelectorAll(".q").forEach(q => q.onclick = () => openPassage($("p-" + q.dataset.p), q));
+  ans.querySelectorAll(".docref").forEach(q => q.onclick = () => openPassage($("src-" + q.dataset.d), q));
+  const tools = r.steps.filter(s => s.kind === "tool").length;
+  const serverS = r.steps.reduce((a, s) => a + (isSearch(s) ? (st(s, "embed").seconds + st(s, "search").seconds) * 1000 + SERVER_RERANK : stepMs(s)), 0) / 1000;
+  $("thread").appendChild(el(`<span>found <b>${r.found}</b></span><span><b>~${serverS.toFixed(0)} s</b> on a server GPU, est.</span><span><b>${r.seconds.toFixed(1)} s</b> on the laptop</span><span>cost <b>$${r.cost_usd.toFixed(3)}</b></span><span><b>${tools}</b> tool calls</span><span>${esc(r.model)}</span>`, "meta"));
+  if (docs.length) {
+    const src = $("thread").appendChild(el(`<h3>the emails behind the answer · ${docs.length}</h3>` + docs.map((d, i) => source(d, i, r)).join(""), "sources"));
+    src.querySelectorAll(".src > button").forEach(b => b.onclick = () => b.parentElement.classList.toggle("open"));
+    src.querySelectorAll(".passage").forEach(p => {
+      if (p.textContent.split("\n").length <= 6 && p.textContent.length < 480) return;
+      const b = document.createElement("button"); b.className = "toggle"; p.appendChild(b);
+      b.onclick = () => fold(p, !p.classList.contains("long"));
+      fold(p, true);
+    });
+  }
+  const act = $("thread").appendChild(el(`<button class="btn" id="bare">ask without RAG</button>`, "actions"));
+  act.querySelector("#bare").onclick = () => bare(r);
+  follow();
+  if (autoplay) queueNext(r);
+}
+
+function bare(r) {
+  $("panel").innerHTML = `<h3>Without RAG: same question, same model, no mail and no tools</h3>
+    <p class="why">The agent's own instructions with the tools taken out: same asker, same day, same answer rules. It answers from what it learned in training, which includes what came out after 2001. Click outside to close.</p>
+    <div class="answer">${md(r.baseline.text)}</div>
+    <div class="meta"><span>found <b>${r.baseline.found}</b> without RAG, <b>${r.found}</b> with it</span><span><b>${r.baseline.seconds} s</b></span><span>cost <b>$${r.baseline.cost.toFixed(4)}</b></span><span>0 tool calls</span><span>${esc(r.model)}</span></div>`;
+  $("sheet").classList.add("open");
+}
+$("sheet").onclick = e => { if (e.target === $("sheet")) $("sheet").classList.remove("open"); };
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("sheet").classList.remove("open"); });
+
+function fold(p, shut) { p.classList.toggle("long", shut); p.querySelector(".toggle").textContent = shut ? "show all" : "collapse"; }
+
+function openPassage(target, q) {
+  if (!target) return;
+  document.querySelectorAll(".passage.lit, .q.lit, .docref.lit").forEach(e => e.classList.remove("lit"));
+  q.classList.add("lit");
+  const src = target.closest(".src"); src.classList.add("open");
+  if (target.classList.contains("passage")) { target.classList.add("lit"); if (target.querySelector(".toggle")) fold(target, false); }
+  (target.classList.contains("passage") ? target : src).scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function queueNext(r) {
+  const nxt = RUNS[(RUNS.indexOf(r) + 1) % RUNS.length];
+  let left = 15;
+  clearInterval(autoNext);
+  const line = $("thread").appendChild(el("", "next"));
+  const show = () => { line.textContent = `next: ${nxt.label}, in ${left} s`; };
+  show(); follow();
+  autoNext = setInterval(() => { if (paused) return; if (--left <= 0) { clearInterval(autoNext); play(nxt); } else show(); }, 1000);
+}
+
+$("play").onclick = () => {
+  if (finished) return play(current);
+  paused = !paused; $("play").textContent = paused ? "play" : "pause";
+};
+$("skip").onclick = () => { if (!finished) instant = true; };
+const seg = (id, f) => $(id).onclick = e => { const b = e.target.closest("button"); if (!b) return;
+  $(id).querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); f(b); };
+seg("speed", b => { speed = +b.dataset.x; });
+seg("timing", b => { timing = b.dataset.t; if (current && !finished) { total = runMs(current); showClock(); } });
+$("auto").onclick = () => { autoplay = !autoplay; $("auto").firstChild.setAttribute("aria-pressed", autoplay); if (!autoplay) clearInterval(autoNext); };
+
+nav();
+play(RUNS.find(r => r.id === "c-fortune-overpriced"));
+</script>
+</body>
+</html>

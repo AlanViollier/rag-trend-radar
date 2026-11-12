@@ -9,8 +9,18 @@ from rag_trend_radar.schema import AgentRun
 
 def save(run: AgentRun, name: str) -> Path:
     """Write `run` under data/reports/agent/ as `<name>@<time>.json` and return the path."""
-    folder = get_settings().data_dir / "reports" / "agent"
+    folder = _folder()
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / f"{name}@{datetime.now(UTC):%Y%m%dT%H%M%S}.json"
     path.write_text(run.model_dump_json(indent=1))
     return path
+
+
+def latest(name: str) -> AgentRun | None:
+    """The newest saved run of question `name`, or None when it was never run."""
+    saved = sorted(_folder().glob(f"{name}@*.json"))
+    return AgentRun.model_validate_json(saved[-1].read_text()) if saved else None
+
+
+def _folder() -> Path:
+    return get_settings().data_dir / "reports" / "agent"

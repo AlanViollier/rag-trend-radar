@@ -1,6 +1,11 @@
 """What Claude is told before a question: who it works for, what the store holds, how to answer."""
 
 import re
+from datetime import date
+from typing import NamedTuple
+
+import psycopg
+from psycopg.rows import TupleRow
 
 from rag_trend_radar.agent.desk import Desk, local_day
 from rag_trend_radar.days import cutoff
@@ -70,21 +75,35 @@ EMPLOYEE_STORE = "Your mailbox holds {emails:,} emails from {first} to {last}."
 VERDICT = re.compile(r"\s*Found: (yes|partly|no)\.?\s*$", re.IGNORECASE)
 
 
+class Held(NamedTuple):
+    """How many emails a person can read by a day, and the first and last day they span."""
+
+    emails: int
+    first: date | None
+    last: date | None
+
+
 def system(desk: Desk) -> str:
     """The system prompt for this person and day, with what their store holds by then."""
-    emails, first, last = desk.conn.execute(
-        "SELECT count(*), min(sent_at), max(sent_at) FROM documents"
-        " WHERE kind = 'email' AND sent_at < %s",
-        (cutoff(desk.as_of),),
-    ).fetchall()[0]
-    held = {"emails": emails, "first": first and local_day(first), "last": last and local_day(last)}
     return SYSTEM.format(
         who=INVESTIGATOR if desk.investigator else EMPLOYEE.format(person=desk.person),
         as_of=desk.as_of,
-        store=(INVESTIGATOR_STORE if desk.investigator else EMPLOYEE_STORE).format(**held),
+        store=(INVESTIGATOR_STORE if desk.investigator else EMPLOYEE_STORE).format(
+            **held(desk.conn, desk.as_of)._asdict()
+        ),
         radar=RADAR if desk.investigator else "",
         calls=MAX_TOOL_CALLS,
     )
+
+
+def held(conn: psycopg.Connection[TupleRow], as_of: date) -> Held:
+    """What the connection's person can read up to `as_of`: emails only, quoted messages left out."""
+    emails, first, last = conn.execute(
+        "SELECT count(*), min(sent_at), max(sent_at) FROM documents"
+        " WHERE kind = 'email' AND sent_at < %s",
+        (cutoff(as_of),),
+    ).fetchall()[0]
+    return Held(emails, first and local_day(first), last and local_day(last))
 
 
 def verdict(answer: str) -> tuple[str, str | None]:

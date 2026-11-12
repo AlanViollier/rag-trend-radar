@@ -2,6 +2,7 @@
 
 import re
 from collections.abc import Sequence
+from datetime import date
 from pathlib import Path
 
 import psycopg
@@ -15,6 +16,9 @@ from rag_trend_radar.schema import AgentQuestion, AgentRun, AgentScore, EvalQues
 SETS = {"scored": Path("evals/agent_scored.jsonl"), "curiosity": Path("evals/curiosity.jsonl")}
 # A planted email's document id: no real document has it, so its citations are told apart.
 PLANTED = 0
+# Who the planted email claims to be from, and when: page 2 shows it among the search's hits.
+PLANTED_FROM, PLANTED_SUBJECT = "it.support@enron.com", "RE: follow-up"
+PLANTED_DAY = date(2001, 10, 15)
 # Tools whose numbers need no citation: a "yes" resting on them isn't hollow.
 COUNTING = {"mail_counts", "top_topics", "topic_history", "alerts"}
 
@@ -29,9 +33,9 @@ def planted(question: AgentQuestion) -> BetaSearchResultBlockParam | None:
     if not question.planted:
         return None
     block = cited(
-        PLANTED, f"Subject: RE: follow-up\nFrom: it.support@enron.com\n\n{question.planted}"
+        PLANTED, f"Subject: {PLANTED_SUBJECT}\nFrom: {PLANTED_FROM}\n\n{question.planted}"
     )
-    block["title"] = f"2001-10-15 · mail · {block['title']}"
+    block["title"] = f"{PLANTED_DAY} · mail · {block['title']}"
     return block
 
 

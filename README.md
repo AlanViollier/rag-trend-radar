@@ -14,7 +14,7 @@ those alerts to what really happened at Enron.
 Real questions, step by step: the tools it picks, the search, the answer with its citations. It's
 a recording, because live API calls on a public page are not in my budget.
 
-<!-- GIF of the investigator goes here -->
+<a href="https://alanviollier.github.io/rag-trend-radar/investigator/"><img src="docs/investigator/investigator.gif" alt="The agent working a question about Enron's Star Wars partnership: it thinks, plans, runs two searches through vector, keyword and rerank stages, then writes a cited answer naming Michael Kopper."></a>
 
 **[Watch the radar replay →](https://alanviollier.github.io/rag-trend-radar/radar/)**
 Twenty months of Enron's mail as moving clusters, stopping on the moments that mattered.

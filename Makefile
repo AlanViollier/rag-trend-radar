@@ -1,4 +1,4 @@
-.PHONY: help hooks format lint lint-slop typecheck test check ci audit scan-history backup-cache restore-cache clean
+.PHONY: help hooks format lint lint-slop typecheck test check ci audit scan-history backup-cache restore-cache check-investigator clean
 
 help:
 	@echo "Targets:"
@@ -14,6 +14,7 @@ help:
 	@echo "  scan-history  - Secrets, .keywords and once-committed ignored files across every commit"
 	@echo "  backup-cache  - Every computed vector to data/backups/ (hours of embedding, ~750 MB)"
 	@echo "  restore-cache - Load the newest backup into an empty cache (after losing the volume)"
+	@echo "  check-investigator - Play every run of page 2 in a headless browser, screenshots to data/"
 	@echo "  clean         - Remove caches and build output"
 
 hooks:
@@ -66,6 +67,13 @@ ci:
 
 audit:
 	uv run pip-audit --skip-editable
+
+# Page 2 played run by run in headless Chromium. Playwright isn't a project dependency: uv
+# fetches it for this run only, pointed at the Chromium Playwright already downloaded (set
+# CHROMIUM to use another one).
+CHROMIUM ?= $(lastword $(wildcard $(HOME)/Library/Caches/ms-playwright/chromium_headless_shell-*/chrome-headless-shell-*/chrome-headless-shell))
+check-investigator:
+	uv run --no-project --with playwright python scripts/check_investigator.py docs/investigator/index.html data/reports/investigator_shots "$(CHROMIUM)"
 
 # Run before a repo goes public. Needs the gitleaks binary (`brew install gitleaks`).
 scan-history:

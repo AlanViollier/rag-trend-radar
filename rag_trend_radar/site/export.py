@@ -42,7 +42,8 @@ _NEW_BLOB_DAYS = 28
 _DUST, _DUST_READ = 4000, 6000
 _DUST_WEEKS = 26
 TEMPLATE = Path(__file__).with_name("page.html")
-_SHAPES = {
+# What the published data must never hold; page 2's export checks the same.
+SHAPES = {
     "SSN-shaped": re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
     "card-shaped": re.compile(r"\b(?:\d[ -]?){13,16}\b"),
 }
@@ -208,7 +209,7 @@ def page(
 def write(data: PageData, out: Path) -> int:
     """Put the data into the page, unless it holds a number it shouldn't; return the page's bytes."""
     text = data.model_dump_json()
-    for what, shape in _SHAPES.items():
+    for what, shape in SHAPES.items():
         if shape.search(text):
             raise ExportRefused(f"the page data holds a {what} number: nothing written")
     html = TEMPLATE.read_text().replace("__DATA__", text.replace("</", "<\\/"))

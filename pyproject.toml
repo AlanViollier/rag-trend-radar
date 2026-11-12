@@ -76,9 +76,10 @@ explicit_package_bases = true
 # data/ is gitignored, and throwaway experiments live there.
 exclude = ["^llm_context/", "^data/"]
 
-# Untyped or optional: the models extra is absent in CI (imported lazily); ranx ships no types.
+# Untyped or optional: the models extra is absent in CI (imported lazily); ranx ships no types;
+# Playwright runs only through `make check-investigator`, outside the project's dependencies.
 [[tool.mypy.overrides]]
-module = ["torch", "transformers", "sentence_transformers", "ranx", "ranx.*", "sklearn.*", "umap"]
+module = ["torch", "transformers", "sentence_transformers", "ranx", "ranx.*", "sklearn.*", "umap", "playwright.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

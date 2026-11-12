@@ -1,5 +1,6 @@
 """The agent's search: the pipeline `ask` runs, with optional dates and source."""
 
+import time
 from datetime import date, datetime
 from typing import Literal
 
@@ -10,6 +11,7 @@ from rag_trend_radar.answer import search_result
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.embed import embed
 from rag_trend_radar.ingest.kinds import Source, source
+from rag_trend_radar.schema import SearchStage
 from rag_trend_radar.search import hybrid, pipeline
 
 DESCRIPTION = """Search the mail this person can read: keyword and meaning search, reranked, the \
@@ -36,7 +38,9 @@ def run(desk: Desk, given: Input) -> ToolResult:
     """The best 10 chunks for `query` between the dates, as search_result blocks."""
     settings = get_settings()
     model = settings.embedding_model
+    begun = time.perf_counter()
     vector = embed([given.query], model, settings.embedding_dims, query=True)[0]
+    stages = [SearchStage(name="embed", seconds=time.perf_counter() - begun, items=1)]
     keep = None if given.source == "any" else Source(given.source)
     ranked = pipeline.reranked(
         desk.conn,
@@ -48,6 +52,7 @@ def run(desk: Desk, given: Input) -> ToolResult:
         hybrid.DEPTH,
         since=given.since,
         keep=keep,
+        stages=stages,
     )
     fresh = [h for h in ranked if h.chunk_id not in desk.shown and h.document_id not in desk.read]
     hits = pipeline.final(fresh, hybrid.DEPTH)
@@ -59,7 +64,9 @@ def run(desk: Desk, given: Input) -> ToolResult:
     )
     if not hits:
         nothing = "Nothing new matches in the mail this person can read."
-        return ToolResult([text(f"{nothing} {aside}".strip())], "0 new results")
+        return ToolResult(
+            [text(f"{nothing} {aside}".strip())], "0 new results", stages=tuple(stages)
+        )
     desk.shown.update(hit.chunk_id for hit in hits)
     sent: dict[int, datetime] = dict(
         desk.conn.execute(
@@ -80,4 +87,5 @@ def run(desk: Desk, given: Input) -> ToolResult:
     summary = f"{len(hits)} results, {kinds.count(Source.MAIL)} of them people's own mail"
     if again:
         summary += f", {len(again)} repeats left out"
-    return ToolResult(blocks, summary, tuple(dict.fromkeys(h.document_id for h in hits)), aside)
+    found = tuple(dict.fromkeys(h.document_id for h in hits))
+    return ToolResult(blocks, summary, found, aside, tuple(stages))

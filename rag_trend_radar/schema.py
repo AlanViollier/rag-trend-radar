@@ -111,6 +111,15 @@ class DayFile(Record):
     date_uncertain: bool
 
 
+class SearchStage(Record):
+    """One stage of a search and how long it took: `items` is what it handed on (candidates found,
+    candidates reranked)."""
+
+    name: Literal["embed", "search", "rerank"]
+    seconds: float
+    items: int
+
+
 class SearchHit(Record):
     """One chunk returned by a search, best first."""
 

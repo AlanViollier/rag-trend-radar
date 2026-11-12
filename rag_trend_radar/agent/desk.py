@@ -12,7 +12,7 @@ from pydantic import ConfigDict
 
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
-from rag_trend_radar.schema import Record
+from rag_trend_radar.schema import Record, SearchStage
 
 type Block = BetaTextBlockParam | BetaSearchResultBlockParam
 
@@ -48,13 +48,14 @@ class ToolResult:
     """What a tool returns: blocks for Claude, one line for the person watching, its documents.
 
     `aside` is text for Claude that can't sit in the result itself (a result of search results
-    takes nothing else): the loop sends it right after.
+    takes nothing else): the loop sends it right after. `stages` is how long a search's steps took.
     """
 
     blocks: Sequence[Block]
     summary: str
     documents: tuple[int, ...] = ()
     aside: str = ""
+    stages: tuple[SearchStage, ...] = ()
 
     def __post_init__(self) -> None:
         # The API refuses a tool result mixing search results with anything else (400, found on
