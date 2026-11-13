@@ -13,7 +13,7 @@ from rag_trend_radar.answer import cited
 from rag_trend_radar.evals import agent as checks
 from rag_trend_radar.exceptions import ExportRefused, ToolRefused
 from rag_trend_radar.pages import investigator
-from rag_trend_radar.pages.investigator import baseline, replay
+from rag_trend_radar.pages.investigator import baseline, replay, timings
 from rag_trend_radar.pages.investigator.records import (
     Baseline,
     Hit,
@@ -145,3 +145,30 @@ def test_an_answer_kept_with_another_prompt_is_not_reused(
     assert baseline.kept("c-raptor", "prompt v1") == saved
     assert baseline.kept("c-raptor", "prompt v2") is None
     assert baseline.kept("c-other", "prompt v1") is None
+
+
+def test_kept_search_times_replace_the_ones_measured_now(monkeypatch: pytest.MonkeyPatch) -> None:
+    read = ToolResult([text("Subject: x")], "read", (7,))
+    monkeypatch.setattr(
+        tools, "call", lambda _desk, name, _args: read if name == "read_email" else _search(7, 8)
+    )
+    run = agent_run(_tool("search", (7, 8)), _tool("read_email", (7,)), _tool("search", (7, 8)))
+    measured = replay.steps(CONN, run, staged=False)
+    assert (
+        replay.search_times(measured).searches
+        == ((SearchStage(name="embed", seconds=0.123, items=1),),) * 2
+    )
+    first = (SearchStage(name="embed", seconds=1.5, items=1),)
+    second = (SearchStage(name="embed", seconds=2.5, items=1),)
+    kept = replay.steps(
+        CONN, run, staged=False, times=timings.SearchTimes(searches=(first, second))
+    )
+    assert replay.search_times(kept).searches == (first, second)
+
+
+def test_search_times_are_kept_per_pick(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(timings, "KEPT", tmp_path)
+    assert timings.kept("c-raptor") is None
+    times = timings.SearchTimes(searches=((SearchStage(name="rerank", seconds=0.5, items=50),),))
+    timings.keep("c-raptor", times)
+    assert timings.kept("c-raptor") == times

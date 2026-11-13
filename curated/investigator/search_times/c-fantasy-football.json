@@ -1,0 +1,140 @@
+{
+ "searches": [
+  [
+   {
+    "name": "embed",
+    "seconds": 0.115,
+    "items": 1
+   },
+   {
+    "name": "search",
+    "seconds": 0.378,
+    "items": 50
+   },
+   {
+    "name": "rerank",
+    "seconds": 0.049,
+    "items": 5
+   }
+  ],
+  [
+   {
+    "name": "embed",
+    "seconds": 0.078,
+    "items": 1
+   },
+   {
+    "name": "search",
+    "seconds": 0.91,
+    "items": 50
+   },
+   {
+    "name": "rerank",
+    "seconds": 0.033,
+    "items": 11
+   }
+  ],
+  [
+   {
+    "name": "embed",
+    "seconds": 0.096,
+    "items": 1
+   },
+   {
+    "name": "search",
+    "seconds": 0.386,
+    "items": 50
+   },
+   {
+    "name": "rerank",
+    "seconds": 0.033,
+    "items": 16
+   }
+  ],
+  [
+   {
+    "name": "embed",
+    "seconds": 0.068,
+    "items": 1
+   },
+   {
+    "name": "search",
+    "seconds": 0.876,
+    "items": 50
+   },
+   {
+    "name": "rerank",
+    "seconds": 0.05,
+    "items": 6
+   }
+  ],
+  [
+   {
+    "name": "embed",
+    "seconds": 0.071,
+    "items": 1
+   },
+   {
+    "name": "search",
+    "seconds": 1.067,
+    "items": 50
+   },
+   {
+    "name": "rerank",
+    "seconds": 0.042,
+    "items": 9
+   }
+  ],
+  [
+   {
+    "name": "embed",
+    "seconds": 0.104,
+    "items": 1
+   },
+   {
+    "name": "search",
+    "seconds": 0.907,
+    "items": 50
+   },
+   {
+    "name": "rerank",
+    "seconds": 0.048,
+    "items": 10
+   }
+  ],
+  [
+   {
+    "name": "embed",
+    "seconds": 0.093,
+    "items": 1
+   },
+   {
+    "name": "search",
+    "seconds": 0.334,
+    "items": 50
+   },
+   {
+    "name": "rerank",
+    "seconds": 0.039,
+    "items": 37
+   }
+  ],
+  [
+   {
+    "name": "embed",
+    "seconds": 0.069,
+    "items": 1
+   },
+   {
+    "name": "search",
+    "seconds": 1.09,
+    "items": 50
+   },
+   {
+    "name": "rerank",
+    "seconds": 0.043,
+    "items": 4
+   }
+  ]
+ ]
+}

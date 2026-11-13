@@ -1,0 +1,38 @@
+{
+ "searches": [
+  [
+   {
+    "name": "embed",
+    "seconds": 0.103,
+    "items": 1
+   },
+   {
+    "name": "search",
+    "seconds": 1.056,
+    "items": 50
+   },
+   {
+    "name": "rerank",
+    "seconds": 0.037,
+    "items": 50
+   }
+  ],
+  [
+   {
+    "name": "embed",
+    "seconds": 0.07,
+    "items": 1
+   },
+   {
+    "name": "search",
+    "seconds": 0.435,
+    "items": 50
+   },
+   {
+    "name": "rerank",
+    "seconds": 0.036,
+    "items": 50
+   }
+  ]
+ ]
+}

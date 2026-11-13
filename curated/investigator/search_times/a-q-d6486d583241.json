@@ -1,0 +1,55 @@
+{
+ "searches": [
+  [
+   {
+    "name": "embed",
+    "seconds": 0.093,
+    "items": 1
+   },
+   {
+    "name": "search",
+    "seconds": 0.725,
+    "items": 50
+   },
+   {
+    "name": "rerank",
+    "seconds": 0.032,
+    "items": 50
+   }
+  ],
+  [
+   {
+    "name": "embed",
+    "seconds": 0.085,
+    "items": 1
+   },
+   {
+    "name": "search",
+    "seconds": 0.791,
+    "items": 50
+   },
+   {
+    "name": "rerank",
+    "seconds": 0.039,
+    "items": 50
+   }
+  ],
+  [
+   {
+    "name": "embed",
+    "seconds": 0.076,
+    "items": 1
+   },
+   {
+    "name": "search",
+    "seconds": 0.13,
+    "items": 48
+   },
+   {
+    "name": "rerank",
+    "seconds": 0.034,
+    "items": 48
+   }
+  ]
+ ]
+}

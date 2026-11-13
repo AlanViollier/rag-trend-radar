@@ -11,7 +11,7 @@ from rag_trend_radar.days import local_day
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.evals import agent as checks
 from rag_trend_radar.exceptions import ExportRefused
-from rag_trend_radar.pages.investigator import baseline, replay
+from rag_trend_radar.pages.investigator import baseline, replay, timings
 from rag_trend_radar.pages.investigator.records import (
     Baseline,
     ChosenRun,
@@ -49,7 +49,8 @@ def build(
     picked: Sequence[ChosenRun], progress: Callable[[str], None] = lambda _: None
 ) -> InvestigatorPage:
     """Every picked run replayed on the store as its asker, with its emails and its answer
-    without RAG. Free: a pick with no kept run or no kept answer without RAG stops the export."""
+    without RAG. Free: a pick with no kept run or no kept answer without RAG stops the export. Each
+    search shows its kept stage times; a pick exported for the first time keeps the ones measured."""
     planted = {q.id for name in checks.SETS for q in checks.questions(name) if q.planted}
     groups: dict[str, list[PageRun]] = {}
     emails: dict[int, PageEmail] = {}
@@ -63,7 +64,11 @@ def build(
                 raise ExportRefused(
                     f"{pick.id} has no answer without RAG for today's prompt: investigator-baseline"
                 )
-            steps = tuple(replay.steps(conn, run, staged=pick.id in planted))
+            times = timings.kept(pick.id)
+            steps = tuple(replay.steps(conn, run, staged=pick.id in planted, times=times))
+            if times is None:
+                timings.keep(pick.id, replay.search_times(steps))
+                progress(f"{pick.id}: search times measured and kept")
             wanted = replay.named(steps) | {c.document_id for c in run.citations}
             emails |= _emails(conn, wanted - {checks.PLANTED})
         if checks.PLANTED in wanted:

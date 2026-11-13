@@ -18,6 +18,7 @@ from rag_trend_radar.answer import SOURCE_PREFIX
 from rag_trend_radar.evals.agent import PLANTED
 from rag_trend_radar.exceptions import ExportRefused, ToolRefused
 from rag_trend_radar.pages.investigator.records import Hit, Note, Step, Thought, ToolCall, Turn
+from rag_trend_radar.pages.investigator.timings import SearchTimes
 from rag_trend_radar.records import AgentRun, AgentStep
 
 # A search result's title is "<day> · <origin> · <subject>" (agent/tools/search.py).
@@ -28,14 +29,21 @@ PLANTED_AT = 1
 DIGITS = 3
 
 
-def steps(conn: psycopg.Connection[TupleRow], run: AgentRun, staged: bool) -> list[Step]:
+def steps(
+    conn: psycopg.Connection[TupleRow],
+    run: AgentRun,
+    staged: bool,
+    times: SearchTimes | None = None,
+) -> list[Step]:
     """Every step of `run` as the page plays it, on a connection set to the run's person.
 
     `staged`: the run had an email planted in its first search, shown among that search's hits.
+    `times`: the kept stage times of its searches, in order; without them, the ones measured now.
     """
     desk = Desk(conn, run.person, run.as_of)
     out: list[Step] = []
     planting = staged
+    kept = iter(times.searches) if times else None
     for step in run.steps:
         if step.kind == "thinking":
             out.append(Thought(text=step.text.strip()))
@@ -45,6 +53,8 @@ def steps(conn: psycopg.Connection[TupleRow], run: AgentRun, staged: bool) -> li
             out.append(Turn(seconds=round(step.seconds, DIGITS)))
         else:
             call = _call(desk, step, planting)
+            if kept is not None and call.tool == "search" and call.stages:
+                call = call.model_copy(update={"stages": next(kept)})
             planting = planting and not call.hits
             out.append(call)
     return out
@@ -99,3 +109,10 @@ def _hits(done: ToolResult) -> list[Hit]:
         for block in done.blocks
         if block["type"] == "search_result"
     ]
+
+
+def search_times(steps: Sequence[Step]) -> SearchTimes:
+    """The stage times of every search among `steps`, in order."""
+    return SearchTimes(
+        searches=tuple(s.stages for s in steps if isinstance(s, ToolCall) and s.stages)
+    )
