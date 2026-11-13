@@ -1,6 +1,7 @@
 """How much mail matches a phrase, senders, recipients and dates, by week, month or sender.
 
-Fixed SQL with Claude's values as parameters, never SQL Claude writes (STATE, 2026-11-09).
+Fixed SQL with Claude's values as parameters, never SQL Claude writes: a reader's connection could
+switch its role back, so only fixed queries keep row-level security whole.
 """
 
 import re

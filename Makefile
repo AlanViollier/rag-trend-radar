@@ -12,7 +12,7 @@ help:
 	@echo "  ci            - What GitHub CI runs: every pre-commit hook + pip-audit"
 	@echo "  audit         - CVE scan of the locked dependencies (network)"
 	@echo "  scan-history  - Secrets, .keywords and once-committed ignored files across every commit"
-	@echo "  backup-cache  - Every computed vector to data/backups/ (hours of embedding, ~750 MB)"
+	@echo "  backup-cache  - Every computed vector to data/backups/ (19 hours of embedding, ~0.9 GB)"
 	@echo "  restore-cache - Load the newest backup into an empty cache (after losing the volume)"
 	@echo "  check-investigator - Play every run of page 2 in a headless browser, screenshots to data/"
 	@echo "  clean         - Remove caches and build output"
@@ -88,7 +88,7 @@ scan-history:
 	@echo "  ✓ history clean"
 
 # The embedding cache survives db-reset but not a deleted Docker volume. Everything else
-# rebuilds from the maildir in about an hour; the vectors took about eight.
+# rebuilds from the maildir in about an hour; the vectors took about 19 hours.
 backup-cache:
 	@mkdir -p data/backups
 	docker compose exec -T db pg_dump -U radar -d radar -t cache.embeddings -Fc > data/backups/embeddings-$$(date +%Y-%m-%d).dump

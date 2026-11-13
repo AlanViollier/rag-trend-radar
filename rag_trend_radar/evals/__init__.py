@@ -1,1 +1,1 @@
-"""Scoring: retrieval now, answers and the radar later."""
+"""Scoring, by code: retrieval, leaks, hard questions, and the agent's runs."""

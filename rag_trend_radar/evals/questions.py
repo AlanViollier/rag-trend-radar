@@ -82,7 +82,7 @@ CODE_PATTERN = (
 DIGITS = "[0-9]{5,}"
 SECOND_ASK = re.compile(r"\b(and|or) (what|how|who|when|where|why|which)\b", re.IGNORECASE)
 # A code held by more documents than this has no single answer: a deal number repeated in
-# every daily report. Up to it, the other holders are fair candidates the judge reads.
+# every daily report. Up to it, the few other holders are fair rivals.
 MAX_CODE_HOLDERS = 5
 
 
@@ -151,7 +151,7 @@ def sample(
 def write(
     picked: list[Sampled], as_of: date, model: str, *, style: Style = Style.NAMES
 ) -> Iterator[EvalQuestion]:
-    """A question per usable email; unusable ones are skipped. Cached per email (rule 6)."""
+    """A question per usable email; unusable ones are skipped. Cached per email."""
     client = claude.client()
     # Calls run 8 at a time and come back in order, so the set reproduces. Every email
     # is asked, even past the ones the caller keeps: the spares are cached for the next run.

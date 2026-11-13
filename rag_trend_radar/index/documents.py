@@ -23,7 +23,7 @@ def upsert_documents(
     (and their vectors), a new boilerplate line or chunk size rewrites them. Who may read an
     email is rewritten every time from `readers`, so a copy found in one more mailbox widens
     access without touching the chunks. A quoted message's readers are recounted from every
-    stored email quoting it, whichever day quoted it (rule 5), and its chunks are cut on the day
+    stored email quoting it, whichever day quoted it, so a re-run changes nothing, and its chunks are cut on the day
     of its first quote, as its title is kept from it. A deleted document is skipped:
     replaying its day doesn't bring it back.
     """
@@ -82,7 +82,7 @@ def delete_document(conn: psycopg.Connection[TupleRow], document_id: int) -> lis
     Its chunks and vectors go, its text and headers are blanked, and the row stays as a
     tombstone so a replay skips it. A quoted message that only this email quoted goes with it;
     one that others quote too keeps the readers who still hold a quote. `raw_files` keeps the
-    file as read (rule 4). Returns the sent_at of every document deleted.
+    file as read; it's never edited. Returns the sent_at of every document deleted.
     """
     with conn.cursor() as cur:
         cur.execute("DELETE FROM quotes WHERE email_id = %s RETURNING quoted_id", (document_id,))

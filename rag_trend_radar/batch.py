@@ -1,6 +1,6 @@
 """The daily loop: stage the dataset once, then turn each simulated day into the store's rows.
 
-Re-running a day changes nothing (rule 5): documents upsert by content hash, and the day's
+Re-running a day changes nothing: documents upsert by content hash, and the day's
 `batches` row is recounted from what's stored, never incremented.
 """
 
@@ -24,7 +24,8 @@ from rag_trend_radar.sources import enron
 def stage(conn: psycopg.Connection[TupleRow], root: Path, tz: ZoneInfo) -> Scan:
     """Read every file once: raw files, quarantine, employees, and the replay's schedule.
 
-    Files already in `raw_files` stay as they were (rule 4). `copies` and `boilerplate` are
+    Files already in `raw_files` stay as they were: they're never edited, and everything else is
+    rebuilt from them. `copies` and `boilerplate` are
     derived, so they're rewritten whole: after a parsing change, staging again updates them.
     """
     scanned = assemble.scan(root)

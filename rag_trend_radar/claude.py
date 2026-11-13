@@ -33,6 +33,6 @@ def cost_usd(
 
 
 def cache_path(folder: str, key: str) -> Path:
-    """Where the answer to a call goes, by everything it depends on (rule 6)."""
+    """Where the answer to a call goes, by everything it depends on: no call is paid for twice."""
     digest = hashlib.blake2b(key.encode(), digest_size=16).hexdigest()
     return get_settings().data_dir / "cache" / folder / f"{digest}.json"

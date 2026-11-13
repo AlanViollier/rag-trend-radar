@@ -18,7 +18,7 @@ from rag_trend_radar.radar import clustering
 from rag_trend_radar.radar.clustering import NOISE
 from rag_trend_radar.run_log import RunLog
 
-# Locked with the owner 2026-11-05. 26 weeks: 8 and 16 kept a cluster too briefly (median life, mail in
+# Settled 2026-11-05. 26 weeks: 8 and 16 kept a cluster too briefly (median life, mail in
 # lasting clusters). First window Jan–Jul 2000: too little mail before. After Feb 2002 mailboxes empty out.
 WEEKS, FIRST, LAST = 26, date(2000, 7, 2), date(2002, 2, 24)
 SEEDS = (1, 2)

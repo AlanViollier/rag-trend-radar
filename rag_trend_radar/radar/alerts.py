@@ -1,6 +1,6 @@
 """When a cluster earns an alert: it grows fast against its own normal, judged on mail up to its week.
 
-Tuned by eye over the whole run (owner 2026-11-07): about one alert every 9 days. Whether one
+Tuned by eye over the whole run (2026-11-07): about one alert every 9 days. Whether one
 mattered is read in the naming pass, as an investigator would.
 """
 

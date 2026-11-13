@@ -19,8 +19,8 @@ type Block = BetaTextBlockParam | BetaSearchResultBlockParam
 class Desk:
     """One run of the agent: a connection already set to `person`, and the day it's asked on.
 
-    Every tool reads through `conn`, so row-level security decides what it sees (rule 3), and
-    stops at `as_of` (rule 2): a date Claude asks for past it is pulled back to it. `shown` and
+    Every tool reads through `conn`, so row-level security decides what it sees, and
+    stops at `as_of`: a date Claude asks for past it is pulled back to it. `shown` and
     `read` are the chunks and whole emails this run has already handed Claude, so search sends
     new ones instead (a fifth to a quarter of results were repeats, 2026-11-10).
     """

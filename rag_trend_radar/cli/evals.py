@@ -27,8 +27,8 @@ from rag_trend_radar.search.mix import RESULTS
 QUESTIONS = Path("evals/questions.jsonl")
 HARD_QUESTIONS = Path("evals/questions_hard.jsonl")
 # hit_rate@1: an answer is first. @10: Claude gets to read one. @50: the reranker gets to see
-# one. MRR@10: 1 / the first answer's rank, so second place counts half. Not recall@k: with
-# judged labels a question can have several answers, and recall would count the share found.
+# one. MRR@10: 1 / the first answer's rank, so second place counts half. Not recall@k: counting
+# copies, a question can have several right answers, and recall would count the share found.
 METRICS = ("hit_rate@1", "hit_rate@10", "hit_rate@50", "mrr@10")
 
 
@@ -147,7 +147,7 @@ def recall(
 
 @app.command()
 def scores(run: Path) -> None:
-    """Print a saved recall run's tables again, with the judgments as they are now (free)."""
+    """Print a saved recall run's tables again, copies counted by today's rule (free)."""
     saved = RecallRun.model_validate_json(run.read_text())
     path = QUESTIONS.parent / saved.manifest.questions
     labelled = read_records(path, EvalQuestion)

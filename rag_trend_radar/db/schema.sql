@@ -38,8 +38,7 @@ CREATE TABLE store (
 );
 INSERT INTO store DEFAULT VALUES;
 
--- One row per searchable thing: an email, a quoted message no email of ours holds, later an
--- arXiv paper.
+-- One row per searchable thing: an email, or a quoted message no email of ours holds.
 -- (source, external_id) is the stable outside id: the content hash for an email, the text
 -- hash for a quoted message.
 CREATE TABLE documents (

@@ -75,17 +75,9 @@ class AppSettings(BaseSettings):
 
 @cache
 def get_settings(config_path: Path = Path("config.yaml")) -> AppSettings:
-    """Load settings from `config_path` plus the environment.
+    """Settings from `config_path` (the non-secret ones) plus the environment, validated.
 
-    Parameters
-    ----------
-    config_path:
-        YAML file holding non-secret settings.
-
-    Returns
-    -------
-    AppSettings
-        Validated settings; raises `ConfigError` when the file doesn't validate.
+    Raises `ConfigError` when they don't validate.
     """
     values = yaml.safe_load(config_path.read_text()) or {}
     try:

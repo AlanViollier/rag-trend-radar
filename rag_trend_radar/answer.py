@@ -28,7 +28,7 @@ SOURCE_PREFIX = "document "
 def answer(question: str, hits: Sequence[SearchHit], as_of: date, model: str) -> Answer:
     """Send the hits as search_result blocks so every claim cites the chunk it came from.
 
-    Answers are cached on disk by their inputs and PROMPT_VERSION (rule 6): asking the same
+    Answers are cached on disk by their inputs and PROMPT_VERSION: asking the same
     thing over the same hits costs nothing the second time.
     """
     cached = _cache_path(question, hits, as_of, model)

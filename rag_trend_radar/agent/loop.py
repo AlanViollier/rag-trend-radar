@@ -1,6 +1,6 @@
 """The agent: Claude picks a tool, reads what comes back, and goes on until it answers.
 
-A plain loop on the Anthropic SDK (STATE, 2026-11-10): one agent and seven tools don't need a
+A plain loop on the Anthropic SDK: one agent and seven tools don't need a
 graph framework. Every step lands in the run's trace as it happens, for the terminal and page 2.
 """
 
@@ -57,7 +57,7 @@ def run(
     """Work `question` as `desk.person` on `desk.as_of` and return the whole run.
 
     A run already made with the same question, person, day, model, prompt and tools is read back
-    from disk at no cost (rule 6). `watch` sees every step as it happens; `client` is the
+    from disk at no cost. `watch` sees every step as it happens; `client` is the
     Anthropic client (default: the one on the key in .env). `planted` is an injection test's fake
     email, slipped into the first search's results; the store never holds it.
     """
@@ -91,7 +91,7 @@ def run(
             tool_choice=NO_TOOLS if out_of_calls else ANY_TOOL,
             messages=messages,
             thinking={"type": "adaptive", "display": "summarized"},
-            # High (owner 2026-11-10): at medium the smoke run stopped at the first plausible
+            # High: at medium, the smoke run (2026-11-10) stopped at the first plausible
             # result; page 2 wants answers that checked.
             output_config={"effort": "high"},
             # The history only grows, so each call reads the last one's prefix from the cache.

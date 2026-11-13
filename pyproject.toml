@@ -9,7 +9,7 @@ description = "RAG and a trend radar over one Postgres store, fed day by day"
 requires-python = ">=3.14"
 
 dependencies = [
-    "anthropic>=1.0",           # answers with native citations; weekly digests (Batch API)
+    "anthropic>=1.0",           # answers with native citations, the agent's tool loop
     "numpy>=2.4",               # vectors between the embedder and Postgres
     "pgvector>=0.5",            # vector / halfvec types for psycopg
     "psycopg[binary]>=3.3",     # Postgres driver; plain SQL, no ORM

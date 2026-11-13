@@ -48,7 +48,8 @@ def replay(
     header: bool = True,
     vectors: bool = True,
 ) -> None:
-    """Run the daily loop for every day from `since` to `until` (default: the M1 slice).
+    """Run the daily loop for every day from `since` to `until` (default: September 2001, the
+    slice search was first measured on).
 
     Days run in order, each one whole: documents, chunks, vectors, then its `batches` row.
     Re-running a day changes nothing. `--max-tokens` and `--no-header` chunk another way, for an

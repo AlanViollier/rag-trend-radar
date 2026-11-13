@@ -31,14 +31,10 @@ MAX_SCAN_TUPLES = 100_000
 def connect(person: str | None = None, ef_search: int = EF_SEARCH) -> psycopg.Connection[TupleRow]:
     """Open a connection; with `person`, every query sees only what that person may see.
 
-    Parameters
-    ----------
-    person:
-        None for the pipeline (owner, no row filtering). 'investigator' or an employee's
-        mailbox (kean-s) for searches: the connection switches to radar_reader and sets
-        app.person.
-    ef_search:
-        How many candidates a reader's HNSW scan keeps; recall varies it to re-measure.
+    Without `person` it's the pipeline's: the tables' owner role, which row-level security doesn't
+    filter. With 'investigator' or an employee's mailbox (kean-s), the connection switches to
+    radar_reader and sets app.person. `ef_search` is how many candidates a reader's HNSW scan
+    keeps; `recall` varies it to measure it again.
     """
     conn = _open()
     register_vector(conn)

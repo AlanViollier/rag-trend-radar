@@ -36,8 +36,9 @@ CREATE TABLE cluster_weeks (
 );
 CREATE INDEX cluster_weeks_week ON cluster_weeks (week);
 
--- Which chunks a cluster held, first and last week: what search is limited to when a surge asks "what
--- happened here?". A deleted chunk leaves here at once; `cluster_weeks` recounts on the next build.
+-- Which chunks a cluster held, first and last week: who wrote in it (the agent's topic_history) and
+-- which mail no cluster took (the page's glow). A deleted chunk leaves here at once; `cluster_weeks`
+-- recounts on the next build.
 CREATE TABLE cluster_chunks (
     cluster_id bigint REFERENCES clusters (id) ON DELETE CASCADE,
     chunk_id   bigint REFERENCES chunks (id) ON DELETE CASCADE,

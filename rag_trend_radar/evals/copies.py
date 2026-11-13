@@ -15,7 +15,7 @@ from rag_trend_radar.ingest.dedup import numbers, words
 from rag_trend_radar.records import EvalQuestion
 
 # Shared words over all words (Jaccard) from which two texts are the same message re-sent.
-# The judge's verdicts (2026-10-30) put real re-sends well above it and look-alikes below.
+# Set on hard cases read on 2026-10-30: real re-sends sit well above it, look-alikes below.
 SHARED = 0.5
 # A label shorter than this ("Thanks, see you there") is contained in too many emails to count.
 MIN_CONTAINED = 100

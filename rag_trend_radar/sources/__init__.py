@@ -1,1 +1,1 @@
-"""Where documents come from. sources/base.py arrives with the second source (arXiv)."""
+"""Where documents come from: the Enron dataset, the only source so far."""

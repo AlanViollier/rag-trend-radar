@@ -12,7 +12,7 @@ from rag_trend_radar.days import cutoff, local_day
 
 # Bump on any change to the prompt or the request shape: saved runs are keyed by it.
 PROMPT_VERSION = 9
-# Thorough runs (owner 2026-11-10): the smoke run stopped after 2 calls every time.
+# Thorough runs: told to use "a few" calls, the smoke run (2026-11-10) stopped after 2 every time.
 MAX_TOOL_CALLS = 12
 
 SYSTEM = """You answer questions about Enron's email for {who}. Today is {as_of}: nothing after \

@@ -56,7 +56,7 @@ class RunManifest(Record):
 
 
 class RecallRun(Record):
-    """A recall run saved whole: re-scoring or judging it never re-runs a search.
+    """A recall run saved whole: re-scoring it never re-runs a search.
 
     Rankings name documents by external id, best first, one entry per document (its best chunk);
     latency is per question, in milliseconds.
