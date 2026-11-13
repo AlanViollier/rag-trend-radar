@@ -75,11 +75,12 @@ CHROMIUM ?= $(lastword $(wildcard $(HOME)/Library/Caches/ms-playwright/chromium_
 check-investigator:
 	uv run --no-project --with playwright python scripts/check_investigator.py docs/investigator/index.html data/reports/investigator_shots "$(CHROMIUM)"
 
-# Run before a repo goes public. Needs the gitleaks binary (`brew install gitleaks`).
+# Run before a repo goes public. Needs the gitleaks binary (`brew install gitleaks`). History is
+# checked against the .keywords lines above `# files only`; lint-slop checks today's files against all.
 scan-history:
 	gitleaks git --redact --no-banner .
 	@if [ -f .keywords ]; then \
-	  patterns=$$(grep -vE '^[[:space:]]*(#|$$)' .keywords | paste -sd '|' -); \
+	  patterns=$$(sed '/^# files only/q' .keywords | grep -vE '^[[:space:]]*(#|$$)' | paste -sd '|' -); \
 	  result=$$(git log -p --all --format= -- . ':!LICENSE' | grep '^+' | grep -inE "($$patterns)" || true); \
 	  if [ -n "$$result" ]; then echo "  ✗ .keywords match in history:"; echo "$$result" | sed 's/^/    /'; exit 1; fi; \
 	fi
