@@ -2,6 +2,6 @@
 
 from rag_trend_radar.agent.desk import Desk
 from rag_trend_radar.agent.loop import run
-from rag_trend_radar.agent.traces import latest, save
+from rag_trend_radar.agent.traces import keep, kept, save
 
-__all__ = ["Desk", "latest", "run", "save"]
+__all__ = ["Desk", "keep", "kept", "run", "save"]

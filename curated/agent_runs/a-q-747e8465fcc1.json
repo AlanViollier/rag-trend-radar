@@ -1,0 +1,103 @@
+{
+ "question": "What was the round-trip fare from Houston to Santa Fe in the late November 2000 fare watcher alert?",
+ "person": "scott-s",
+ "as_of": "2002-12-31",
+ "model": "claude-sonnet-5-5",
+ "prompt_version": 6,
+ "steps": [
+  {
+   "kind": "note",
+   "text": "Plan: find the fare watcher alert from late November 2000 mentioning Houston to Santa Fe, and read the fare.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 1.6440833750093589,
+   "input_tokens": 4,
+   "output_tokens": 157,
+   "cache_read": 0,
+   "cache_write": 2826,
+   "cost_usd": 0.008643
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"fare watcher Houston to Santa Fe round-trip\", \"since\": \"2000-11-15\", \"until\": \"2000-12-10\"}",
+   "summary": "10 results, 2 of them people's own mail",
+   "documents": [
+    112628,
+    121021,
+    116525,
+    115186,
+    111123
+   ],
+   "error": false,
+   "seconds": 17.869772333011497,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 3.285858167000697,
+   "input_tokens": 2,
+   "output_tokens": 317,
+   "cache_read": 0,
+   "cache_write": 12858,
+   "cost_usd": 0.035319
+  }
+ ],
+ "answer": "The fare was $198 round-trip. It appeared in the Travelocity.com fare watcher update dated Friday, November 24, 2000.\n\n- That alert listed Houston (all airports) to Santa Fe, NM (SAF) at a new price of $198.00. The previous price was also $198.00, so the change was $0.00.\n- Travelocity said the alert covered 4 recent fare changes based on the subscriber's round-trip selections.\n- The alert's notes say prices do not include applicable tax and fees.\n- Neighboring alerts show the fare moving afterward. The December 1 alert still showed $198.00. The December 8 alert showed $268.00.",
+ "found": "yes",
+ "citations": [
+  {
+   "document_id": 112628,
+   "cited_text": "*  QHO-SAF   FROM: HOUSTON ALL AIRPORTS (QHO)\n             TO:   SANTA FE, NM (SAF)\n   PRICE:    NEW PRICE      WAS      DIFFERENCE\n             ---------    -------    ----------\n             $198.00      $198.00     -$0.00"
+  },
+  {
+   "document_id": 112628,
+   "cited_text": "Travelocity.com fare watcher found 4 recent fare change(s) based on\nyour current round-trip selections. If the fares have\ngone down in price, we recommend you act quickly to take\nadvantage of time-sensitive low fares."
+  },
+  {
+   "document_id": 116525,
+   "cited_text": "Prices DO NOT INCLUDE applicable tax and fees (Tax\nand fees on international fares may be higher)."
+  },
+  {
+   "document_id": 116525,
+   "cited_text": "*  QHO-SAF   FROM: HOUSTON ALL AIRPORTS (QHO)\n             TO:   SANTA FE, NM (SAF)\n   PRICE:    NEW PRICE      WAS      DIFFERENCE\n             ---------    -------    ----------\n             $198.00      $198.00     -$0.00"
+  },
+  {
+   "document_id": 121021,
+   "cited_text": "*  QHO-SAF   FROM: HOUSTON ALL AIRPORTS (QHO)\n             TO:   SANTA FE, NM (SAF)\n   PRICE:    NEW PRICE      WAS      DIFFERENCE\n             ---------    -------    ----------\n             $268.00      $268.00     -$0.00"
+  }
+ ],
+ "cost_usd": 0.043962,
+ "seconds": 22.8001920000097,
+ "started": "2026-11-10T16:10:17.124030Z",
+ "commit": "8a831ca"
+}

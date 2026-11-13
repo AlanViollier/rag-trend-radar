@@ -1,0 +1,393 @@
+{
+ "question": "When did Raptor first show up in the mail, and who was writing about it?",
+ "person": "investigator",
+ "as_of": "2002-12-31",
+ "model": "claude-sonnet-5-5",
+ "prompt_version": 8,
+ "steps": [
+  {
+   "kind": "thinking",
+   "text": "I'll check when \"Raptor\" first shows up and who wrote it, keeping in mind it might refer to something else like a product name. I'll start by looking at the mail counts by month and running a search.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "Plan: (1) count \"Raptor\" by month to find its earliest appearance; (2) search the early mail to see what it refers to (the Enron Raptor vehicles or something else); (3) identify who wrote it and read the first emails.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 3.2717638750036713,
+   "input_tokens": 4,
+   "output_tokens": 305,
+   "cache_read": 0,
+   "cache_write": 4196,
+   "cost_usd": 0.013548
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "mail_counts",
+   "arguments": "{\"words\": [\"Raptor\"], \"by\": \"month\"}",
+   "summary": "314 emails, 2000-05-02 to 2002-04-10",
+   "documents": [],
+   "error": false,
+   "seconds": 0.05634541600011289,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Raptor structure hedge, Raptor I, Raptor vehicle\", \"until\": \"2001-06-30\"}",
+   "summary": "10 results, 10 of them people's own mail",
+   "documents": [
+    87656,
+    108409,
+    108047,
+    158873,
+    164009,
+    81096,
+    150469,
+    139658,
+    77756,
+    78760
+   ],
+   "error": false,
+   "seconds": 16.947062000006554,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "I've got a first match from 2 May 2000 and six emails in May to check. This Raptor might be a different one, so I'll run the search again with a date filter.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "The counts show the earliest matches in May 2000, before the Raptor structure appears in the search results (Aug 2000). I'll check those early emails.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 1.786751000006916,
+   "input_tokens": 2,
+   "output_tokens": 164,
+   "cache_read": 0,
+   "cache_write": 10399,
+   "cost_usd": 0.0276415
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Raptor\", \"until\": \"2000-07-31\"}",
+   "summary": "10 results, 10 of them people's own mail",
+   "documents": [
+    69923,
+    53018,
+    48380,
+    64386,
+    58286,
+    59712,
+    53148,
+    58098,
+    51542,
+    53041
+   ],
+   "error": false,
+   "seconds": 5.29318374999275,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "I'm checking whether the April 2000 forwarded email with the \"Raptor v5.ppt\" attachment should count as the first mention, since the count reports 2000-05-02. My guess is the phrase matching is tokenizing the attachment name differently, so the document may actually date to 2000-04-12 and got missed.\n\nNext I'll search for \"Raptor\" before 2000-05-01 and pull the mail counts by sender for the early weeks. The May 2 email is already in view, so I'll skip re-reading it. I'll run the sender counts through July 2000 and then search the earlier window.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "The April 2000 email references a \"Raptor v5.ppt\" attachment even though the count starts May 2. I'll check for anything earlier and see who wrote most in the early period.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 4.249634874999174,
+   "input_tokens": 2,
+   "output_tokens": 481,
+   "cache_read": 10399,
+   "cache_write": 4015,
+   "cost_usd": 0.0158914
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Raptor LJM2 structure Enron stock hedge draft\", \"until\": \"2000-05-01\"}",
+   "summary": "10 results, 10 of them people's own mail, 1 repeats left out",
+   "documents": [
+    43742,
+    34696,
+    29176,
+    29943,
+    27413,
+    39149,
+    39054,
+    29749,
+    36879,
+    29733
+   ],
+   "error": false,
+   "seconds": 7.365692500010482,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "mail_counts",
+   "arguments": "{\"words\": [\"Raptor\"], \"by\": \"sender\", \"until\": \"2000-08-15\"}",
+   "summary": "19 emails, 2000-05-02 to 2000-08-15",
+   "documents": [],
+   "error": false,
+   "seconds": 0.03810920799151063,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "I've confirmed nothing predates April 12 apart from doc 48380, a April 2000 PwC \"Raptor v5.ppt\" forwarded by Trushar Patel, which matches the attachment name. The earliest date is therefore 2000-04-12, going by the original forward on 04/04. The count tool probably missed this one because of how \"Raptor v5.ppt\" was tokenized, so I'll open that document to verify it and check the early sender names as well.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "The counts start at May 2, but search turned up an April 12 email with a \"Raptor v5.ppt\" attachment. I'll read it in full.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 3.036996541006374,
+   "input_tokens": 4,
+   "output_tokens": 239,
+   "cache_read": 14414,
+   "cache_write": 7100,
+   "cost_usd": 0.0215894
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "read_email",
+   "arguments": "{\"document_id\": 48380}",
+   "summary": "read document 48380, 2000-04-12",
+   "documents": [
+    48380
+   ],
+   "error": false,
+   "seconds": 0.011985833989456296,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 9.410564000005252,
+   "input_tokens": 2,
+   "output_tokens": 1291,
+   "cache_read": 21514,
+   "cache_write": 1145,
+   "cost_usd": 0.0179279
+  }
+ ],
+ "answer": "Raptor first shows up in the mail on 2000-04-12, but only as an attachment name. The first email that discusses Raptor in its own text is dated 2000-05-02.\n\n**First appearance (April 2000).**\n- On 04/11/2000 Trushar Patel forwarded a 04/04/2000 email from Ian D'Souza at PwC, copied to Steven Stampf and Timothy Luehrman.\n- It carried a \"very preliminary\" draft analysis of a transaction.\n- It says \"(See attached file: Raptor v5.ppt)\".\n- The analysis used the Enron share price as of March 28, 2000 ($72.81) and assumed an LJM2 distribution of $30m, or a 25% IRR.\n- The stored copy of this message is known only from replies quoting it. The mail_counts tool does not list it, because it puts the first \"Raptor\" match on May 2. The word appears here only in the attachment name.\n- A search for Raptor-related terms before May 2000 found nothing else.\n\n**First email about Raptor itself (May 2000).**\n- On 2000-05-02 Carol St. Clair's email \"Project Raptor\" asked that a legal assistant get copies of all the Raptor docs and the swap docs, plus the latest closing list. A Raptor deal had apparently already been signed by then, though the email doesn't say so outright.\n- It was a short note to a colleague named Trina.\n- On 2000-06-08 an invitation announced a \"Project Raptor Closing Dinner\" for Monday, June 12, 2000.\n- A 06-15 email about a second Raptor transaction notes that, unlike Raptor 1, no stock from the UBS position would be involved.\n- By 2000-07-07 Carol St. Clair wrote that Raptor II was completed and that she was leaving her closing binder on Raptor I.\n\n**Who wrote about it early on.**\n- By sender count (mail_counts, through 2000-08-15), 19 emails mention Raptor. The top senders are Carol St. Clair with 8 and David Delainey with 5. Sara Shackleton has 3. Andrea Reed, Eric Bass and John Lavorato have 1 each.\n- Delainey wrote on 2000-05-11 that \"raptor may be a good accounting hedge\" but that taking back JEDI's share at existing marks would destroy \"significant real value\".\n- A reply that day from Mike, in Enron Global Finance, discussed reserving some Raptor capacity to hedge JEDI II investments after the restructuring.\n- On 2000-07-31 Delainey described $500M gross ($408M net to ENA) going into Raptor on September 1, and a second tranche of $608M gross going into Raptor 2 on December 1.\n\n**Volume.** Mentions then surged. The counts show 36 emails in August 2000 and 70 in September 2000. In those months Gordon McKillop, Stuart Zisman and Scott Sefton wrote about derivative proposal sheets and swaps into the Raptor structure, for example the \"Raptor I Derivative Proposal Sheet\" for confirmations with Talon.",
+ "found": "yes",
+ "citations": [
+  {
+   "document_id": 48380,
+   "cited_text": "---------------------- Forwarded by Trushar Patel/Corp/Enron on 04/11/2000 \n09:49 AM ---------------------------ian.c.dsouza@us.pwcglobal.com on 04/04/2000 01:42:34 PM\nTo: Trushar.Patel@enron.com\ncc: steven.j.stampf@us.pwcglobal.com, timothy.luehrman@us.pwcglobal.com"
+  },
+  {
+   "document_id": 48380,
+   "cited_text": "Please find attached our draft analysis.  It is still very preliminary as we\nhave not been provided the latest version of legal documents and so the \nanalysis\nreflects our understanding of the economics of the transaction as outlined to \nus\nbased on discussions with Enron and available prior draft documentation.."
+  },
+  {
+   "document_id": 48380,
+   "cited_text": "(See attached file: Raptor v5.ppt)\n----------------------------------------------------------------\nThe information transmitted is intended only for the person or entity to which\nit is addressed and may contain confidential and/or privileged material.  Any\nreview, retransmission, dissemination or other use of, or taking of any action\nin reliance upon, this information by persons or entities other than the\nintended recipient is prohibited.   If you received this in error, please\ncontact the sender and delete the material from any computer."
+  },
+  {
+   "document_id": 48380,
+   "cited_text": "The analysis uses the Enron share price as of March 28, 2000 ($72.81) and\nassumes the LJM2 distribution is based on $30m or 25% IRR.  We anticipated \nthat\nthis might reach 30% IRR based on Enron discussions with LJM2."
+  },
+  {
+   "document_id": 51542,
+   "cited_text": "Subject: Project Raptor\nFrom: carol.clair@enron.com\nDate: 2000-05-02Trina:\nCould you please make sure that Susan Bailey, a legal assistant in our group, \ngets copies of all of the Raptor docs so that we can keep a file in our \ngroup.  Ideally, we should get originals of all of the swap docs but I don't \nknow if that's possible.  I just want to make sure that I don't have to go \nthrough Scott to get anthing if you know what I mean.    Susan's extension is \n34737.  Could you also e-mail the latest closing list so that she can keep \ntrack of what was signed?  Thanks."
+  },
+  {
+   "document_id": 51542,
+   "cited_text": "Subject: Project Raptor\nFrom: carol.clair@enron.com\nDate: 2000-05-02"
+  },
+  {
+   "document_id": 58286,
+   "cited_text": "PROJECT RAPTOR CLOSING DINNER"
+  },
+  {
+   "document_id": 58286,
+   "cited_text": "Monday, June 12, 2000\n6:30 p.m."
+  },
+  {
+   "document_id": 59712,
+   "cited_text": "Quoted in this reply: I understand that we want to put a second Raptor transaction in place before \nthe end of the month. One major difference from Raptor 1 is that no stock \nfrom the UBS position will be involved. \n\nAnne, Will we be getting a fairness opinion on this deal? We also need to \nthink about whether we'll need to get full board or executive committee \napproval.\n\nThanks!\n\nScott"
+  },
+  {
+   "document_id": 64386,
+   "cited_text": "Susan and Samantha:\nWe are in the process of completing a quarter end project called Project \nMargaux and have completed the Raptor II project.  With respect to Project \nMargaux, please coordinate with Mark Evans in London to get closing sets of \ndocuments.   With respect to Raptor II, I will leav a message with Alicia \nCurry at V&E to send you the closing sets.  I will leave with you my closing \nbinder on Raptor I."
+  },
+  {
+   "document_id": 53018,
+   "cited_text": "That may work -  I don't want to end up with an equity position I just worked \nhard to eliminate. Further, raptor may be a good accounting hedge but if we \ntook back JEDI's share at existing marks we would be destroying significant \nreal value. Will the buy back price of the equity/debt we get back from JEDI \nincorporate the write downs we think should occur?"
+  },
+  {
+   "document_id": 53148,
+   "cited_text": "Dave, I assume you are asking how we hedge the portion of JEDI II investments \nthat will come back to us after the restructuring. As any buyout price for \nCALPERS will reflect the state of the assets at closing, I think we are well \nhedged until the closing of the restructuring. We can see if we can reserve \nsome Raptor capacity upfront to hege us moving forward from the restructuring \nclosin. If this does not answer your question, let me know.    Mike"
+  },
+  {
+   "document_id": 69923,
+   "cited_text": "Rick, we have re-examined the portfolio as a result of our last meeting and \nhave an expected portfolio of $500M (gross) or $408M (net-ENA's share) to be \nplaced into Raptor on September 1.  We have a second tranche of $608M (gross) \nor $396M (net ENA's share) to be placed into Raptor 2 on December 1."
+  },
+  {
+   "document_id": 77756,
+   "cited_text": "The Raptor I structure requires that certian information be included with the \nconfirmation of derivative transactions with Talon.  Please fill out the \nattached form for the Avici swap on August 3 and submit it to me.  If you \nhave any questions please let me know.\nThanks,\nGordon x33123"
+  }
+ ],
+ "cost_usd": 0.0965982,
+ "seconds": 51.471590625005774,
+ "started": "2026-11-10T17:00:16.625980Z",
+ "commit": "fc8c10f"
+}

@@ -25,6 +25,8 @@ from rag_trend_radar.site.investigator.records import (
 )
 
 TEMPLATE = Path(__file__).with_name("page.html")
+# The runs picked for the page, in page order.
+PICKS = Path("curated/investigator/picks.jsonl")
 _PLANTED_EMAIL = PageEmail(
     kind="planted",
     date=checks.PLANTED_DAY,
@@ -48,18 +50,20 @@ def build(
     picked: Sequence[ChosenRun], progress: Callable[[str], None] = lambda _: None
 ) -> InvestigatorPage:
     """Every picked run replayed on the store as its asker, with its emails and its answer
-    without RAG. Free: a run never saved or never asked without RAG stops the export."""
+    without RAG. Free: a pick with no kept run or no kept answer without RAG stops the export."""
     planted = {q.id for name in checks.SETS for q in checks.questions(name) if q.planted}
     groups: dict[str, list[PageRun]] = {}
     emails: dict[int, PageEmail] = {}
     for pick in picked:
-        run = agent.latest(pick.id)
+        run = agent.kept(pick.id)
         if run is None:
-            raise ExportRefused(f"{pick.id} has no saved run: run agent-evals first")
+            raise ExportRefused(f"{pick.id} has no kept run: run agent-evals first")
         with db.connect(run.person) as conn:
-            asked = baseline.cached(run, baseline.prompt(conn, run.person, run.as_of))
+            asked = baseline.kept(pick.id, baseline.prompt(conn, run.person, run.as_of))
             if asked is None:
-                raise ExportRefused(f"{pick.id} was never asked without RAG: investigator-baseline")
+                raise ExportRefused(
+                    f"{pick.id} has no answer without RAG for today's prompt: investigator-baseline"
+                )
             steps = tuple(replay.steps(conn, run, staged=pick.id in planted))
             wanted = replay.named(steps) | {c.document_id for c in run.citations}
             emails |= _emails(conn, wanted - {checks.PLANTED})

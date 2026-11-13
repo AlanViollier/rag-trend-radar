@@ -11,7 +11,6 @@ from rag_trend_radar.cli.app import app
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.site import investigator
 
-RUNS = Path("evals/investigator_runs.jsonl")
 PAGE = Path("docs/investigator/index.html")
 
 
@@ -19,22 +18,25 @@ PAGE = Path("docs/investigator/index.html")
 def investigator_baseline(yes: bool = False) -> None:
     """Ask each picked run's question without RAG: same model and prompt, no mail, no tools.
 
-    Paid, about a cent each; a question asked before is read back from disk and costs nothing.
+    Paid, about a cent each; an answer kept with today's prompt is reused and costs nothing.
     """
-    runs = [run for pick in investigator.chosen(RUNS) if (run := agent.latest(pick.id))]
-    prompts = []
-    for run in runs:
-        with db.connect(run.person) as conn:
-            prompts.append(investigator.baseline.prompt(conn, run.person, run.as_of))
-    todo = [
-        (r, p) for r, p in zip(runs, prompts, strict=True) if not investigator.baseline.cached(r, p)
+    picked = [
+        (pick.id, run)
+        for pick in investigator.chosen(investigator.PICKS)
+        if (run := agent.kept(pick.id))
     ]
+    todo = []
+    for pick, run in picked:
+        with db.connect(run.person) as conn:
+            system = investigator.baseline.prompt(conn, run.person, run.as_of)
+        if not investigator.baseline.kept(pick, system):
+            todo.append((pick, run, system))
     cents = len(todo) * investigator.baseline.CENTS_EACH
-    show(f"{len(todo)} of {len(runs)} not asked yet, about ${cents / 100:.2f}")
+    show(f"{len(todo)} of {len(picked)} not asked with today's prompt, about ${cents / 100:.2f}")
     if todo and not yes:
         typer.confirm("Ask them?", abort=True)
-    for run, system in todo:
-        answer = investigator.baseline.ask(run, system)
+    for pick, run, system in todo:
+        answer = investigator.baseline.ask(pick, run, system)
         show(f"{run.question[:60]}: {answer.found}, ${answer.cost:.4f}")
 
 
@@ -42,7 +44,7 @@ def investigator_baseline(yes: bool = False) -> None:
 def investigator_export(out: Path = PAGE) -> None:
     """Write page 2 from the saved runs, their tool calls run again on the store (free, ~2 min)."""
     page = investigator.build(
-        investigator.chosen(RUNS), progress=lambda line: show(line, file=sys.stderr)
+        investigator.chosen(investigator.PICKS), progress=lambda line: show(line, file=sys.stderr)
     )
     size = investigator.write(page, out)
     runs = sum(len(g.runs) for g in page.groups)

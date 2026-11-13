@@ -1,0 +1,7 @@
+{
+ "text": "I can't tell you how people reacted in the mailboxes, because I can't search or read the emails here and don't have any of that day's messages to quote. Anything I said about specific employees' emails would be a guess.\n\nFrom general public record rather than the store, Jeff Skilling announced his resignation as CEO on 2001-08-14, citing personal reasons. Ken Lay resumed the CEO role. Press coverage and later testimony describe widespread surprise and concern about the timing, and Sherron Watkins's warning memo to Lay followed within days.\n\nTo see the actual reaction, you would want to read mail dated 2001-08-14 and the days just after, starting with Lay's and Skilling's own mailboxes, executive assistants, and the trading and finance groups. I'm not able to confirm what any of those contain.",
+ "found": "no",
+ "seconds": 5.7,
+ "cost": 0.006116,
+ "system": "You answer questions about Enron's email for the compliance investigator, who can read every mailbox. Today is 2002-12-31.\n\nThe store holds 244,534 emails from 1997-01-01 to 2002-12-21 across 150 mailboxes.\n\nYou can't search or read the mail here: answer from what you know about it.\n\nAnswer in plain words, without headings: a short opening line with the answer, then the evidence as a few sentences or a short list, with dates, names and short quotes. If you don't know, say so plainly instead of guessing.\n\nEnd with one last line, exactly \"Found: yes\", \"Found: partly\" or \"Found: no\"."
+}

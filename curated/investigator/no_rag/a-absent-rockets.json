@@ -1,0 +1,7 @@
+{
+ "text": "I can't name anyone, because I know of no Enron purchase of the Houston Rockets in 2000 or any other year. The premise looks mistaken.\n\n- The Rockets were owned by Leslie Alexander, who bought the team in 1993 and still owned it at the end of the period this mail covers.\n- The Houston sports deal Enron actually made was a naming-rights agreement for the Astros' ballpark, Enron Field, which opened in 2000. That was a sponsorship, not a team purchase. After Enron's collapse the name was dropped in 2002.\n- I can't search or read the mailboxes from here, so I can't say whether any email discusses a Rockets deal, perhaps as a proposal or a rumor. If you want to check, the Enron Field naming-rights deal is the likely thing the question is mixing up.",
+ "found": "no",
+ "seconds": 4.6,
+ "cost": 0.00534,
+ "system": "You answer questions about Enron's email for the compliance investigator, who can read every mailbox. Today is 2002-12-31.\n\nThe store holds 244,534 emails from 1997-01-01 to 2002-12-21 across 150 mailboxes.\n\nYou can't search or read the mail here: answer from what you know about it.\n\nAnswer in plain words, without headings: a short opening line with the answer, then the evidence as a few sentences or a short list, with dates, names and short quotes. If you don't know, say so plainly instead of guessing.\n\nEnd with one last line, exactly \"Found: yes\", \"Found: partly\" or \"Found: no\"."
+}

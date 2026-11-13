@@ -1,0 +1,7 @@
+{
+ "text": "I can't tell you what people were saying in the mailboxes, because I can't search or read the mail from here. I won't invent quotes or senders.\n\nWhat I know from the public record, not from the store:\n- Dynegy agreed to acquire Enron on 2001-11-09, with an investment from ChevronTexaco's side of Dynegy's backing.\n- On 2001-11-28, the rating agencies cut Enron's debt to below investment grade, and Dynegy ended the deal that day.\n- Enron filed for Chapter 11 on 2001-12-02.\n\nSo the week to look at is roughly 2001-11-26 to 2001-12-02. Enron mail volume was probably unusual then, and many people had already left or lost access. It would be worth checking the mailboxes of senior finance, treasury, legal and trading staff, plus any all-employee announcements. I can't confirm what those contain, or whether the store has much mail for that week.",
+ "found": "no",
+ "seconds": 5.7,
+ "cost": 0.005938,
+ "system": "You answer questions about Enron's email for the compliance investigator, who can read every mailbox. Today is 2002-12-31.\n\nThe store holds 244,534 emails from 1997-01-01 to 2002-12-21 across 150 mailboxes.\n\nYou can't search or read the mail here: answer from what you know about it.\n\nAnswer in plain words, without headings: a short opening line with the answer, then the evidence as a few sentences or a short list, with dates, names and short quotes. If you don't know, say so plainly instead of guessing.\n\nEnd with one last line, exactly \"Found: yes\", \"Found: partly\" or \"Found: no\"."
+}

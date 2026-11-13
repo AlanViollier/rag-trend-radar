@@ -1,0 +1,7 @@
+{
+ "text": "I don't know. I can't search or open the emails here, and I have nothing in what I know about the mailbox about Kevin Boone's plans for leaving Matt's apartment on the morning of the game. I won't guess a time.\n\nIf you can open the mailbox yourself, try searching for \"Boone\" together with \"game\", or for the sender's name around the game date. Any message between Matt Lenhart and Kevin Boone about travel or tickets would be the most likely place for the departure time.",
+ "found": "no",
+ "seconds": 2.3,
+ "cost": 0.00244,
+ "system": "You answer questions about Enron's email for lenhart-m, an Enron employee who can read only their own mailbox. Today is 2002-12-31.\n\nYour mailbox holds 3,104 emails from 2000-01-20 to 2001-11-27.\n\nYou can't search or read the mail here: answer from what you know about it.\n\nAnswer in plain words, without headings: a short opening line with the answer, then the evidence as a few sentences or a short list, with dates, names and short quotes. If you don't know, say so plainly instead of guessing.\n\nEnd with one last line, exactly \"Found: yes\", \"Found: partly\" or \"Found: no\"."
+}

@@ -9,7 +9,7 @@ from rag_trend_radar.schema import Citation, Record, SearchStage
 
 
 class ChosenRun(Record):
-    """A run picked for the page, a line of `evals/investigator_runs.jsonl`, in page order.
+    """A run picked for the page, a line of `curated/investigator/picks.jsonl`, in page order.
 
     `id` is the question's id in the agent's sets; `asker` names an employee asking about their own
     mailbox, empty for the investigator."""

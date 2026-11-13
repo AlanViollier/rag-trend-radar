@@ -59,8 +59,8 @@ SHOWN_THINKING = 400
 def agent(question: str, person: str = "investigator", as_of: str = "", name: str = "ask") -> None:
     """Let the agent work a question as `person` on day `as_of`, showing each step as it goes.
 
-    The run is saved under data/reports/agent/ as `<name>@<time>.json`, for page 2 and the
-    evals. Asked again unchanged, it is read back from disk and costs nothing.
+    The run is saved under data/reports/agent/ as `<name>@<time>.json`. Asked again unchanged, it
+    is read back from disk and costs nothing. The question sets' runs go through `agent-evals`.
     """
     with db.connect(person) as conn:
         day = date.fromisoformat(as_of) if as_of else last_day(conn)

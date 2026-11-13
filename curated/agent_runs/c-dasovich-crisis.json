@@ -1,0 +1,491 @@
+{
+ "question": "How did Jeff Dasovich describe the California crisis to colleagues while it was happening?",
+ "person": "investigator",
+ "as_of": "2002-12-31",
+ "model": "claude-sonnet-5-5",
+ "prompt_version": 8,
+ "steps": [
+  {
+   "kind": "thinking",
+   "text": "I'm going to lay out a plan first: pin down Dasovich's email addresses, then search his messages from the 2000–2001 crisis period for ones that describe it, read the key ones, and check the counts before I look for the person.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "Plan: (1) find Dasovich's mailbox and addresses; (2) see when he wrote most about the crisis; (3) read his own descriptions to colleagues, in different phrasings, across mid-2000 to 2001; (4) read the key emails.\n\nChecking who Dasovich is and which addresses he used.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 2.4845006670075236,
+   "input_tokens": 4,
+   "output_tokens": 222,
+   "cache_read": 0,
+   "cache_write": 4203,
+   "cost_usd": 0.0127355
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "find_person",
+   "arguments": "{\"name\": \"Jeff Dasovich\"}",
+   "summary": "1 mailboxes, 4 addresses for 'dasovich'",
+   "documents": [],
+   "error": false,
+   "seconds": 0.7323571250017267,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 2.2037329159938963,
+   "input_tokens": 2,
+   "output_tokens": 307,
+   "cache_read": 4203,
+   "cache_write": 377,
+   "cost_usd": 0.0044368
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Dasovich explains California electricity crisis to colleagues: what's going on, who is to blame\", \"source\": \"mail\", \"since\": \"2000-06-01\", \"until\": \"2001-12-31\"}",
+   "summary": "10 results, 10 of them people's own mail",
+   "documents": [
+    173548,
+    217943,
+    163966,
+    199104,
+    210362,
+    260453,
+    152778,
+    79698,
+    201747
+   ],
+   "error": false,
+   "seconds": 15.602722542011179,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "mail_counts",
+   "arguments": "{\"senders\": [\"jeff.dasovich@enron.com\"], \"words\": [\"California\"], \"by\": \"month\", \"since\": \"2000-05-01\", \"until\": \"2002-03-01\"}",
+   "summary": "902 emails, 2000-06-22 to 2001-12-19",
+   "documents": [],
+   "error": false,
+   "seconds": 0.48617879100493155,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "Most of these are forwarded press clippings, so they don't show what he actually thinks. I'm going to look for his own analysis instead.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "Much of that is press he forwarded. I'm now looking for his own wording in memos and replies, since that shows what he thought.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 3.2670959170063725,
+   "input_tokens": 2,
+   "output_tokens": 372,
+   "cache_read": 0,
+   "cache_write": 14130,
+   "cost_usd": 0.039049
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"my view: the problem in California is the politicians, the utilities can't pay, the state is broke, we need direct access\", \"source\": \"mail\", \"since\": \"2000-11-01\", \"until\": \"2001-08-31\"}",
+   "summary": "10 results, 10 of them people's own mail",
+   "documents": [
+    236231,
+    218316,
+    235506,
+    215748,
+    174552,
+    230883,
+    135065,
+    197901,
+    221284
+   ],
+   "error": false,
+   "seconds": 6.494373458001064,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Dasovich \\\"the situation is a mess\\\" California legislature Davis no one knows what they're doing, frankly\", \"source\": \"mail\", \"since\": \"2000-06-01\", \"until\": \"2001-12-31\"}",
+   "summary": "10 results, 10 of them people's own mail",
+   "documents": [
+    224433,
+    168607,
+    11931,
+    11179,
+    171492,
+    223426,
+    217943,
+    166642,
+    165971
+   ],
+   "error": false,
+   "seconds": 6.5763613330054795,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "I need to find his own analytical writing, not just forwarded material. The July 11 email (224433) may be a quote rather than his own words, so I'll check that, along with the September 2001 updates, and look for earlier 2000 writing and candid internal emails from fall 2000 to early 2001.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "I'll read the 2001-07-11 email in full to see whether it's his own writing or forwarded press, and search for candid internal emails from late 2000 and early 2001.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 3.156034291998367,
+   "input_tokens": 2,
+   "output_tokens": 371,
+   "cache_read": 14130,
+   "cache_write": 16340,
+   "cost_usd": 0.045977
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "read_email",
+   "arguments": "{\"document_id\": 224433}",
+   "summary": "read document 224433, 2001-07-11",
+   "documents": [
+    224433
+   ],
+   "error": false,
+   "seconds": 0.01335783299873583,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Jeff Dasovich to Skilling Lay Kean: California situation, utilities going bankrupt, blackouts, what Enron should do, summary of where things stand\", \"source\": \"mail\", \"since\": \"2000-11-01\", \"until\": \"2001-02-28\"}",
+   "summary": "10 results, 10 of them people's own mail",
+   "documents": [
+    137703,
+    137400,
+    144977,
+    148855,
+    151812,
+    148023,
+    152313,
+    125342,
+    129430
+   ],
+   "error": false,
+   "seconds": 6.4892896249948535,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "I'm sorting through the candidate documents: the July 11 item is a forwarded Dan Walters column rather than his own writing, so I'll set it aside. His own material looks like the February 2001 emails, the talking points, the Hertzberg message points, the September 2001 updates, and the July 6 update. I'll read 148023 in full, maybe 11931 too, and look for something more candid, such as emails to friends or colleagues.\n\nI'm also looking for something more candid, like emails to friends or colleagues, and searching for candid phrasing around the \"Davis ... cluster\" wording.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "Two of his statements are his own writing (Feb 14 and the Sept 2001 updates), but the July 11 email is a forwarded Dan Walters column, so I'm not counting it as his view. I'm pulling the full Feb 14 email and searching for more candid remarks next.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 3.891954666003585,
+   "input_tokens": 2,
+   "output_tokens": 463,
+   "cache_read": 30470,
+   "cache_write": 10068,
+   "cost_usd": 0.032851
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "read_email",
+   "arguments": "{\"document_id\": 148023}",
+   "summary": "read document 148023, 2001-02-14",
+   "documents": [
+    148023
+   ],
+   "error": false,
+   "seconds": 0.00794408400543034,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Dasovich candid: this is a disaster, Davis and the legislature are clueless, nobody in Sacramento gets it, crazy\", \"source\": \"mail\", \"since\": \"2000-08-01\", \"until\": \"2001-12-31\"}",
+   "summary": "10 results, 10 of them people's own mail, 3 repeats left out",
+   "documents": [
+    226400,
+    1209,
+    170949,
+    260369,
+    191934,
+    281904,
+    5720,
+    228160,
+    165971
+   ],
+   "error": false,
+   "seconds": 6.134257958008675,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "I've got enough to wrap up now. A lot of his emails were forwarded press coverage, like the Dan Walters columns, so I'm also pulling out the messages that are actually in his own words, from February through October.\n\nI'm pulling his own quoted lines from the emails, with dates, since much of the rest is forwarded press. The Feb 22 \"DRAFT Message Points\" document is from Jeff Dasovich and is advocacy framing, so I'll flag that as a caveat when citing it.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 11.29913970900816,
+   "input_tokens": 4,
+   "output_tokens": 1606,
+   "cache_read": 40538,
+   "cache_write": 10249,
+   "cost_usd": 0.0457443
+  }
+ ],
+ "answer": "Dasovich described the crisis as a political and policy failure by Sacramento, and he argued Enron's market-based fixes should replace state-run ones. Much of what he sent in 2000–01 was forwarded press, so I've used only his own writing here. The quotes come from internal updates, replies to outside contacts and message-point drafts, not from private reflection.\n\n- **Flawed design and a failed state response.** On 2001-02-14 he told a Cisco contact, copying Steve Kean and Karen Denne, that customer choice was \"arguably the only bright spot in an otherwise fatally flawed plan\". He added that California \"delayed identifying and implementing a solution\", leaving very limited options for this summer's shortages.\n- **Against state takeover.** In the same email he called a state take over of the industry \"an extreme move and bad public policy\". He argued there was \"no shortage of private capital ready and willing to invest\" if California created the right climate. His own fix was a demand buy-down, paying customers to \"reduce\" power at the same rate the market pays producers to \"produce\" it.\n- **Bankruptcy solves nothing.** In his 2001-02-15 points he said utility bankruptcy \"does nothing to solve California's supply-demand imbalance\". He proposed staged rate increases to return the utilities to solvency.\n- **Message points for Hertzberg (2001-02-22).** His draft warned that the proposed bills would \"increase the risk of blackouts this summer\" and \"increase the likelihood of bankruptcy\". Those are advocacy lines, so they show Enron's position more than private opinion.\n- **A messy, chaotic legislature.** In his 2001-07-06 update he reported that no proposal was \"comprehensive\", so a package would be stitched together from core/noncore, \"Plan B\" and the Edison MOU. On 2001-07-17 he signed off with \"Sacramento is one goofy place.\"\n- **Tougher language later in 2001.** On 2001-07-23 he asked about \"Davis' people and the crazies in the Legislature\". On 2001-10-23 he called Davis' bailout bills \"ridiculous\".\n- **Fall 2001: the crisis had turned fiscal and political.** On 2001-09-27 he reported Davis was facing \"horrible polling, an unwilling legislature, an uncooperative California PUC\" and a \"wily\" Senate leader (Burton). He added that Davis might \"throw up his hands\" and leave Edison to follow PG&E into Chapter 11. On 2001-10-03 he wrote that \"what had been (a foreseeable and avoidable) energy crisis, is now by and large a pretty messy state fiscal and political crisis for our good friends in Sacramento\".\n\nCaveats:\n- He forwarded many clippings without comment, such as a Dan Walters column on 2001-07-11 and Chronicle pieces on Davis. I read those as what he chose to circulate, not as his own words.\n- The search was selective: I read only part of his roughly 900 California-related emails (the mail_counts total). Most of his emails were from September 2000 onward, and I found little of his own writing from mid-2000 to early 2001.",
+ "found": "partly",
+ "citations": [
+  {
+   "document_id": 148023,
+   "cited_text": "Customer choice was of course the foundation of California's restructuring \nlaw, AB 1890, and is arguably the only bright spot in an otherwise fatally \nflawed plan.  For example, the only businesses and consumers that were \nprotected in San Diego when rates were deregulated last year were those \nbusinesses and consumers that had signed fixed price power deals with \ncompetitive service providers.  Ironically, the recently passed legislation \ntakes choices away from consumers and diminishes their ability to manage \ntheir energy costs.  Before AB 1890, consumers and businesses had one \nchoice--the monopoly  utility.  With the passage of AB 1X, they again will \nhave one choice. But this time their only choice will be to buy from a \ngovernment agency DWR."
+  },
+  {
+   "document_id": 148023,
+   "cited_text": "This approach is critical for two reasons:  first, it provides businesses and \nconsumers the financial incentives necessary (and that California currently \nlacks) to conserve energy and use energy more efficiently.  Second, because \nCalifornia delayed identifying and implementing a solution to California's \nenergy crisis, its options for addressing the severe shortages that are \nlikely occur this summer are very limited.  Reducing demand represents one of \nthe few options that can help to immediately reduce the gap between supply \nand demand.  Putting financial incentives in place now to reduce demand and \n\"free up\" electrons is an investment with significant payback."
+  },
+  {
+   "document_id": 148023,
+   "cited_text": "Again, it would be extremely useful for folks to let the Govenor know in the \nmeetings on Thursday that a State take over of the industry is an extreme \nmove and bad public policy.  I will forward to you in a separate email \nletters that we sent to Burton expressing our opposition to his bills and the \nreasons for our opposition.  In brief, there is no shortage of private \ncapital ready and willing to invest in California's energy infrastructure \n(i.e., power plants, electric transmission lines, gas pipelines).  All \nCalifornia needs to do is create the investment climate necessary to attract \nthe capital.  In addition, history shows that the State is extremely \nill-equipped to become California's mega-utility."
+  },
+  {
+   "document_id": 148023,
+   "cited_text": "Again, it would be extremely useful for folks to let the Govenor know in the \nmeetings on Thursday that a State take over of the industry is an extreme \nmove and bad public policy.  I will forward to you in a separate email \nletters that we sent to Burton expressing our opposition to his bills and the \nreasons for our opposition.  In brief, there is no shortage of private \ncapital ready and willing to invest in California's energy infrastructure \n(i.e., power plants, electric transmission lines, gas pipelines).  All \nCalifornia needs to do is create the investment climate necessary to attract \nthe capital.  In addition, history shows that the State is extremely \nill-equipped to become California's mega-utility."
+  },
+  {
+   "document_id": 148023,
+   "cited_text": "A demand buy-down proposal.  We made this proposal to the Governor (and \ncontinue to propose it to policymakers in Sacramento, Washington D.C. and \njust about everywhere else).  In short, the notion is that, if the market is \nwilling to pay power producers, say, 7 cents/kwh to \"produce\" power, then the \nmarket ought to be willing to pay businesses and consumers 7 cents/kwh to \n\"reduce\" power consumption."
+  },
+  {
+   "document_id": 148855,
+   "cited_text": "Return California\u0001,s Investor-owned utilities to solvency\u0001*Legislative vehicle: \nAB18X\nUtility bankruptcy will not increase supply and it will not decrease demand.  \nIn short, bankruptcy does nothing to solve California\u0001,s supply-demand \nimbalance.  In addition, bankruptcy increases the likelihood that consumers \nand businesses will bear the significant financial risks of having California \nState government assume the role of \u0001&electricity buyer\u00018 for an extended \nperiod of time."
+  },
+  {
+   "document_id": 148855,
+   "cited_text": "California can return the utilities to financial solvency by implementing a \nseries of staged rate increases.  California should design those rate \nincreases with the dual goal of returning the utilities to solvency without \n\u0001&shocking\u00018 the economy or consumers\u0001, wallets (e.g., amortize the recovery of \nthe utilities\u0001, debt over a 5-10 year period). The magnitude of the rate \nincrease can be reduced in two ways: First, the utilities could absorb some \nportion of their existing debt in recognition of the risk they accepted when \nthey agreed to the structure of AB 1890.  Second, California can \u0001&net\u00018 the \nrevenues the utilities have received from selling electricity into the Power \nExchange against the debts they have accrued due to the retail price cap."
+  },
+  {
+   "document_id": 151812,
+   "cited_text": "This scenario makes the old vertically-integrated monopoly structure look \ninviting.\nCapital markets will run from this \u0001&solution\u00018 and put capital to more \nproductive uses outside of California.\nUnder this proposed \u0001&solution\u00018 only IOUs and municipal utilities will build \nplants, and the state will be forced to finance them.  \nThat\u0001,s the same recipe for inefficiency and waste that got California to \nelectricity prices that were 50% higher than the national average.  \nWe\u0001,ve been down that route; it\u0001,s been given chance after chance to succeed, \nand it\u0001,s failed.  State-ownership and intrusive regulation haven\u0001,t worked in \nthe past, and they won\u0001,t work today.\nThis package of bills will increase the risk of blackouts this summer; \nincrease the time it takes to close the gap between supply and demand in \nCalifornia; increase the likelihood of bankruptcy; and force businesses to \nlook elsewhere to locate and/or expand operations, all of which put \nCalifornia\u0001,s economy at risk.\nThe real solution is to succeed in doing what California failed to do the \nfirst time\u0001*lay the groundwork for truly competitive retail and wholesale \nmarkets and foster an environment designed to foster investment, invest, \nrather than chase it away."
+  },
+  {
+   "document_id": 223426,
+   "cited_text": "Work will be done over the weekend to put the core/noncore proposal in legislative language.  (We will be in the room.)\nWork done by the \"Plan B\" group in the Assembly (Joe Dutra and Joe Nation) will also be put into legislative language over the weekend.\nBecause no proposal is \"comprehensive,\" a complete legislative package will be created from the various pieces that have been worked on thus far (i.e., core/noncore, \"Plan B,\" Edison MOU)\nIn addition, there are Republican demands that Hertzberg will need to address (e.g., end the litigation) in order to achieve bi-partison support, which is what Hertzberg's shooting for. \nTo move the legislation, the plan is to establish a \"conference committee,\" comprised of an equal number of Democrats and Republicans.\nThe committe would begin work on Monday and would attempt to finish putting a comprehensive bill together, vote it out of the Legislature and send it to the Governor for signing by Monday, July 16th.\nJuly 16th is the deadline because that is the date that the PUC will issue its proposed decision regarding, among other things, how DWR's revenue requirement will be put into rates, whether Direct Access needs to be suspended, etc.\nThe PUC is issuing the draft on the 16th in order to give everyone 30 days to review and comment before the Commission votes on a final order on August 15th.  (The PUC will actually issue a \"thought piece\" on Monday the 9th and will use reactions to the \"thought piece\" to craft the develop the proposed decision it plans to issue on the 16th.)\nAll of this is still up in the air, however.  As of right now, the leader of the Senate (Burton) has not agreed to Hertzberg's gameplan and the Republicans, while interested, have not yet committed to join the process."
+  },
+  {
+   "document_id": 226400,
+   "cited_text": "Sacramento is one goofy place."
+  },
+  {
+   "document_id": 228160,
+   "cited_text": "How long do you think it will take for Davis' people and the crazies in the \nLegislature to link the study and PRI to the funders?"
+  },
+  {
+   "document_id": 281904,
+   "cited_text": "*\tRepublican assemblymember from the Sacramento area.\n*\tWas a member of the Sacramento muni utility district prior to going to the legislature.\n*\tRepublican (minority) head of the assembly electricity oversight committee (the one that Rod Wright chairs).\n*\tDon't recall that he's ever seen a a pro-utility bill that he didn't like.\n*\tIn fact, he sponsored some legislation just this past session that would have locked the utilities in to major parts of the gas industry, and specifically wold have locked out competition.  It was strongly opposed by industry and defeated.\n*\tWhen push came to shove, I can't think of a time he didn't side with the utilities.\n*\tEven when the Assembly Republicans were doing of good job of bottling up Davis' ridiculous bailout bills in Rod Wright's committee, Pescetti seemed to go along more to tweek the Democrats than to foster competition.\n*\tAnd even then, he followed; he didn't lead--other, more junior, members on the committee led.\n*\tCan't recall a time that he's been there for us."
+  },
+  {
+   "document_id": 11931,
+   "cited_text": "Though there is a high degree of uncertainty regarding whether and when Davis will call back the California legislature to address the Edison MOU, here's the latest information we have.\nFaced with horrible polling, an unwilling legislature, an uncooperative California PUC, and a wily leader of the state Senate (Burton), Davis is now considering delaying any action to call back the legislature.\nRumors of a delay come despite Davis' statements that he would call them back next week.\nWe received the information about a likely delay from an Edison SVP who's working with administration staff to come up with a deal that the legislature can finally swallow.\nIt's Edison's view that the earliest Davis would now call the legislature back is end of next week, with early the following week being most likely.\nAt this point, the chance remains that Davis may be forced to throw up his hands and call the whole thing off, leaving Edison to follow PG&E into chapter 11.\nIn the meantime, negotiations between Davis' staff, and staff from the Senate and Assembly continue."
+  },
+  {
+   "document_id": 11931,
+   "cited_text": "Though there is a high degree of uncertainty regarding whether and when Davis will call back the California legislature to address the Edison MOU, here's the latest information we have.\nFaced with horrible polling, an unwilling legislature, an uncooperative California PUC, and a wily leader of the state Senate (Burton), Davis is now considering delaying any action to call back the legislature.\nRumors of a delay come despite Davis' statements that he would call them back next week.\nWe received the information about a likely delay from an Edison SVP who's working with administration staff to come up with a deal that the legislature can finally swallow.\nIt's Edison's view that the earliest Davis would now call the legislature back is end of next week, with early the following week being most likely.\nAt this point, the chance remains that Davis may be forced to throw up his hands and call the whole thing off, leaving Edison to follow PG&E into chapter 11.\nIn the meantime, negotiations between Davis' staff, and staff from the Senate and Assembly continue."
+  },
+  {
+   "document_id": 260369,
+   "cited_text": "Much happened yesterday--wow!--and at least for now, it appears that Loretta has let the Legislature off the hook--appears that the PUC is still a fairly potent institution.\nBut it also appears that what had been (a foreseeable and avoidable) energy crisis, is now by and large a pretty messy state fiscal and political crisis for our good friends in Sacramento, so I don't think that legislators, irrespective of their wishes, can avoid staying involved.\nAdd 18XX to the mix and the signing/veto process generally, and, well, Sacramento still seems pretty darned relevant.\nAs such, we will have our regularly scheduled call tomorrow at 11:30."
+  }
+ ],
+ "cost_usd": 0.1807936,
+ "seconds": 68.84259895900323,
+ "started": "2026-11-10T16:57:50.881909Z",
+ "commit": "fc8c10f"
+}

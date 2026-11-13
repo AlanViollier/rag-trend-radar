@@ -1,0 +1,386 @@
+{
+ "question": "What did employees write about their 401(k) while the Savings Plan was frozen?",
+ "person": "investigator",
+ "as_of": "2002-12-31",
+ "model": "claude-sonnet-5-5",
+ "prompt_version": 9,
+ "steps": [
+  {
+   "kind": "thinking",
+   "text": "I'm working out when the Savings Plan was frozen, which would be the lockdown in late October to November 2001, along with what employees wrote about it. I'll run a search for that next, and I'll note a short line beforehand for each tool call.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "Plan: (1) find when the Savings Plan lockdown/blackout happened; (2) find what employees wrote about their 401(k) in that window; (3) check volume and read key emails.\n\nChecking what mail says about the Savings Plan freeze and its dates.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 3.436326374998316,
+   "input_tokens": 4,
+   "output_tokens": 445,
+   "cache_read": 0,
+   "cache_write": 4221,
+   "cost_usd": 0.0150105
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"401(k) savings plan blackout lockdown can't sell Enron stock in my account\", \"source\": \"mail\", \"since\": \"2001-10-15\", \"until\": \"2002-01-31\"}",
+   "summary": "6 results, 6 of them people's own mail",
+   "documents": [
+    303799,
+    346611,
+    321296,
+    324314,
+    301161,
+    322350
+   ],
+   "error": false,
+   "seconds": 12.637639583001146,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "mail_counts",
+   "arguments": "{\"words\": [\"401(k)\", \"401k\"], \"by\": \"week\", \"since\": \"2001-09-01\", \"until\": \"2002-03-01\", \"source\": \"mail\"}",
+   "summary": "103 emails, 2001-09-05 to 2002-02-28",
+   "documents": [],
+   "error": false,
+   "seconds": 0.1272705839946866,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "I need more information before I can settle this, specifically announcements about the freeze dates and what employees have written. I'll run another search to find them.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "Checking the official announcement of the freeze and dates, and more employee reactions.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 2.465881124997395,
+   "input_tokens": 2,
+   "output_tokens": 334,
+   "cache_read": 0,
+   "cache_write": 8476,
+   "cost_usd": 0.024534
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Savings Plan transition to Hewitt, blackout period October 26 through November 20, unable to change investments\", \"since\": \"2001-10-01\", \"until\": \"2001-12-31\"}",
+   "summary": "10 results, 10 of them people's own mail, 1 repeats left out",
+   "documents": [
+    286490,
+    305435,
+    312551,
+    320597,
+    279546,
+    287750,
+    307320,
+    288225,
+    289974,
+    316196
+   ],
+   "error": false,
+   "seconds": 7.709003500000108,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"I was locked out of my 401k while Enron stock dropped, couldn't move my money, lost my retirement\", \"source\": \"mail\", \"since\": \"2001-10-25\", \"until\": \"2001-12-15\"}",
+   "summary": "10 results, 10 of them people's own mail, 3 repeats left out",
+   "documents": [
+    316196,
+    327101,
+    304720,
+    304675,
+    323079,
+    303605,
+    290651,
+    322261,
+    317399,
+    322563
+   ],
+   "error": false,
+   "seconds": 4.3055135419999715,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "I'm running a couple more searches for internal employee messages from the lockdown window, October 26 to November 20, looking for complaints and any reply from Lavorato. I'll also check the December 5 forward titled \"Major Opps.\"\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "Looking for internal employees' own comments during the lockdown window (Oct 26–Nov 20), including any reply to Vernon.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 2.627641875005793,
+   "input_tokens": 4,
+   "output_tokens": 317,
+   "cache_read": 8476,
+   "cache_write": 12919,
+   "cost_usd": 0.0363231
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"lockdown savings plan Hewitt transition employees angry sell Enron stock before it dropped lawsuit\", \"source\": \"mail\", \"since\": \"2001-10-26\", \"until\": \"2001-11-21\"}",
+   "summary": "10 results, 10 of them people's own mail, 5 repeats left out",
+   "documents": [
+    305635,
+    295607,
+    294898,
+    289776,
+    303635,
+    312655,
+    305556,
+    312766,
+    312359,
+    305557
+   ],
+   "error": false,
+   "seconds": 3.821778124998673,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "read_email",
+   "arguments": "{\"document_id\": 324314}",
+   "summary": "read document 324314, 2001-12-05",
+   "documents": [
+    324314
+   ],
+   "error": false,
+   "seconds": 0.002336833000299521,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "I'm checking the key dates first: the trading freeze ran from October 26 at 3pm until it ended early on November 13, and the lawsuit claims were filed October 17. Next I'm sorting the sources: internal messages from Vernon, Mark Whitt, and Irma Alvarez's HR reply, the external Brunswick PR draft, the lawsuit press coverage, and the letters to Lay about 401(k) losses, some written during or after the freeze.\n\nI'm also weighing whether some of the letters to Lay were about the 401(k) losses rather than the freeze itself, and I need to remember that the December 5 Hewitt issue came after the freeze, so I'll quote these sources carefully.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 12.55869162500312,
+   "input_tokens": 4,
+   "output_tokens": 1778,
+   "cache_read": 21395,
+   "cache_write": 7353,
+   "cost_usd": 0.03831
+  }
+ ],
+ "answer": "Few employees wrote about the freeze itself. Most mail about the 401(k) in this period is about losses, and the freeze comes up in only a handful of emails. The freeze ran from 3:00 PM CST on October 26, 2001 to 8:00 AM CST on November 20, per Enron's October 25 notice of the move to a new Savings Plan administrator. Enron later said the period ended early, when the Hewitt site went live on November 13. The `mail_counts` tool shows 401(k)/401k mentions peaking at 9 emails in the week ending Oct 28 and 12 in the week ending Nov 18, then 12 again in the week ending Dec 2. I read only a sample of these emails, so the picture below is partial.\n\n**Employees' own words about the freeze**\n- On Oct 26, Mark Whitt forwarded the final reminder and added: \"I can't believe they are going to stop the employees from managing their investments through such a turbulent time. This will be a case study in how not to do things.\"\n- On Nov 13, Clayton Vernon (Manager, East Power Fundamentals) wrote that Enron \"locked us out from making any changes in our asset allocations or contribution rules until November 20. This has generated an awful lot of resentment and deep conspiracy theories.\" He asked for the Board to offer a remedy. On Nov 16, John Lavorato asked someone to respond to him so he could reply to Clayton. I found no reply in the mail I read.\n- A former PGE worker quoted in forwarded press said: \"We couldn't take our money out of Enron stock into another portfolio. Basically they had us locked down to where we had no say over our own future.\" This is a news clip circulated by the Enron India newsdesk, not an employee email.\n\n**How the company and its advisers handled it**\n- HR told one employee about a pending ESOP change request: \"we are still experimenting the blackout period on any savings plan activity through November 20th.\"\n- On Nov 27, a PR adviser (Brunswick Group) circulated draft talking points on the lawsuits. They stated that the transition ran \"only October 26th to November 13th\" and that Enron's stock \"went from $15.40 to $9.98\" during it. The draft also said it had not been approved by legal. The same email suggested a \"well orchestrated leak\" that the suits were bogus.\n- Press forwarded internally gave a different start date. It said the suit alleges Enron \"locked down\" 401(k) accounts on October 17, until November 19, and that Enron's spokeswoman said the block ran from October 26 to November 19.\n\n**Broader 401(k) writing in the same weeks**\nMostly this is loss and anguish rather than complaints about the freeze:\n- \"I am one of many long time employees who has lost my life's savings and my kid's college fund.\" (Rebecca Longoria to Ken Lay, Nov 14)\n- A mother \"lost $300,000 in her 401K and only had a little over $400,000 in it to begin with.\" (Rebekah Rushing, Nov 14)\n- On Dec 12, a 19-year employee demanded that Lay repay $1,171,968.00 \"which must be replaced in my 401K.\"\n- Some wrote in support of Lay despite their losses: \"Yes, I am one of the employees who have lost their retirement\", wrote an employee of 21 years on Nov 30.\n\nAfter the freeze ended, a Dec 5 email forwarded by Lynn Blair complained about Hewitt's system. A buy order shown as \"canceled\" was later executed, and the writer said \"we can't live this way.\"\n\nGaps: I found only two emails (Whitt, Vernon) where employees directly criticised the freeze, and I did not search every mailbox. The mail I read doesn't show how the Board or management answered Vernon.",
+ "found": "partly",
+ "citations": [
+  {
+   "document_id": 286490,
+   "cited_text": "We understand that you are concerned about the timing of the move to a new Savings Plan administrator and the restricted access to your investment funds during the upcoming transition period scheduled to take place beginning at 3:00PM CST on October 26 and ending at 8:00AM CST on November 20."
+  },
+  {
+   "document_id": 305435,
+   "cited_text": "The Savings Plan Transition Period Ends Early!We have been working closely with Hewitt Associates to get you access to your Savings Plan account before November 20 and are pleased to announce that the internet site went live as of 8:00 AM yesterday morning, November 13."
+  },
+  {
+   "document_id": 288225,
+   "cited_text": "I can't believe they are going to stop the employees from managing their investments through such a turbulent time.  This will be a case study in how not to do things."
+  },
+  {
+   "document_id": 303799,
+   "cited_text": "Late October, Enron announced a change in the administrator for the Enron Savings Plan (our 401(k)s) and locked us out from making any changes in our asset allocations or contribution rules until November 20. This has generated an awful lot of resentment and deep conspiracy theories. Can you ask the Board to offer a remedy to those affected by this?"
+  },
+  {
+   "document_id": 307320,
+   "cited_text": "Subject: FW: question\nFrom: john.lavorato@enron.com\nDate: 2001-11-16Can your respond to me so I can respond to Clayton"
+  },
+  {
+   "document_id": 316196,
+   "cited_text": "During that period Enron reported its first quarterly loss in four years and took a charge of $1.2 billion against stockholders' equity as a result of off-balance-sheet deals that would later come under investigation by US regulators. In that time, Enron shares fell from $30.72 at the close of trading October 16 to $11.69 on November 19. Enron spokeswoman Karen Denne said employees' access to the accounts was blocked as part of a previously planned change in the administration of the retirement plan and that the measure was in effect from October 26. to November 19.Steve Lacey, a 45-year-old emergency repair dispatcher who has worked for Portland General Electric for 21 years, said the measure came at a time when bad news about Enron was flying thick and fast, driving the stock price down at a dizzying pace. \"We couldn't take our money out of Enron stock into another portfolio. Basically they had us locked down to where we had no say over our own future,\" he said."
+  },
+  {
+   "document_id": 289974,
+   "cited_text": "I wanted to take a moment this morning to provide you an update on your recent ESOP change request.  I have received confirmation from Corporate Benefits that your form has been received.  Unfortunately due to current switch over of our Savings vendor, which was also the vendor for our ESOP program, we are still experimenting the blackout period on any savings plan activity through November 20th."
+  },
+  {
+   "document_id": 320597,
+   "cited_text": "?       The transition period (when employees could not sell stock), ran from only October 26th to November 13th - a shorter time span than was originally planned.?       During the transition period Enron's stock went from $15.40 to $9.98 - while we're not happy about the reduced share price, the magnitude of the decline during the lock down period is much smaller than the drop alleged by some plaintiffs attorneys."
+  },
+  {
+   "document_id": 320597,
+   "cited_text": "1. Draft comments re: the 401K plan -- NOTE: they have not been approved by legal; \n2. A Dow Jones story alleging that the recent lawsuit could allow: i) Dynegy to back away from the deal; ii) creates the implication that the suit adds financial pressure; iii) it also erroneously (I believe) discusses the time frame of the lock down period"
+  },
+  {
+   "document_id": 320597,
+   "cited_text": "WE SHOULD: Consider a well orchestrated leak regarding the fact that these suits are bogus -- the leak would include information on:"
+  },
+  {
+   "document_id": 316196,
+   "cited_text": "Enron, a former Wall Street favorite, agreed to be bought out earlier this month by smaller energy trading rival Dynegy Inc., but continuing problems at Enron have caused some analysts to question whether the deal will be completed. Doubts have also been expressed about a planned sale of Portland General to Northwest Natural Gas. Hagens Berman plans to seek class-action status for its suit and says 21,000 Enron employees could be eligible to join it. The suit alleges that Enron \"locked down\" 401(k) retirement accounts on October 17, preventing employees from changing the investments they held in their accounts until November 19."
+  },
+  {
+   "document_id": 316196,
+   "cited_text": "During that period Enron reported its first quarterly loss in four years and took a charge of $1.2 billion against stockholders' equity as a result of off-balance-sheet deals that would later come under investigation by US regulators. In that time, Enron shares fell from $30.72 at the close of trading October 16 to $11.69 on November 19. Enron spokeswoman Karen Denne said employees' access to the accounts was blocked as part of a previously planned change in the administration of the retirement plan and that the measure was in effect from October 26. to November 19.Steve Lacey, a 45-year-old emergency repair dispatcher who has worked for Portland General Electric for 21 years, said the measure came at a time when bad news about Enron was flying thick and fast, driving the stock price down at a dizzying pace. \"We couldn't take our money out of Enron stock into another portfolio. Basically they had us locked down to where we had no say over our own future,\" he said."
+  },
+  {
+   "document_id": 304675,
+   "cited_text": "I am one of many long time employees who has lost my life's savings and my kid's college fund."
+  },
+  {
+   "document_id": 304720,
+   "cited_text": "I wanted to send you a note to say I appreciate the way that you have been handling things.  I have alot of respect for you.  My name is Rebekah Rushing.  I consider myself an Enron grandbaby.  My mother, Helena Payne worked for HNG and then Enron for a total of 24 years.  She was an accounting clerk and retired in April of this year when the accounting group was outsourced.  Going through that process with my mother, was an eye opener for me, however after numerous meetings with her supervisor and the human resources department, I feel comfortable that Enron did a good job of taking care of her in that situation.  Her supervisor even made it possible for her to receive her 25 year grandfather clock.  The one thing that does trouble me is the fact that allot of the people that were around in Enron's beginning that we'll call the worker bee's (the people that you could count to get the job done behind the scenes) have lost alot due to the poor decisions that upper management have made.  My mother along with many others  in her situation were the people that this company could and still can count on, they are loyal to Enron and alot of them had the majority of their 401K invested in Enron stock.  This was the majority of their live savings, they do not have anything to fall back on. In my mother's case (as is the case with many other retired or soon to be retired Enron employees) she lost $300,000 in her 401K and only had a little over $400,000 in it to begin with.  I work with a lady that has been with Enron for 23 years and was looking forward to retiring within the next 5-6 years, but now she's not sure if she'll be able to, because she too lost alot in her 401K.  I realize that it's been said many times, a 401K is not a sure thing but the people that I'm referring to had been around for a long time, knew the track record of Enron, and showed their loyalty to the company."
+  },
+  {
+   "document_id": 327101,
+   "cited_text": "Based on today's closing stock price for Enron, the current amount you\nowe me and my family is now $1,171,968.00 which must be replaced in my\n401K . This money you so callously destroyed was intended to pay for my\nchildren's education and provide a retirement fund for my wife and me.\nI worked for Enron for almost 19 years and I earned every bit of this\nretirement.  Have you ever lived in Midland Texas where the dust blows\nso thick you cannot see or breathe?  I experienced these conditions\noften when I lived there while I worked for Enron.  Have you ever lived\nin Minnesota and cleared snow drifts 6 feet high when the wind chill was\n100 degrees below zero so you could get your children to school?  I did\nmany times when I lived there and worked for Enron. I could give you\nmore examples but I do not want to bore you."
+  },
+  {
+   "document_id": 322261,
+   "cited_text": "Subject: Words of encouragement\nFrom: mike.underwood@enron.com\nDate: 2001-11-30"
+  },
+  {
+   "document_id": 324314,
+   "cited_text": "Quoted in this reply: -----Original Message-----\nFrom: \tFord, John  \nSent:\tWednesday, December 05, 2001 12:06 PM\nTo:\tJordan, Fred; Williams, Walt; Lowe, Mickey; Ford, John; Urban, Larry; Fusilier, Warren; Dooling, Ralph; Brent.Perkins@eott.com; dan.mcmillian@eott.com; Bill.Marshall@eott.com; mark.goss@eott; mike.pope@eott.com; Randy.richey@eott.com; john.stark@eott.com; Brasier, Cliff; Pape, Gragg; Stogsdill, Paul; Willingham, Jackie; Cantrell, Kevin; Eaves, Lynn; Hall, James; Jackson, Melvin; McLemore, Dawl; Reed, Steve; Roberts, Dale; Smith, Eddie; Gross, John; Huff, Randy; Adamson, Alvin; Biffle, Charles; Chandler, Robert; Golden, David; Jones, Paul; Kerby, Bryce; McDaniels, Bud; Wichert, John; Adamson, Alvin; Foresman, Bill; Marshall, Bill; Perkins, Brent; Kerby, Bryce; McDaniels, Bud; Brasier, Cliff; Roberts, Dale; McMillian, Dan; Golden, David; Bowers, Dawson; Hall, Dennis; Pool, Eddie; Elliot, Frank; Jordan, Fred; Spraggins, Gary; Smith, Jimmie; Caskey, Joe; Woolley, Joey; Gross, John; Stark, John; Wichert, John; Lewis, Kelly; Cantrell, Kevin; Urban, Larry; Trout, Lonnie; Blair, Lynn; Eaves, Lynn; Goss, Mark; Jackson, Melvin; Lowe, Mickey; Pope, Mike; Jones, Paul; Dooling, Ralph; Huff, Randy; Richie, Randy; Morris, Richard; Barbee, Roger; Scott, Ronald; Brickman, Ronnie; Reed, Steve; January, Steve; Beaver-Plant, Team; Canadian-North, Team; Elk-City, Team; Ellis2, Team; Pampa-Overhaul, Team; Team Pampa Pipeline,; Pampa, Team; Perryton, Team; Spearman, Team; Sunray-Compressor, Team; Sunray-Field, Team; Whorton, Tim; Poston, Tom; Griffith, Vance; Williams, Walt; Fusilier, Warren; Mullen, William; Jones, Vera; Poole, Susan; Nollner, Marlane; Brickman, Susan Jane; Harkreader, Jerry \nSubject:\tMajor Opps on the savings plan!\n\nEveryone -- especially Jerry!  The other day on the conference call it was mentioned that many transactions dealing with Enron stock had been canceled.  I made a transaction to buy Enron stock on the day it closed at $.61; when I went into the system on Fri. Hewitt showed that that transaction had been canceled; stock was at $.26; a sigh of relief for me.  I have been off line since Friday and upon coming back in I was curious about where my normal contributions went.  Imagine my surprise that my transaction had now taken place--I'm only happy that stock has risen.  It is not my habit to check this site very often--we can't live this way--when we see something posted on the system we need to be able to rely on that information!  Does this make sense?\n\nJerry:  I know that you said that the problem was in the manpower not the system when you spoke on the conference call the other day.  Instead of stating that the order had been canceled it would be much better to state that there was a delay in posting.  I'm assuming that my transaction took place at the closing price on the day I made the transaction--I believe that was Wed.-- I made the my change before 3pm -- I have not done the math on that but, if they did not cover the transaction until Friday and charged the same price, what happened to the float?\n\nI know that you are very busy and hopefully I have covered what happened to me so that others can check their balances and protect their savings as they see fit.  I know that you agree this is something that should be reported and clarified.\n\nThanks in advance!"
+  },
+  {
+   "document_id": 324314,
+   "cited_text": "Quoted in this reply: -----Original Message-----\nFrom: \tFord, John  \nSent:\tWednesday, December 05, 2001 12:06 PM\nTo:\tJordan, Fred; Williams, Walt; Lowe, Mickey; Ford, John; Urban, Larry; Fusilier, Warren; Dooling, Ralph; Brent.Perkins@eott.com; dan.mcmillian@eott.com; Bill.Marshall@eott.com; mark.goss@eott; mike.pope@eott.com; Randy.richey@eott.com; john.stark@eott.com; Brasier, Cliff; Pape, Gragg; Stogsdill, Paul; Willingham, Jackie; Cantrell, Kevin; Eaves, Lynn; Hall, James; Jackson, Melvin; McLemore, Dawl; Reed, Steve; Roberts, Dale; Smith, Eddie; Gross, John; Huff, Randy; Adamson, Alvin; Biffle, Charles; Chandler, Robert; Golden, David; Jones, Paul; Kerby, Bryce; McDaniels, Bud; Wichert, John; Adamson, Alvin; Foresman, Bill; Marshall, Bill; Perkins, Brent; Kerby, Bryce; McDaniels, Bud; Brasier, Cliff; Roberts, Dale; McMillian, Dan; Golden, David; Bowers, Dawson; Hall, Dennis; Pool, Eddie; Elliot, Frank; Jordan, Fred; Spraggins, Gary; Smith, Jimmie; Caskey, Joe; Woolley, Joey; Gross, John; Stark, John; Wichert, John; Lewis, Kelly; Cantrell, Kevin; Urban, Larry; Trout, Lonnie; Blair, Lynn; Eaves, Lynn; Goss, Mark; Jackson, Melvin; Lowe, Mickey; Pope, Mike; Jones, Paul; Dooling, Ralph; Huff, Randy; Richie, Randy; Morris, Richard; Barbee, Roger; Scott, Ronald; Brickman, Ronnie; Reed, Steve; January, Steve; Beaver-Plant, Team; Canadian-North, Team; Elk-City, Team; Ellis2, Team; Pampa-Overhaul, Team; Team Pampa Pipeline,; Pampa, Team; Perryton, Team; Spearman, Team; Sunray-Compressor, Team; Sunray-Field, Team; Whorton, Tim; Poston, Tom; Griffith, Vance; Williams, Walt; Fusilier, Warren; Mullen, William; Jones, Vera; Poole, Susan; Nollner, Marlane; Brickman, Susan Jane; Harkreader, Jerry \nSubject:\tMajor Opps on the savings plan!\n\nEveryone -- especially Jerry!  The other day on the conference call it was mentioned that many transactions dealing with Enron stock had been canceled.  I made a transaction to buy Enron stock on the day it closed at $.61; when I went into the system on Fri. Hewitt showed that that transaction had been canceled; stock was at $.26; a sigh of relief for me.  I have been off line since Friday and upon coming back in I was curious about where my normal contributions went.  Imagine my surprise that my transaction had now taken place--I'm only happy that stock has risen.  It is not my habit to check this site very often--we can't live this way--when we see something posted on the system we need to be able to rely on that information!  Does this make sense?\n\nJerry:  I know that you said that the problem was in the manpower not the system when you spoke on the conference call the other day.  Instead of stating that the order had been canceled it would be much better to state that there was a delay in posting.  I'm assuming that my transaction took place at the closing price on the day I made the transaction--I believe that was Wed.-- I made the my change before 3pm -- I have not done the math on that but, if they did not cover the transaction until Friday and charged the same price, what happened to the float?\n\nI know that you are very busy and hopefully I have covered what happened to me so that others can check their balances and protect their savings as they see fit.  I know that you agree this is something that should be reported and clarified.\n\nThanks in advance!"
+  }
+ ],
+ "cost_usd": 0.11417759999999999,
+ "seconds": 49.69572612500633,
+ "started": "2026-11-10T17:13:23.386092Z",
+ "commit": "877dc63"
+}

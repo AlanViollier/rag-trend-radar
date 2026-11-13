@@ -1,0 +1,244 @@
+{
+ "question": "Which Enron executive negotiated the company's purchase of the Houston Rockets in 2000?",
+ "person": "investigator",
+ "as_of": "2002-12-31",
+ "model": "claude-sonnet-5-5",
+ "prompt_version": 7,
+ "steps": [
+  {
+   "kind": "thinking",
+   "text": "I'm wondering whether Enron ever bought the Houston Rockets in 2000, since that sounds like a false premise. I'll run a search to check.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "Plan: (1) check whether the mail mentions Enron buying the Houston Rockets, (2) if so, find who negotiated it, (3) if not, see what the mail says about Enron and the Rockets, such as sponsorship or arena naming.\n\nSearching for any mention of a Rockets purchase.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 3.2083016660035355,
+   "input_tokens": 4,
+   "output_tokens": 287,
+   "cache_read": 0,
+   "cache_write": 4173,
+   "cost_usd": 0.0133105
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Enron purchase of Houston Rockets basketball team negotiation\"}",
+   "summary": "10 results, 2 of them people's own mail",
+   "documents": [
+    302048,
+    303895,
+    95011,
+    101059,
+    72806,
+    356260,
+    59261,
+    58258
+   ],
+   "error": false,
+   "seconds": 18.42028620900237,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "mail_counts",
+   "arguments": "{\"words\": [\"Houston Rockets\", \"Rockets\"], \"by\": \"month\"}",
+   "summary": "309 emails, 1999-03-11 to 2002-03-08",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0829486669972539,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "I'm running one more search for \"Enron buy Rockets\" and \"Enron owns Rockets\" to make sure there was no purchase. The Haedicke email only seems to be about buying game tickets, so I'll do one last check.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "The first results show no purchase. They cover arena politics and sponsorship, and one email about buying game tickets. I'll try different wording to be sure.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 2.746307875000639,
+   "input_tokens": 2,
+   "output_tokens": 295,
+   "cache_read": 0,
+   "cache_write": 13465,
+   "cost_usd": 0.0366165
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Enron to acquire Rockets from Les Alexander, ownership of the team\", \"source\": \"mail\", \"since\": \"2000-01-01\", \"until\": \"2001-01-31\"}",
+   "summary": "10 results, 10 of them people's own mail",
+   "documents": [
+    129507,
+    44127,
+    42631,
+    132451,
+    39053,
+    93679,
+    94294,
+    139692,
+    92399,
+    90737
+   ],
+   "error": false,
+   "seconds": 6.3949715420021676,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "read_email",
+   "arguments": "{\"document_id\": 58258}",
+   "summary": "read document 58258, 2000-06-08",
+   "documents": [
+    58258
+   ],
+   "error": false,
+   "seconds": 0.00276995800959412,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 6.411703874997329,
+   "input_tokens": 2,
+   "output_tokens": 853,
+   "cache_read": 13465,
+   "cache_write": 5648,
+   "cost_usd": 0.0240005
+  }
+ ],
+ "answer": "No Enron executive negotiated a purchase of the Houston Rockets in 2000, because the mail shows no such purchase. I found nothing suggesting Enron bought or tried to buy the team.\n\nI searched twice with different wording and checked the Rockets mentions by month. What the mail does show about Enron and the Rockets is a different set of dealings:\n\n- **Arena campaign:** In 2000 Enron was backing a downtown arena for the Rockets. Ken Lay's August 2000 letter argued that a new downtown arena to house the Rockets and Comets would help revitalize downtown and keep the teams in town. One email describes negotiations with the Rockets over how much each party would contribute to the arena referendum campaign. Lay's office approved the arrangement. Rosalee Fleming wrote \"Ken Lay said to tell you this is fine.\" The email names John Watson as one of the people who advised Rockets counsel in those talks. That is a campaign-funding negotiation, not a purchase.\n- **Press on the arena:** A press clipping says a group of private business leaders, headed by Lay, would lend the sports authority $30 million for the arena garage. The clipping also says the Rockets, not Enron, would pay the construction cost overruns. It also describes Houston's plan as a heavily subsidized one for the basketball team.\n- **Tickets:** The mail also shows Enron using Rockets tickets. David Tagliarino wrote about Lay's ticket selection for the 2000–2001 season, under an \"agreement letter.\" Mark Haedicke, in a June 2000 email to an outside lawyer, said he wanted to take part in a shared game-ticket arrangement again. That reads as a ticket-sharing arrangement, not a team purchase.\n- **Ownership:** The press clippings treat Les Alexander as the Rockets' owner. One 2001 article calls him \"Houston Rockets owner Les Alexander\". Enron's own name was on the Astros' ballpark. Enron paid $100 million to put its name on Enron Field.",
+ "found": "no",
+ "citations": [
+  {
+   "document_id": 72806,
+   "cited_text": "Three years ago, Houstonians took the initiative to keep the Houston Astros \nin town by passing a baseball stadium referendum that sparked the \nrevitalization of our downtown district. A new downtown basketball arena to \nhouse our hometown Houston Rockets and Comets would amplify our current \nefforts.Houston has a vibrant, attractive, central business district that is \nrecognized globally.  A basketball arena is of key importance for the \ncontinuing revitalization of downtown Houston, for keeping the Rockets and \nComets in town, and for retaining an exceptional workforce in our world class \ncity. We must not allow our city to lose its competitive advantage on or off \nthe court."
+  },
+  {
+   "document_id": 90737,
+   "cited_text": "Quoted in this reply: Mr. Lay--\n\nDuring the negotiations with the Rockets as to how much each party would\ncontribute to the Arena referendum campaign, Mike Goldberg of Baker & Botts\nsuggested that the Rockets would like to net their contribution obligation\nagainst other contributions that they solicited.\n\nAfter a conversation with you, John Watson and I advised Mike Goldberg that\nyou did not want to be competing with the Rockets in soliciting\ncontributions to the Arena referendum campaign.\n\nMike Goldberg called Friday and asked whether it would be acceptable for the\nRockets to net against their contribution obligat"
+  },
+  {
+   "document_id": 90737,
+   "cited_text": "Subject: Re: Referendum Campaign\nFrom: rosalee.fleming@enron.com\nDate: 2000-10-04"
+  },
+  {
+   "document_id": 90737,
+   "cited_text": "Ken Lay said to tell you this is fine."
+  },
+  {
+   "document_id": 101059,
+   "cited_text": "she said. \"I think it's kind of funny the arena people are taking the \nattitude of `How dare anyone question us?' \" \nThe letter, which clearly targets Brown, further suggests that \"what Houston \nlacks is world-class leaders\" who would have negotiated a tougher deal with \nHouston Rockets owner Leslie Alexander. \n\"Mayor Lee Brown won't fund the immunization of Houston's poor Hispanic \nchildren, but he is able to build a parking garage benefiting a handful of \nmultimillionaires,\" the letter says. \nWalden called that statement racist. \nIt is also inaccurate, as the city is not building the parking garage. A \ngroup of private business leaders, headed by Lay, will lend the Harris \nCounty-Houston Sports Authority $30 million for the garage. The sports \nauthority, and its hotel and car rental tax revenues, are not affiliated with \nthe city. \nAmong other errors in the letter: \n? \"The ballot language does NOT rule out ... the usual cost overruns.\" This \nis irrelevant because the Houston Rockets pay construction cost overruns. \n? \"Taxpayers fund and build the arena garage with Les Alexander reaping ALL \nof the parking fees.\" The private, interest-free loan will help the sports \nauthority finance the garage. To help repay the loan, the sports authority \nwill collect parking fees during the daytime and at concerts and other events \nthat don't involve Alexander's Rockets, Comets and ThunderBears. \n? Although the city gets use of the arena for 20 dates a year, the letter \nsays that only five days may be leased for revenue. In fact, all 20 dates may \nbe used for fund-raisers. This was clarified in changes to the letter of \nagreement between the Rockets and the sports authority. \n? \"This year's ballot language gives an incredible $200 million to the \nRockets for naming rights, while the city receives less than 10 percent.\" \nUnder terms of the agreement, the Rockets may sell the naming rights to the \narena, but it is unlikely the team would receive $200 million. Such a payment"
+  },
+  {
+   "document_id": 95011,
+   "cited_text": "negotiating with the team were remarkably similar to Houston's. \nThe city had just spent about $200 million in public money to build Coors \nField for the Colorado Rockies baseball team, and was contemplating an even \nlarger expenditure to replace Mile High Stadium for the NFL's Broncos. \nBut when it came to the city-owned McNichols Arena, built, like Compaq \nCenter, in 1975, the attitude was that if the team's owner wanted a new \nbuilding he would have to do it largely with public money, said Dean Bonham, \na Denver-based sports consultant. Eventually, the owner got some city \nconcessions totaling about $30 million but paid for all the arena's \nconstruction costs. \nA few years later in Houston, after building Enron Field and ponying up for a \nnew football stadium, public leaders have signed a similar, heavily \nsubsidized plan for the basketball team. \nWhat was it that opened Houston's treasury when Denver's was closed? \n\"I can sum the difference up in one word: leverage,\" Bonham said. \"The Denver \nteams weren't going anywhere soon. The Rockets got a green light to go.\" \nIn Miami, a smaller market where a building was constructed with slightly \nmore public money than would be spent in Houston, the Heat's first arena was \nonly 8 years old when the team asked for a new facility. \nAt first team officials, amid threats of leaving, managed to cut a deal with \nthe Miami-Dade County Commission to build a $165 million arena on Biscayne \nBay with only $50 million coming from the team. \nBut leading up to a referendum a new county mayor, Alex Penelas, was elected \nin part because he campaigned against public financing for the arena, saying \nthe county had \"given away the kitchen sink.\" \nLater, a deal was struck in which the team paid for the arena's construction \nand the county bought bayfront property and helped the team with annual \noperating costs. \nThis dramatic game of building publicly backed sports stadiums with \nquestionable public support is so familiar throughout the United States that \nit has practically become the fifth major league sport."
+  },
+  {
+   "document_id": 92399,
+   "cited_text": "Per your request, I have responded to Allen Gage with Mr. Lay's ticket \nselection for the upcoming 2000 - 2001 Rockets season.  He has asked if Mr. \nLay would reconsider providing 1 of the 2 Los Angeles Lakers games (Nov. 7 or \nDec. 21) in exchange for one of his January game choices?  As stated in the \nagreement letter, if Mr. Lay elects - we could provide Allen Gage with Mr. \nLay's tickets behind the Rockets bench at Courtside Row 2, Seats 25-28 as \nanother option."
+  },
+  {
+   "document_id": 58258,
+   "cited_text": "After last year it is a close call, but I want to do it again.  I am willing \nto go for one-half again but am ok with only a quarter of the games.  Let me \nknow when you need the money and I will scout around to see if anyone wants a \nquarter of the games."
+  },
+  {
+   "document_id": 302048,
+   "cited_text": "\"Chuck is very, very intense . . . He burns,\" said former Houston Mayor Bob Lanier. \"In negotiations, he gets down and learns all the details himself.\" \nHow tough Watson is willing to be came to light in his contentious dealings with Houston Rockets owner Les Alexander. Watson owned the master lease to the Summit, later renamed the Compaq Center, which committed the Rockets to playing there through 2003. Eager to break the deal, Alexander tried negotiating and litigating his way out of the lease, all to no avail. \nThe battle deepened as the two men competed unsuccessfully to get a NHL hockey team in Houston and feuded over how a hockey team would share in the revenues of a new stadium proposed for downtown. \nAngered at the deal Alexander was able to get for the Rockets, at the expense of a hockey franchise, Watson spent about $100,000 out of his own pocket to help defeat the stadium referendum. It was his one overtly political act here, and some say it was the decisive blow to Alexander's aspirations. \n\"There are a lot of people I'd much rather have a contest with,\" Lanier said of Watson. \nAlexander and Watson were later able to settle their differences, and Watson supported the second arena referendum, which passed. A basketball arena is now under construction downtown. \n\"I'm not surprised to see Chuck Watson make an aggressive move like this,\" Alexander said Friday evening. \"He understands the industry as well as anyone; and therefore, he's in the best position to assess the risk and take advantage of the opportunity.\" \nLike most opportunities, the deal also represents a sizable risk. Taking over Enron is a huge reach for Dynegy, which will try to swallow a company that was five times bigger when measured by revenues. \nWatson will need all of his shrewdness and ferocity to untangle the mess that is Enron and merge two operations that were each, in their own way, trying to reinvent the energy business. \n\"I have some concerns for my friend,\" McNair confessed. \"It is a tremendous challenge. I know he'll handle it well, but this will be a very demanding business.\""
+  },
+  {
+   "document_id": 303895,
+   "cited_text": "Houston's identity is closely tied to its businesses. The\nHouston Astros baseball team plays in Enron Field, the downtown\nretractable-roof stadium. Enron paid $100 million to put its name\non the 42,000-seat stadium. The Compaq Center is home to the\nHouston Rockets basketball team."
+  }
+ ],
+ "cost_usd": 0.07392750000000001,
+ "seconds": 37.27005970799655,
+ "started": "2026-11-10T16:40:38.104907Z",
+ "commit": "5a10ef1"
+}

@@ -2,8 +2,8 @@
 
 The prompt is the agent's with the tools taken out: the same asker, day, facts about the store and
 answer rules, so the comparison is fair. The first try (2026-11-12) sent the bare question and the
-model read "the mail on September 11" as the postal service. Paid, cached by model, prompt and
-question: asking again costs nothing.
+model read "the mail on September 11" as the postal service. Paid, so each answer is kept in the
+repo under its pick's id, with the prompt it was asked with: asking again costs nothing.
 """
 
 import time
@@ -33,6 +33,7 @@ End with one last line, exactly "Found: yes", "Found: partly" or "Found: no"."""
 MAX_TOKENS = 1500
 # One answer of a few hundred words, at Sonnet's price; shown before a paid run.
 CENTS_EACH = 1
+KEPT = Path("curated/investigator/no_rag")
 
 
 def prompt(conn: psycopg.Connection[TupleRow], person: str, as_of: date) -> str:
@@ -50,15 +51,18 @@ def prompt(conn: psycopg.Connection[TupleRow], person: str, as_of: date) -> str:
     )
 
 
-def cached(run: AgentRun, system: str) -> Baseline | None:
-    """The answer asked before for this run's question and prompt, or None."""
-    path = _path(run, system)
-    return Baseline.model_validate_json(path.read_text()) if path.exists() else None
+def kept(pick: str, system: str) -> Baseline | None:
+    """Pick `pick`'s answer when it was asked with this prompt, or None."""
+    path = KEPT / f"{pick}.json"
+    if not path.exists():
+        return None
+    saved = Baseline.model_validate_json(path.read_text())
+    return saved if saved.system == system else None
 
 
-def ask(run: AgentRun, system: str) -> Baseline:
-    """Ask Claude (paid, unless asked before) and keep the answer on disk."""
-    if (saved := cached(run, system)) is not None:
+def ask(pick: str, run: AgentRun, system: str) -> Baseline:
+    """Ask Claude `run`'s question (paid, unless kept with this prompt) and keep the answer."""
+    if (saved := kept(pick, system)) is not None:
         return saved
     begun = time.perf_counter()
     response = claude.client().messages.create(
@@ -78,11 +82,6 @@ def ask(run: AgentRun, system: str) -> Baseline:
             "system": system,
         }
     )
-    path = _path(run, system)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(answer.model_dump_json())
+    KEPT.mkdir(parents=True, exist_ok=True)
+    (KEPT / f"{pick}.json").write_text(answer.model_dump_json(indent=1) + "\n")
     return answer
-
-
-def _path(run: AgentRun, system: str) -> Path:
-    return claude.cache_path("no_rag", f"{run.model}\n{system}\n{run.question}")

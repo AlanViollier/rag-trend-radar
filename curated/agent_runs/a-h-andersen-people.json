@@ -1,0 +1,317 @@
+{
+ "question": "Which people at the auditor were tied to the destruction of records and the instruction behind it?",
+ "person": "investigator",
+ "as_of": "2002-12-31",
+ "model": "claude-sonnet-5-5",
+ "prompt_version": 7,
+ "steps": [
+  {
+   "kind": "thinking",
+   "text": "I'm looking for emails about Andersen's document destruction and who gave the instruction, likely Nancy Temple or David Duncan, starting with searches in parallel.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "Plan: I need to find which Andersen people the mail links to shredding or destroying records, then what instruction was given, by whom, and when. I'll search for the shredding and retention-policy mail, then read the key emails.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 3.309785749996081,
+   "input_tokens": 4,
+   "output_tokens": 372,
+   "cache_read": 0,
+   "cache_write": 4169,
+   "cost_usd": 0.0141505
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Andersen document destruction shredding Enron records instruction\"}",
+   "summary": "10 results, 1 of them people's own mail",
+   "documents": [
+    346361,
+    347433,
+    345549,
+    348835,
+    342251,
+    350581,
+    346682,
+    347570
+   ],
+   "error": false,
+   "seconds": 17.721997000000556,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Andersen document retention policy reminder, destroy documents, Duncan Temple\", \"since\": \"2001-09-01\"}",
+   "summary": "10 results, 0 of them people's own mail, 2 repeats left out",
+   "documents": [
+    345549,
+    347816,
+    350581,
+    344493,
+    346361,
+    345767,
+    347099
+   ],
+   "error": false,
+   "seconds": 8.408263791992795,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "All the results so far are press coverage, so I want internal mail from Enron staff instead, though the question is about the auditors. I'll run another search on Latham and the other four partners who were relieved, plus a mail-only search for Latham and Shannon Adlong.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "The results so far are all forwarded press. Next I'll check whether any firsthand mail covers this, and look for the other Andersen people named, such as Latham and the other partners put on leave.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 3.3147640000097454,
+   "input_tokens": 4,
+   "output_tokens": 387,
+   "cache_read": 0,
+   "cache_write": 22477,
+   "cost_usd": 0.0600705
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Andersen partners relieved of duties administrative leave Odom Duncan Temple Latham Enron shredding\", \"source\": \"mail\", \"since\": \"2002-01-01\"}",
+   "summary": "0 new results",
+   "documents": [],
+   "error": false,
+   "seconds": 1.6282785840012366,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Latham \\\"clean out\\\" computer directories Andersen Enron team Oct. 24 e-mail overtime Shannon Adlong\", \"since\": \"2002-01-20\"}",
+   "summary": "10 results, 0 of them people's own mail, 3 repeats left out",
+   "documents": [
+    348835,
+    347816,
+    347433,
+    352667,
+    348109,
+    347099
+   ],
+   "error": false,
+   "seconds": 8.881504667006084,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "I'm going through the clippings and noting that everything here is forwarded press material from Enron's daily media digest, with no Andersen-authored emails. I'm mapping the cited passages: in doc 345549, the Duncan order after the Temple email and Odom passing on it, Temple's October 19 message to Stewart and Ripepi, and another chunk; then 346361 and the Latham passage in 348835.\n\nNow I'm sorting out the remaining citations: Bauer's leave and the Latham note, Temple's and Andrews's testimony, the Duncan October 23 and assistant November 9 emails, and the six-employee and Baskins passages. Temple's e-mailed policy to two Chicago partners is the last one I need. I'm also keeping in mind that whether Temple's message was actually a destruction instruction is still contested, so I shouldn't overstate it.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 13.852391791995615,
+   "input_tokens": 4,
+   "output_tokens": 2053,
+   "cache_read": 22477,
+   "cache_write": 9206,
+   "cost_usd": 0.0458007
+  }
+ ],
+ "answer": "Mail names David Duncan as the person Andersen says ordered the destruction. It names Nancy Temple's Oct. 12 retention-policy e-mail as the instruction behind it. Every source is forwarded press, in Enron's daily \"Enron Mentions\" clippings from Jan. 2002. I found no e-mail written by an Andersen person.\n\n**The people**\n- **David Duncan** (lead Enron partner, Houston). Andersen fired him on Jan. 15 for ordering the destruction of Enron documents after the SEC probe was launched in October. Andersen's own account is that on Oct. 23 he called an urgent meeting of the engagement team and organized an expedited effort to shred or dispose of documents. Several lawmakers suspected Andersen was making him a scapegoat. He declined to answer questions at the hearing, citing the Fifth Amendment.\n- **Nancy Temple** (in-house lawyer, Chicago). She wrote the Oct. 12 e-mail. It said: \"It might be useful to consider reminding the engagement team of our documentation and retention policy… It will be helpful to make sure that we have complied with the policy.\" She told the House hearing, \"I never counseled any shredding or destruction of documents.\" She also sent a terse reminder of the policy on Oct. 19 to John Stewart and Amy Ripepi.\n- **Michael Odom** (head of risk management, Houston). Temple's Oct. 12 e-mail went to Odom, who passed it on to Duncan.\n- **Kimberly Latham** (manager on the Enron account). On Oct. 24 she told her staff to comply with the \"documentation retention guidelines.\" She said her supervisor \"expects everyone to do what is necessary to adhere to the guidelines,\" on an overtime basis if needed. The staffer she delegated to follow through called it a \"cleanup\" of computer files and on Oct. 25 listed directories he wanted cleaned out. The press didn't name that staffer in the passages I saw.\n- **Thomas Bauer** (partner). He convened the Oct. 23 meeting with Duncan and was put on administrative leave.\n- **Others on the Enron engagement.** Three other partners on the engagement were placed on administrative leave. The press names Bauer; I did not find the other two named. The judge ordered six Andersen people to give early depositions, including Duncan, four other Houston partners and the lawyer who sent the policy e-mail. The press doesn't name all of them.\n\n**The instruction and its timing**\n- **Oct. 12 e-mail:** Duncan told investigators he began the destruction after receiving Temple's e-mail. Andersen said the memo doesn't appear to have prompted the destruction.\n- **Oct. 23 meeting:** Andersen says Duncan directed the document disposal at this meeting.\n- **Oct. 24–25 follow-up:** the Latham e-mails above turned it into staff tasks.\n- **Nov. 9 stop:** The shredding appears to have stopped after Duncan's assistant e-mailed other secretaries on Nov. 9, the day after the SEC subpoena, saying \"No more shredding.\" Another account says Temple left Duncan a voice-mail that day saying the SEC had issued subpoenas and all documents must be preserved.\n\n**What is disputed**\n- Duncan and Odom told investigators that other partners and managers were \"at the table\" when the retention policy was handed out.\n- Andersen says Duncan acted without consulting others in the firm or, as far as it knew, legal counsel.\n- Andersen's Andrews said Duncan \"was violating company policy.\"\n- Tauzin said more people than disclosed knew of the destruction, \"perhaps in Chicago.\"\n- One account says Temple also e-mailed the policy to two high-level Chicago partners reviewing the Enron audit. They aren't named in what I read.",
+ "found": "partly",
+ "citations": [
+  {
+   "document_id": 347433,
+   "cited_text": "HOUSTON, Jan 24 (Reuters) - A federal judge on Thursday ordered six key Andersen employees to give early depositions about the shredding of Enron-related documents, handing an initial victory to shareholders suing the auditor and the failed energy giant's top insiders. \nU.S. District Judge Melinda Harmon granted in full a motion for discovery in the massive suit that requires the preservation of all Enron-related records held by Andersen, the accounting firm that Enron Corp. fired last week. The motion was requested by all but one plaintiff in the suit.\nAllegations of systematic document shredding at Andersen and Enron rapidly mobilized plaintiffs' attorneys, who pushed for the early discovery and depositions to preserve as much evidence as possible in what is certain to be a lengthy lawsuit with billions of dollars at stake. \nThe six employees include Andersen's fired top partner on the Enron account, David Duncan, who on Thursday asserted his Fifth Amendment right against self-incrimination during a hearing before the U.S. House Energy and Commerce Subcommittee on Oversight and Investigations. \nAndersen fired him on Jan. 15 for ordering the destruction of Enron documents after a U.S. Securities and Exchange Commission probe was launched in October. \nAlso giving depositions will be four other Andersen partners in Houston who were relieved of their management responsibilities and a lawyer who sent an e-mail explaining Andersen's document-destruction policy to the auditor's Houston office. \nHarmon's order waives a provision of U.S. securities law that delays depositions until a judge determines whether a suit is frivolous. The provision is intended to prevent legal interviews from being improperly used to gather business information. \nThe depositions cannot be taken until 20 days from now, and are restricted to eight hours and limited to the topic of document and data destruction or storage. \nThe order allows Andersen's outside lawyers to guard the documents at their own sites and permits the plaintiffs to inspect those sites immediately. Andersen must within 20 days categorize and report the documents they have found or recovered, and explain the steps it took to recover deleted documents, the order says. \nOne lawyer said the plaintiffs were delighted with the judge's ruling."
+  },
+  {
+   "document_id": 347816,
+   "cited_text": "This policy toward document disposal reflects longstanding and sound audit practice. It is designed to assure that the audit work papers, which are the principal materials reflecting and documenting the conclusions of the audit, unambiguously reflect the judgments that actually were reached. \nThis understanding of proper audit practice was reflected in the Andersen document retention policy in effect last fall, which provided that documents other than work papers ordinarily should be disposed of when no longer needed but that such documents should be retained when litigation has commenced or is threatened. \nOf course, precisely when that occurs, often we'll require the application of informed judgment to the particular circumstances of a given case. And that may well be a point on which reasonable people can differ. \nAs for the destruction of Enron-related documents, we know that on Oct. 23, just six days after the S.E.C. requested information from Enron, David Duncan, Andersen's lead partner on the Enron engagement, called an urgent meeting of the Enron engagement team, at which he organized an expedited effort to shred or otherwise dispose of Enron-related documents. \nThis effort was undertaken without any consultation with others in the firm or, so far as we are aware, with legal counsel. \nOver the course of the next several days, a very substantial volume of documents and e-mails were disposed of by the Enron engagement team. This activity appears to have stopped shortly after Mr. Duncan's assistant sent an e-mail to other secretaries on Nov. 9, the day after Andersen received a subpoena from the S.E.C. telling them, ''No more shredding.'' \nOnce this activity came to light, Andersen's response was immediate. Andersen notified the Department of Justice, the S.E.C. and all relevant congressional committees. At the same time, the firm suspended its records management policy and asked former Senator Danforth to conduct an immediate and comprehensive review. \nOn Jan. 15, approximately two weeks after our C.E.O. learned about the document destruction, Andersen dismissed Mr. Duncan. The firm also placed three other partners from the Enron engagement on administrative leave, pending completion of the investigation into their responsibility for these events."
+  },
+  {
+   "document_id": 347816,
+   "cited_text": "Enron also had disclosed as early as Oct. 22 that the SEC was probing its books. \nGesturing dramatically and thumping his desk in the hearing room, Rep. W. J. \"Billy\" Tauzin, R-La., chair of the committee, asked Temple why she was silent for so long about the need to preserve documents. \n\"I never counseled any shredding or destruction of documents. I only wish someone had raised the question,\" Temple said. \nTauzin fired back, \"Does anybody have to raise it, or is it somebody's responsibility in the company to raise it themselves? Whose responsibility is it but yours?\" \nAndersen fired Duncan last week, saying he had organized a massive destruction of Enron documents beginning Oct. 23. \nC.E. Andrews, an Andersen global managing partner who also appeared before the committee, said it was Duncan's responsibility to protect the documents. \n\"I cannot say it more strongly, Mr. Duncan was not following company policy. Mr. Duncan was violating company policy,\" Andrews said. \nThe claim, echoed by other Andersen witnesses, drew fresh scorn from Tauzin, who questioned why such a sensitive legal issue was left to an accountant. \n\"I hope you're all OK, I don't know,\" Tauzin warned, referring to the legal ramifications the testimony raised. \"I don't know what's going to come out of all this.\" \nSeveral lawmakers said they suspect Andersen is making a scapegoat of Duncan, when it appears many employees may have been involved in destroying Enron documents. \nIn an internal, Oct. 24 Andersen document the committee released Thursday, a manager instructs staff to use overtime if necessary in complying with the company's policy, which at the time called for destruction of all but the final auditing documents. \nNoting that retaining documents is largely a passive act, Greenwood asked why complying with the Andersen policy would require staff to use overtime. \n\"If the emphasis is on retaining documents, it doesn't seem to us that a whole lot of overtime is required,\" Greenwood said."
+  },
+  {
+   "document_id": 347816,
+   "cited_text": "Arthur Andersen LLP analysts determined during the fall that there was significantly \"heightened risk of financial-statement fraud\" at Enron Corp., a newly released document shows. \nThat determination came from a test on the Houston energy company's financial statements described in an Oct. 9 e-mail sent by Mark Zajac, a risk-management employee in Chicago, to Andersen auditors on the Enron account. Michigan Rep. John Dingell, the senior Democrat on the House Energy and Commerce Committee, released the e-mail as the panel's investigations subcommittee opened hearings on Enron's collapse.\nAt the hearing, which focused on document destruction at Andersen, firm executives acknowledged that they retained a law firm in early October in part because they feared being sued over Enron -- but waited another month before telling the Houston office to preserve Enron-related documents. \nAndersen's lead Enron auditor, David Duncan, was fired this month for allegedly overseeing a massive document-destruction effort after the Securities and Exchange Commission opened an inquiry into Enron's accounting practices in late October. Yesterday, Andersen acknowledged that personnel outside Houston also destroyed documents. \nThe Zajac e-mail provides another indication that Mr. Duncan and other Andersen auditors were increasingly uncomfortable with Enron's practices as it spiraled toward collapse. The e-mail also offers a clue to Mr. Duncan's state of mind as he and his subordinates were shredding documents. The e-mail was dated a week before a previously disclosed Oct. 15 memo that recounted Mr. Duncan warning Enron that its upcoming third-quarter earnings announcement might be misleading. The Oct. 16 earnings news release characterized $1.01 billion of losses as \"nonrecurring charges,\" a characterization Mr. Duncan opposed."
+  },
+  {
+   "document_id": 346361,
+   "cited_text": "The shredding at Andersen stopped after Temple, an in-house lawyer for the firm in Chicago, wrote a memo telling employees to preserve documents. \nTemple's instruction followed word on Nov. 9 that the SEC had subpoenaed Andersen -- weeks after the SEC opened its probe of Enron. \nHouse investigators want to know whether Andersen's legal department intentionally stalled on issuing the order to preserve documents until after thousands of Enron papers and e-mails had been destroyed. \nWeeks earlier, Temple sent Odom the e-mail referencing the firm's policy on document destruction and retention. \nComing as it did days before Enron's calamitous Oct. 16 third-quarter earnings report, thee-mail has been the focus of zealous scrutiny by House and Senate investigators tracking Andersen's destruction of evidence. \n\"Mike -- It might be useful to consider reminding the engagement team of our documentation and retention policy,\" Temple wrote in the Oct. 12 memo. \"It will be helpful to make sure that we have complied with the policy.\" \nTemple's e-mail included a link to the company's policy, which outlines which sorts of documents should be destroyed and which retained. \nFour days later, Enron reported a $638 million third-quarter loss and disclosed a $1.2 billion reduction in shareholder equity. \nThe devastating report was the start of Enron's stunning free fall, culminating in the largest-ever corporate bankruptcy on Dec. 2. \nAndersen has acknowledged the apparent impropriety of its document shredding, but said Temple's e-mail was aimed at preserving evidence. \nOdom, who is still employed by Andersen, was moved out of management duties in Houston the day Duncan was fired. \nWhile the destruction of documents is crucial to the probe into Enron's collapse, the central issue is likely to be how involved Andersen management was in creating a corporate structure that misled creditors and shareholders, experts and investigators said. \nThe House committee's investigation is one of 10 Enron-related probes under way on Capitol Hill."
+  },
+  {
+   "document_id": 347816,
+   "cited_text": "Enron also had disclosed as early as Oct. 22 that the SEC was probing its books. \nGesturing dramatically and thumping his desk in the hearing room, Rep. W. J. \"Billy\" Tauzin, R-La., chair of the committee, asked Temple why she was silent for so long about the need to preserve documents. \n\"I never counseled any shredding or destruction of documents. I only wish someone had raised the question,\" Temple said. \nTauzin fired back, \"Does anybody have to raise it, or is it somebody's responsibility in the company to raise it themselves? Whose responsibility is it but yours?\" \nAndersen fired Duncan last week, saying he had organized a massive destruction of Enron documents beginning Oct. 23. \nC.E. Andrews, an Andersen global managing partner who also appeared before the committee, said it was Duncan's responsibility to protect the documents. \n\"I cannot say it more strongly, Mr. Duncan was not following company policy. Mr. Duncan was violating company policy,\" Andrews said. \nThe claim, echoed by other Andersen witnesses, drew fresh scorn from Tauzin, who questioned why such a sensitive legal issue was left to an accountant. \n\"I hope you're all OK, I don't know,\" Tauzin warned, referring to the legal ramifications the testimony raised. \"I don't know what's going to come out of all this.\" \nSeveral lawmakers said they suspect Andersen is making a scapegoat of Duncan, when it appears many employees may have been involved in destroying Enron documents. \nIn an internal, Oct. 24 Andersen document the committee released Thursday, a manager instructs staff to use overtime if necessary in complying with the company's policy, which at the time called for destruction of all but the final auditing documents. \nNoting that retaining documents is largely a passive act, Greenwood asked why complying with the Andersen policy would require staff to use overtime. \n\"If the emphasis is on retaining documents, it doesn't seem to us that a whole lot of overtime is required,\" Greenwood said."
+  },
+  {
+   "document_id": 345549,
+   "cited_text": "Meanwhile, congressional investigators examining Enron's collapse met for four hours yesterday with Ms. Temple, the Andersen in-house counsel who left the voice-mail message for Mr. Duncan about preserving documents. She was asked about the reason for her reminders to Andersen employees about her firm's policy on retaining and destroying documents. According to people familiar with the questioning, Ms. Temple said yesterday that her reminders were simply routine restatements of Arthur Andersen policy and weren't intended as anything more. \nMs. Temple is considered likely to be asked to appear at a House Energy and Commerce subcommittee hearing Thursday examining document destruction. Her attorney didn't return calls seeking comment. \nAs for Mr. Duncan, his lawyer, Vince DiBlasi, said, \"It is premature to require him to testify.\" But the chairman of the subcommittee, Republican Rep. Jim Greenwood of Pennsylvania, has said he would subpoena Mr. Duncan if necessary. \nMs. Temple sent an Oct. 12 e-mail to Michael Odom, head of risk management for Arthur Andersen's Houston office, according to people with knowledge of Mr. Odom's interview with congressional investigators. He told them he forwarded it to Mr. Duncan, who oversaw the shredding of documents until Nov. 9 when Ms. Temple sent him a voice-mail message. \nIn addition to those two communications, Ms. Temple sent out a terse reminder of the policy on Oct. 19 to John Stewart, Andersen's director of U.S. accounting standards, who holds a powerful regulatory position within the profession as a member of the Financial Accounting Standards Board's Emerging Issues Task Force. The memo also went to Amy Ripepi, an Andersen executive who heads the SEC regulations committee for the American Institute of Certified Public Accountants. \nThis is the first indication that Andersen executives with leading regulatory positions in the accounting profession were issued reminders about the firm's document-retention and -destruction policies."
+  },
+  {
+   "document_id": 345549,
+   "cited_text": "Mr. Duncan last week told congressional investigators that he ordered subordinates to begin destroying documents related to the Enron account after he received an e-mail from Nancy Temple, a senior lawyer in Andersen's Chicago office. The Oct. 12 e-mail -- sent to Mr. Odom, who passed it on to Mr. Duncan -- was a reminder of Andersen's longstanding document-retention and destruction policy, which called for the disposal of nonessential papers. \nBoth Messrs. Odom and Duncan told congressional investigators that they had never before been sent such a reminder, according to people familiar with their interviews. Ms. Temple was a member of an \"extended review team\" of Houston and Chicago officials created to take a closer look at Enron as questions arose about its condition. Members of the team talked with each other several times a week, Mr. Odom told congressional investigators. \nMr. Duncan told investigators he didn't think there was anything wrong with destroying Andersen-owned documents because the SEC inquiry begun in late October concerned Enron, not Andersen. The shredding stopped on Nov. 9 when Ms. Temple left a voice-mail message for Mr. Duncan telling him that the SEC had issued subpoenas and that all documents must be preserved. \nA person close to Mr. Duncan says he forwarded that voice mail to the entire Enron audit team and instructed his secretary to send an e-mail repeating the instruction. The next day, Ms. Temple reiterated the message in a follow-up e-mail to Mr. Duncan and others involved with the Enron account. \nThe implication of the account offered by Mr. Duncan and bolstered by Mr. Odom is that the document destruction began only when the office was reminded of Andersen's document-destruction policy by Ms. Temple and stopped only when the office heard from her again about the subpoenas."
+  },
+  {
+   "document_id": 348835,
+   "cited_text": "The Houston office of accountant Arthur Andersen may have accelerated its efforts to destroy Enron's audit records -- requiring staffers to work overtime -- after it learned the Securities & Exchange Commission was investigating Enron's accounting, documents released on Jan. 24 by a House Energy & Commerce subcommittee suggest. \nThe documents -- e-mail messages obtained by BusinessWeek -- show that David B. Duncan, Andersen's lead partner on the Enron account, called a \"mandatory\" meeting on Oct. 23, 2001, \"to discuss the current events of Enron.\" That was the day after Enron issued a press release disclosing the SEC had requested information about the accounting treatment of the partnership deals that ended up costing Enron $588 million in profit writedowns.\nOn Oct. 24, the day after the Andersen meeting, Kimberly H. Latham, an Andersen manager on the Enron account, instructed her staff to cooperate with efforts \"to insure that our team is in compliance with the Andersen documentation retention guidelines.\" The staffer who Latham delegated to follow through was less politic: He referred to his task as a \"cleanup\" of computer files, and on Oct. 25 he gave his colleagues a list of computer directories \"that I would like you to clean out,\" according to the e-mails. \nREGARDING \"RETENTION.\" While they're called \"retention guidelines,\" Andersen's rules regarding records actually call for disposing of documents on a regular schedule. According to Andersen officials, the firm keeps only the papers it deems to be essential to the audit. The guidelines contain exceptions -- including instructions that routine document disposal should cease when the firm learns of \"threatened or actual commencement of litigation, governmental, and/or professional investigations.\" \nThat makes the wording and timing of the e-mails significant. Congressional probers investigating the Enron affair believe the memos suggest that the destruction of records may have been a deliberate attempt to sweep away the history of the Enron audits. Andersen has acknowledged its Houston office destroyed thousands of documents relating to Enron, stopping only when the firm was subpoenaed by the SEC on Nov. 8."
+  },
+  {
+   "document_id": 348835,
+   "cited_text": "The computer files referred to in the Oct. 24 and Oct. 25 e-mails weren't yet subject to subpoena, but they appear to fall under Andersen's policies requiring a freeze when an audit is under investigation, the congressional probers believe. \nCOVERING TRACKS? A House Energy & Commerce Committee subcommittee has subpoenaed Andersen officials, including Duncan and CEO Joseph Berardino, to testify about the shredding and discarding of documents. The panel has copies of the e-mails and is investigating them, says Ken Johnson, committee spokesman. \"This has all the outward appearance of people desperately trying to cover their tracks,\" Johnson says. \nAfter reviewing copies of the e-mails, an Andersen official said they back up the firm's contention that Duncan directed the shredding campaign. Andersen fired Duncan on Jan. 15 and put partner Thomas H. Bauer, who convened the Oct. 23 meeting with Duncan, on administrative leave. \"It's clear that David Duncan, a certified public accountant with full knowledge of an SEC investigation, ordered a full-scale document-destruction campaign,\" says the Andersen official, who spoke on the condition he not be named. \"That's consistent with what we found in our internal review.\" \nDuncan's attorney could not be reached for comment. \nBut the e-mails put the cleanup in the context of Andersen's document retention policies, which could pose problems for the firm. On Oct. 12, an Andersen attorney sent an e-mail to Houston reminding partners and managers of the need to keep up with disposal of outdated documents. Andersen has insisted the lawyer's reminder was routine and unrelated to Enron -- but that Duncan's directions to his staff were not. \n\"DO WHAT IS NECESSARY.\" Indeed, the e-mails present the cleanup as an urgent matter. In her Oct. 24 note, Latham told her staff that her supervisor \"expects everyone to do what is necessary to adhere to the guidelines. Obviously this should not interfere with client obligations...; however, we do expect that people will be able to do this on an overtime basis, if necessary, for the remainder of the week, or for however long it takes.\""
+  },
+  {
+   "document_id": 348835,
+   "cited_text": "The Houston office of accountant Arthur Andersen may have accelerated its efforts to destroy Enron's audit records -- requiring staffers to work overtime -- after it learned the Securities & Exchange Commission was investigating Enron's accounting, documents released on Jan. 24 by a House Energy & Commerce subcommittee suggest. \nThe documents -- e-mail messages obtained by BusinessWeek -- show that David B. Duncan, Andersen's lead partner on the Enron account, called a \"mandatory\" meeting on Oct. 23, 2001, \"to discuss the current events of Enron.\" That was the day after Enron issued a press release disclosing the SEC had requested information about the accounting treatment of the partnership deals that ended up costing Enron $588 million in profit writedowns.\nOn Oct. 24, the day after the Andersen meeting, Kimberly H. Latham, an Andersen manager on the Enron account, instructed her staff to cooperate with efforts \"to insure that our team is in compliance with the Andersen documentation retention guidelines.\" The staffer who Latham delegated to follow through was less politic: He referred to his task as a \"cleanup\" of computer files, and on Oct. 25 he gave his colleagues a list of computer directories \"that I would like you to clean out,\" according to the e-mails. \nREGARDING \"RETENTION.\" While they're called \"retention guidelines,\" Andersen's rules regarding records actually call for disposing of documents on a regular schedule. According to Andersen officials, the firm keeps only the papers it deems to be essential to the audit. The guidelines contain exceptions -- including instructions that routine document disposal should cease when the firm learns of \"threatened or actual commencement of litigation, governmental, and/or professional investigations.\" \nThat makes the wording and timing of the e-mails significant. Congressional probers investigating the Enron affair believe the memos suggest that the destruction of records may have been a deliberate attempt to sweep away the history of the Enron audits. Andersen has acknowledged its Houston office destroyed thousands of documents relating to Enron, stopping only when the firm was subpoenaed by the SEC on Nov. 8."
+  },
+  {
+   "document_id": 348835,
+   "cited_text": "The computer files referred to in the Oct. 24 and Oct. 25 e-mails weren't yet subject to subpoena, but they appear to fall under Andersen's policies requiring a freeze when an audit is under investigation, the congressional probers believe. \nCOVERING TRACKS? A House Energy & Commerce Committee subcommittee has subpoenaed Andersen officials, including Duncan and CEO Joseph Berardino, to testify about the shredding and discarding of documents. The panel has copies of the e-mails and is investigating them, says Ken Johnson, committee spokesman. \"This has all the outward appearance of people desperately trying to cover their tracks,\" Johnson says. \nAfter reviewing copies of the e-mails, an Andersen official said they back up the firm's contention that Duncan directed the shredding campaign. Andersen fired Duncan on Jan. 15 and put partner Thomas H. Bauer, who convened the Oct. 23 meeting with Duncan, on administrative leave. \"It's clear that David Duncan, a certified public accountant with full knowledge of an SEC investigation, ordered a full-scale document-destruction campaign,\" says the Andersen official, who spoke on the condition he not be named. \"That's consistent with what we found in our internal review.\" \nDuncan's attorney could not be reached for comment. \nBut the e-mails put the cleanup in the context of Andersen's document retention policies, which could pose problems for the firm. On Oct. 12, an Andersen attorney sent an e-mail to Houston reminding partners and managers of the need to keep up with disposal of outdated documents. Andersen has insisted the lawyer's reminder was routine and unrelated to Enron -- but that Duncan's directions to his staff were not. \n\"DO WHAT IS NECESSARY.\" Indeed, the e-mails present the cleanup as an urgent matter. In her Oct. 24 note, Latham told her staff that her supervisor \"expects everyone to do what is necessary to adhere to the guidelines. Obviously this should not interfere with client obligations...; however, we do expect that people will be able to do this on an overtime basis, if necessary, for the remainder of the week, or for however long it takes.\""
+  },
+  {
+   "document_id": 347816,
+   "cited_text": "This policy toward document disposal reflects longstanding and sound audit practice. It is designed to assure that the audit work papers, which are the principal materials reflecting and documenting the conclusions of the audit, unambiguously reflect the judgments that actually were reached. \nThis understanding of proper audit practice was reflected in the Andersen document retention policy in effect last fall, which provided that documents other than work papers ordinarily should be disposed of when no longer needed but that such documents should be retained when litigation has commenced or is threatened. \nOf course, precisely when that occurs, often we'll require the application of informed judgment to the particular circumstances of a given case. And that may well be a point on which reasonable people can differ. \nAs for the destruction of Enron-related documents, we know that on Oct. 23, just six days after the S.E.C. requested information from Enron, David Duncan, Andersen's lead partner on the Enron engagement, called an urgent meeting of the Enron engagement team, at which he organized an expedited effort to shred or otherwise dispose of Enron-related documents. \nThis effort was undertaken without any consultation with others in the firm or, so far as we are aware, with legal counsel. \nOver the course of the next several days, a very substantial volume of documents and e-mails were disposed of by the Enron engagement team. This activity appears to have stopped shortly after Mr. Duncan's assistant sent an e-mail to other secretaries on Nov. 9, the day after Andersen received a subpoena from the S.E.C. telling them, ''No more shredding.'' \nOnce this activity came to light, Andersen's response was immediate. Andersen notified the Department of Justice, the S.E.C. and all relevant congressional committees. At the same time, the firm suspended its records management policy and asked former Senator Danforth to conduct an immediate and comprehensive review. \nOn Jan. 15, approximately two weeks after our C.E.O. learned about the document destruction, Andersen dismissed Mr. Duncan. The firm also placed three other partners from the Enron engagement on administrative leave, pending completion of the investigation into their responsibility for these events."
+  },
+  {
+   "document_id": 347433,
+   "cited_text": "HOUSTON, Jan 24 (Reuters) - A federal judge on Thursday ordered six key Andersen employees to give early depositions about the shredding of Enron-related documents, handing an initial victory to shareholders suing the auditor and the failed energy giant's top insiders. \nU.S. District Judge Melinda Harmon granted in full a motion for discovery in the massive suit that requires the preservation of all Enron-related records held by Andersen, the accounting firm that Enron Corp. fired last week. The motion was requested by all but one plaintiff in the suit.\nAllegations of systematic document shredding at Andersen and Enron rapidly mobilized plaintiffs' attorneys, who pushed for the early discovery and depositions to preserve as much evidence as possible in what is certain to be a lengthy lawsuit with billions of dollars at stake. \nThe six employees include Andersen's fired top partner on the Enron account, David Duncan, who on Thursday asserted his Fifth Amendment right against self-incrimination during a hearing before the U.S. House Energy and Commerce Subcommittee on Oversight and Investigations. \nAndersen fired him on Jan. 15 for ordering the destruction of Enron documents after a U.S. Securities and Exchange Commission probe was launched in October. \nAlso giving depositions will be four other Andersen partners in Houston who were relieved of their management responsibilities and a lawyer who sent an e-mail explaining Andersen's document-destruction policy to the auditor's Houston office. \nHarmon's order waives a provision of U.S. securities law that delays depositions until a judge determines whether a suit is frivolous. The provision is intended to prevent legal interviews from being improperly used to gather business information. \nThe depositions cannot be taken until 20 days from now, and are restricted to eight hours and limited to the topic of document and data destruction or storage. \nThe order allows Andersen's outside lawyers to guard the documents at their own sites and permits the plaintiffs to inspect those sites immediately. Andersen must within 20 days categorize and report the documents they have found or recovered, and explain the steps it took to recover deleted documents, the order says. \nOne lawyer said the plaintiffs were delighted with the judge's ruling."
+  },
+  {
+   "document_id": 345549,
+   "cited_text": "Mr. Duncan last week told congressional investigators that he ordered subordinates to begin destroying documents related to the Enron account after he received an e-mail from Nancy Temple, a senior lawyer in Andersen's Chicago office. The Oct. 12 e-mail -- sent to Mr. Odom, who passed it on to Mr. Duncan -- was a reminder of Andersen's longstanding document-retention and destruction policy, which called for the disposal of nonessential papers. \nBoth Messrs. Odom and Duncan told congressional investigators that they had never before been sent such a reminder, according to people familiar with their interviews. Ms. Temple was a member of an \"extended review team\" of Houston and Chicago officials created to take a closer look at Enron as questions arose about its condition. Members of the team talked with each other several times a week, Mr. Odom told congressional investigators. \nMr. Duncan told investigators he didn't think there was anything wrong with destroying Andersen-owned documents because the SEC inquiry begun in late October concerned Enron, not Andersen. The shredding stopped on Nov. 9 when Ms. Temple left a voice-mail message for Mr. Duncan telling him that the SEC had issued subpoenas and that all documents must be preserved. \nA person close to Mr. Duncan says he forwarded that voice mail to the entire Enron audit team and instructed his secretary to send an e-mail repeating the instruction. The next day, Ms. Temple reiterated the message in a follow-up e-mail to Mr. Duncan and others involved with the Enron account. \nThe implication of the account offered by Mr. Duncan and bolstered by Mr. Odom is that the document destruction began only when the office was reminded of Andersen's document-destruction policy by Ms. Temple and stopped only when the office heard from her again about the subpoenas."
+  },
+  {
+   "document_id": 342251,
+   "cited_text": "WASHINGTON -(Dow Jones)- David Duncan, fired by Arthur Andersen Tuesday for his alleged role in destroying documents on Enron Corp. (ENE), was only following orders from Andersen's own attorneys, a spokesman said.\n\"Mr. Duncan is cooperating with all investigations of this matter. He did nothing wrong. He followed the instructions of an Andersen in-house lawyer in handling documents,\" the spokesman said. \nAndersen dismissed Duncan, saying it found widespread destruction of Enron-related materials after he called an Oct. 23 meeting. \nChicago-based Andersen said an Oct. 12 memo from a company attorney on the firm's document retention policy doesn't appear to have prompted the destruction of electronic and paper records related to Enron."
+  },
+  {
+   "document_id": 347099,
+   "cited_text": "REP. JAMES GREENWOOD (R), PENNSYLVANIA: We subpoenaed him. He still doesn`t want to come. He wants immunity. We are not going to grant him immunity. He wants to take the 5th, and we are telling him to come in tomorrow. If you want to take the 5th Amendment that`s your constitution right, but do it at the hearing, and if you don`t do it we reserve the right to cite you for contempt of Congress. \nCHERNOFF: A source close to Duncan says he will appear and simply will invoke the 5th Amendment protection against self-incrimination. \nHis attorney had argued to the subcommittee that \"Mr. Duncan has not yet had access to all the documents necessary for him to prepare for a formal hearing.\" \nREP. BILLY TAUZIN (R), LOUISIANA: I think he needs to be there to explain why he was willing to give us 4.5 hours of testimony and wouldn`t go public with the same testimony. But, he has his rights, and we`ll respect his rights. \nCHERNOFF: According to Andersen it was Duncan who ordered employees at the Houston office to shred and delete Enron-related documents. Duncan has told congressional investigators he was only following company orders, in the form of a memo reminding the engagement team of our documentation and retention policy, written by Andersen attorney Nancy Temple. She will testify. \nOf particular interest to the subcommittee, an October 23 Andersen e-mail addressed to David Duncan and other executives discussing a conference call agenda which included the SEC, legal representation, and response to SEC. \nAndersen says Duncan had directed the document disposal at a meeting on October 23. Andersen`s chief executive, Joseph Berardino, who testified before Congress in December, fought off the subcommittee`s request. Instead, the Chicago headquarters is sending executive Dorsey Baskin, who oversees the firm`s policy on audit and work papers. \n(END VIDEOTAPE)"
+  },
+  {
+   "document_id": 347816,
+   "cited_text": "This policy toward document disposal reflects longstanding and sound audit practice. It is designed to assure that the audit work papers, which are the principal materials reflecting and documenting the conclusions of the audit, unambiguously reflect the judgments that actually were reached. \nThis understanding of proper audit practice was reflected in the Andersen document retention policy in effect last fall, which provided that documents other than work papers ordinarily should be disposed of when no longer needed but that such documents should be retained when litigation has commenced or is threatened. \nOf course, precisely when that occurs, often we'll require the application of informed judgment to the particular circumstances of a given case. And that may well be a point on which reasonable people can differ. \nAs for the destruction of Enron-related documents, we know that on Oct. 23, just six days after the S.E.C. requested information from Enron, David Duncan, Andersen's lead partner on the Enron engagement, called an urgent meeting of the Enron engagement team, at which he organized an expedited effort to shred or otherwise dispose of Enron-related documents. \nThis effort was undertaken without any consultation with others in the firm or, so far as we are aware, with legal counsel. \nOver the course of the next several days, a very substantial volume of documents and e-mails were disposed of by the Enron engagement team. This activity appears to have stopped shortly after Mr. Duncan's assistant sent an e-mail to other secretaries on Nov. 9, the day after Andersen received a subpoena from the S.E.C. telling them, ''No more shredding.'' \nOnce this activity came to light, Andersen's response was immediate. Andersen notified the Department of Justice, the S.E.C. and all relevant congressional committees. At the same time, the firm suspended its records management policy and asked former Senator Danforth to conduct an immediate and comprehensive review. \nOn Jan. 15, approximately two weeks after our C.E.O. learned about the document destruction, Andersen dismissed Mr. Duncan. The firm also placed three other partners from the Enron engagement on administrative leave, pending completion of the investigation into their responsibility for these events."
+  },
+  {
+   "document_id": 345549,
+   "cited_text": "Mr. Duncan last week told congressional investigators that he ordered subordinates to begin destroying documents related to the Enron account after he received an e-mail from Nancy Temple, a senior lawyer in Andersen's Chicago office. The Oct. 12 e-mail -- sent to Mr. Odom, who passed it on to Mr. Duncan -- was a reminder of Andersen's longstanding document-retention and destruction policy, which called for the disposal of nonessential papers. \nBoth Messrs. Odom and Duncan told congressional investigators that they had never before been sent such a reminder, according to people familiar with their interviews. Ms. Temple was a member of an \"extended review team\" of Houston and Chicago officials created to take a closer look at Enron as questions arose about its condition. Members of the team talked with each other several times a week, Mr. Odom told congressional investigators. \nMr. Duncan told investigators he didn't think there was anything wrong with destroying Andersen-owned documents because the SEC inquiry begun in late October concerned Enron, not Andersen. The shredding stopped on Nov. 9 when Ms. Temple left a voice-mail message for Mr. Duncan telling him that the SEC had issued subpoenas and that all documents must be preserved. \nA person close to Mr. Duncan says he forwarded that voice mail to the entire Enron audit team and instructed his secretary to send an e-mail repeating the instruction. The next day, Ms. Temple reiterated the message in a follow-up e-mail to Mr. Duncan and others involved with the Enron account. \nThe implication of the account offered by Mr. Duncan and bolstered by Mr. Odom is that the document destruction began only when the office was reminded of Andersen's document-destruction policy by Ms. Temple and stopped only when the office heard from her again about the subpoenas."
+  },
+  {
+   "document_id": 345549,
+   "cited_text": "\"The bottom line is he will agree to testify by [today] or he will be subpoenaed,\" Johnson said. \"All the witnesses have been put on notice that they are expected to appear and will face contempt-of-Congress charges and criminal penalties if they do not.\" \nIn a letter to the committee Monday, Duncan's attorney, Robert Giuffra, said it is premature to require his client's testimony. Giuffra said Duncan wants to review boxes of documents that Andersen gave the committee but has not yet shared with him. \nAt issue is Andersen's destruction of documents relating to Enron, shredding that took place even after the accounting firm was aware that the SEC was looking into the company's collapse. \nIn firing Duncan, Joseph F. Berardino, Andersen's managing partner and chief executive, asserted that the 42-year-old executive had organized the destruction of records. The firm, he said, would not tolerate \"unethical behavior, gross errors in judgment or willful violation of our policies.\" \nIn private interviews with congressional staffers last week, Duncan and another Andersen official, Michael C. Odom, indicated that others at the accounting firm were \"at the table\" when the memo regarding the destruction of material was discussed, one congressional investigator said Monday. \nAndersen attorney Nancy Temple sent a memo Oct. 12 reminding employees of the company's long-standing policy to get rid of nonessential documents. \n\"Duncan and Odom said there were other partners and managers at the table when the retention policy was handed out,\" said an investigator, who spoke on the condition of anonymity. \"Employees were told to do no less or no more than the policy called for.\" \nA month later, and nearly three weeks after Enron disclosed it was the subject of an SEC probe, Temple wrote another memo instructing company employees to preserve Enron documents. As of late Monday, she was the only one of four Andersen executives summoned who has told investigators she will appear on Capitol Hill for the Thursday hearing. \nThe inquiry has been called to investigate who was involved in the destruction of evidence, which documents were destroyed and why."
+  },
+  {
+   "document_id": 347816,
+   "cited_text": "This policy toward document disposal reflects longstanding and sound audit practice. It is designed to assure that the audit work papers, which are the principal materials reflecting and documenting the conclusions of the audit, unambiguously reflect the judgments that actually were reached. \nThis understanding of proper audit practice was reflected in the Andersen document retention policy in effect last fall, which provided that documents other than work papers ordinarily should be disposed of when no longer needed but that such documents should be retained when litigation has commenced or is threatened. \nOf course, precisely when that occurs, often we'll require the application of informed judgment to the particular circumstances of a given case. And that may well be a point on which reasonable people can differ. \nAs for the destruction of Enron-related documents, we know that on Oct. 23, just six days after the S.E.C. requested information from Enron, David Duncan, Andersen's lead partner on the Enron engagement, called an urgent meeting of the Enron engagement team, at which he organized an expedited effort to shred or otherwise dispose of Enron-related documents. \nThis effort was undertaken without any consultation with others in the firm or, so far as we are aware, with legal counsel. \nOver the course of the next several days, a very substantial volume of documents and e-mails were disposed of by the Enron engagement team. This activity appears to have stopped shortly after Mr. Duncan's assistant sent an e-mail to other secretaries on Nov. 9, the day after Andersen received a subpoena from the S.E.C. telling them, ''No more shredding.'' \nOnce this activity came to light, Andersen's response was immediate. Andersen notified the Department of Justice, the S.E.C. and all relevant congressional committees. At the same time, the firm suspended its records management policy and asked former Senator Danforth to conduct an immediate and comprehensive review. \nOn Jan. 15, approximately two weeks after our C.E.O. learned about the document destruction, Andersen dismissed Mr. Duncan. The firm also placed three other partners from the Enron engagement on administrative leave, pending completion of the investigation into their responsibility for these events."
+  },
+  {
+   "document_id": 347816,
+   "cited_text": "Enron also had disclosed as early as Oct. 22 that the SEC was probing its books. \nGesturing dramatically and thumping his desk in the hearing room, Rep. W. J. \"Billy\" Tauzin, R-La., chair of the committee, asked Temple why she was silent for so long about the need to preserve documents. \n\"I never counseled any shredding or destruction of documents. I only wish someone had raised the question,\" Temple said. \nTauzin fired back, \"Does anybody have to raise it, or is it somebody's responsibility in the company to raise it themselves? Whose responsibility is it but yours?\" \nAndersen fired Duncan last week, saying he had organized a massive destruction of Enron documents beginning Oct. 23. \nC.E. Andrews, an Andersen global managing partner who also appeared before the committee, said it was Duncan's responsibility to protect the documents. \n\"I cannot say it more strongly, Mr. Duncan was not following company policy. Mr. Duncan was violating company policy,\" Andrews said. \nThe claim, echoed by other Andersen witnesses, drew fresh scorn from Tauzin, who questioned why such a sensitive legal issue was left to an accountant. \n\"I hope you're all OK, I don't know,\" Tauzin warned, referring to the legal ramifications the testimony raised. \"I don't know what's going to come out of all this.\" \nSeveral lawmakers said they suspect Andersen is making a scapegoat of Duncan, when it appears many employees may have been involved in destroying Enron documents. \nIn an internal, Oct. 24 Andersen document the committee released Thursday, a manager instructs staff to use overtime if necessary in complying with the company's policy, which at the time called for destruction of all but the final auditing documents. \nNoting that retaining documents is largely a passive act, Greenwood asked why complying with the Andersen policy would require staff to use overtime. \n\"If the emphasis is on retaining documents, it doesn't seem to us that a whole lot of overtime is required,\" Greenwood said."
+  },
+  {
+   "document_id": 347816,
+   "cited_text": "The Justice Department is investigating Andersen's document destruction as part of its criminal probe of Enron's collapse. In Houston yesterday, FBI agents were inside Enron's headquarters investigating the shredding of documents there, which was disclosed earlier this week. \nIn remarks after the four-hour House hearing, Rep. W.J. \"Billy\" Tauzin (R-La.), chairman of the House Energy and Commerce Committee, said more people than previously disclosed knew about document destruction by Andersen, \"perhaps in Chicago,\" at the company's headquarters. \nGreenwood scoffed at the idea of Andersen employees working overtime to uphold the document-retention policy. \"It doesn't seem to us it takes a lot of overtime to retain documents,\" he said. \nThe testy House session demonstrated the complexity, disagreement and posturing that are quickly coming to characterize the widening investigations of Enron's fall. \nLawmakers from both parties have pledged to examine how the energy trader collapsed, the allegations of corporate fraud and coverups, and the impact on thousands of investors who lost billions of dollars when Enron's share price dropped to less than a dollar in recent months. \nGreenwood opened the House subcommittee hearing by calling it \"just the first step in a thorough and rigorous investigation.\" He and other panel members were aggressive in their questioning -- and openly skeptical of the responses of Andersen executives. \nA focus of much of the questioning was the role of Nancy Temple, an Andersen lawyer who wrote an Oct. 12 memo that she said was meant to remind Duncan and others about the company's policy, which calls for the retention of some documents and the destruction of others. Temple told lawmakers her memo was not intended as a directive to shred documents. \nThe 35-page policy statement said that under normal circumstances, employees were to retain only final work papers supporting client audits, and to throw out drafts, but that if litigation was anticipated, all documents were to be retained. In her testimony, Temple said she meant employees to understand that they were to retain documents."
+  },
+  {
+   "document_id": 350581,
+   "cited_text": "It may take an insider to reveal those names, because they are not on company records. Even Enron's lawyers say they don't have them. Similarly, it may require an inside source to help prosecutors decide if there is a tax evasion case to be made from the partnerships located in the Cayman Islands. \nThe prospect of an obstruction case against Arthur Andersen seems to have shaken at least one important potential witness loose already. David B. Duncan, Andersen's lead auditor on the Enron account, has met with the Justice Department Enron task force twice. His lawyers said he is cooperating, but he has not so far entered into any deal with prosecutors. \nDuncan is in a position to know what went on at both companies and about the partnerships themselves. Enron executives came up with the partnership concepts and the accountants \"tweaked\" the financial setups, said one source familiar with the accountant's work. \nThe early phase of the investigation may turn on how far up the chain the document destruction investigation goes at Andersen. Duncan has told congressional investigators he believed he was following direction from company lawyer Nancy Temple. \nIn October, with shareholders filing lawsuits against Enron and the SEC preparing an inquiry, Temple sent Duncan's group an e-mail reminding him of the Andersen document retention policy. It called for the retention of some documents and the destruction of others. A week later, Temple e-mailed the policy to two high-level Chicago partners who were reviewing the Enron audit and the way the partnerships had been reviewed. \nYesterday, the House Energy and Commerce Committee demanded information from Andersen about Enron document destruction, which the company has acknowledged went beyond the Houston office. Committee investigators also are interested in the role of Andersen's outside lawyers, the New York-based law firm of Davis, Polk and Wardwell. \nThe firm was hired Oct. 9. It has declined to comment on what advice it gave Andersen and Temple about preserving documents. Temple testified before Congress that the firm advised her to send out an e-mail on Nov. 10 -- three weeks after the SEC began probing Enron -- saying it was time to start preserving documents."
+  }
+ ],
+ "cost_usd": 0.1200217,
+ "seconds": 57.11983458400937,
+ "started": "2026-11-10T16:33:28.692047Z",
+ "commit": "5a10ef1"
+}

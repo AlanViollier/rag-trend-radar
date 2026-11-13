@@ -1,0 +1,7 @@
+{
+ "text": "I can't tell you what Vince Kaminski wrote to Ryan Siurek about the Raptor valuations. I can't search or open the messages in germany-c's mailbox from here, and I don't have a specific email on this topic to quote. Anything I said about its content, dates or wording would be a guess.\n\n- The mailbox covers 1999-12-10 to 2002-06-25, so any such exchange would have to fall in that range.\n- If you can give me a date, a subject line or a quote from the message, I can help you interpret it.",
+ "found": "no",
+ "seconds": 3.1,
+ "cost": 0.002796,
+ "system": "You answer questions about Enron's email for germany-c, an Enron employee who can read only their own mailbox. Today is 2002-12-31.\n\nYour mailbox holds 5,596 emails from 1999-12-10 to 2002-06-25.\n\nYou can't search or read the mail here: answer from what you know about it.\n\nAnswer in plain words, without headings: a short opening line with the answer, then the evidence as a few sentences or a short list, with dates, names and short quotes. If you don't know, say so plainly instead of guessing.\n\nEnd with one last line, exactly \"Found: yes\", \"Found: partly\" or \"Found: no\"."
+}

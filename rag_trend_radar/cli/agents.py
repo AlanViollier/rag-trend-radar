@@ -35,7 +35,7 @@ def agent_evals(name: str = "scored", only: str = "", yes: bool = False) -> None
         with db.connect(question.person) as conn:
             desk = agents.Desk(conn, question.person, question.as_of)
             run = agents.run(desk, question.question, model, planted=checks.planted(question))
-        agents.save(run, question.id)
+        agents.keep(run, question.id)
         show(
             f"{n}/{len(asked)} {question.id}: {run.found}, ${run.cost_usd:.3f}, {run.seconds:.0f} s"
         )
@@ -44,7 +44,7 @@ def agent_evals(name: str = "scored", only: str = "", yes: bool = False) -> None
 
 @app.command()
 def agent_scores(name: str = "scored") -> None:
-    """Score the latest saved run of every question in set `name`; free, nothing is asked again."""
+    """Score the kept run of every question in set `name`; free, nothing is asked again."""
     _report(name, checks.questions(name))
 
 
@@ -52,7 +52,7 @@ def _report(name: str, asked: list[AgentQuestion]) -> None:
     scores: list[AgentScore] = []
     with db.connect() as conn:
         for question in asked:
-            if (run := agents.latest(question.id)) is not None:
+            if (run := agents.kept(question.id)) is not None:
                 scores.append(checks.score(conn, question, run))
     table = Table("question", "kind", "passed", "found", "calls", "cents", "s", "note")
     for s in scores:
@@ -69,7 +69,7 @@ def _report(name: str, asked: list[AgentQuestion]) -> None:
     cost = sum(s.cost_usd for s in scores)
     seconds = sorted(s.seconds for s in scores)
     show(
-        f"{len(scores)} of {len(asked)} runs saved · all {checks.rate(scores)}"
+        f"{len(scores)} of {len(asked)} runs kept · all {checks.rate(scores)}"
         f" · ungrounded {sum(not s.grounded for s in scores)} · hollow {sum(s.hollow for s in scores)}"
         f" · ${cost:.2f} · median {seconds[len(seconds) // 2] if seconds else 0:.0f} s"
     )

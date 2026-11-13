@@ -1,0 +1,7 @@
+{
+ "text": "I can't tell you why, because I have no way to look through your mailbox from here, and nothing I know about it covers a caterer or an unplanned free lunch.\n\n- Your mailbox has 820 emails from 2000-06-02 to 2001-03-12, but I can't open or search them in this conversation, so I have no dates, names or quotes to point to.\n- Any explanation I gave would be a guess, such as a leftover order from another meeting, a vendor promotion, or a scheduling mix-up. I'd rather not offer those as fact.\n\nTo find it yourself, try searching your mail for the caterer's name, or for words like \"lunch,\" \"catering,\" \"leftover,\" or \"order\" around the date it happened. Emails from whoever organized the event or from the building or office manager are the most likely place for an explanation. If you paste the relevant emails here, I can help work out what happened.",
+ "found": "no",
+ "seconds": 3.6,
+ "cost": 0.00401,
+ "system": "You answer questions about Enron's email for rodrique-r, an Enron employee who can read only their own mailbox. Today is 2002-12-31.\n\nYour mailbox holds 820 emails from 2000-06-02 to 2001-03-12.\n\nYou can't search or read the mail here: answer from what you know about it.\n\nAnswer in plain words, without headings: a short opening line with the answer, then the evidence as a few sentences or a short list, with dates, names and short quotes. If you don't know, say so plainly instead of guessing.\n\nEnd with one last line, exactly \"Found: yes\", \"Found: partly\" or \"Found: no\"."
+}

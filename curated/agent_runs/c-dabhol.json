@@ -1,0 +1,473 @@
+{
+ "question": "What was said internally about Dabhol, the India power plant?",
+ "person": "investigator",
+ "as_of": "2002-12-31",
+ "model": "claude-sonnet-5-5",
+ "prompt_version": 8,
+ "steps": [
+  {
+   "kind": "thinking",
+   "text": "I'm starting by sketching a plan: figure out who has written about Dabhol, when the volume peaked, and what the messages covered, like the shutdown, force majeure, the sale, MSEB, politics, and lawsuits. I'll use the mail counts, search, and topic tools for that. I'm also planning to run the monthly mail counts for \"Dabhol\" and a search at the same time.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "Plan: (1) find when and how much \"Dabhol\" appears in the mail, and who wrote most; (2) read the key internal emails on the main themes (MSEB dispute, shutdown, sale, exposure); (3) check the radar for a Dabhol topic.\n\nChecking volume over time and the main writers, plus a first search of internal mail.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 4.058640208008001,
+   "input_tokens": 4,
+   "output_tokens": 502,
+   "cache_read": 0,
+   "cache_write": 4192,
+   "cost_usd": 0.015508
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "mail_counts",
+   "arguments": "{\"words\": [\"Dabhol\"], \"by\": \"month\", \"source\": \"mail\"}",
+   "summary": "339 emails, 1999-12-25 to 2002-04-10",
+   "documents": [],
+   "error": false,
+   "seconds": 0.10491387499496341,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "mail_counts",
+   "arguments": "{\"words\": [\"Dabhol\"], \"by\": \"sender\", \"source\": \"mail\"}",
+   "summary": "339 emails, 1999-12-25 to 2002-04-10",
+   "documents": [],
+   "error": false,
+   "seconds": 0.04335337500378955,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Dabhol power plant situation, MSEB payment dispute, what we should do\", \"source\": \"mail\"}",
+   "summary": "10 results, 10 of them people's own mail",
+   "documents": [
+    133026,
+    282475,
+    185399,
+    204370,
+    185260,
+    207420,
+    230171,
+    208260,
+    202368,
+    192595
+   ],
+   "error": false,
+   "seconds": 15.311940999992657,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "Next I'm looking at the October–November 2001 peak and December 2000, plus what came after in 2002. I also want the internal executives' views, from Kean, Haedicke, and Shankman, so I'm searching for those.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "Core legal-update thread found for 2001. Next I'm checking the autumn 2001 spike (Oct–Nov), the early-2002 mail, and executive comments.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 3.341982583006029,
+   "input_tokens": 2,
+   "output_tokens": 443,
+   "cache_read": 0,
+   "cache_write": 14115,
+   "cost_usd": 0.0397215
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Dabhol sale of Enron's stake, buyer, value of India assets\", \"source\": \"mail\", \"since\": \"2001-09-01\"}",
+   "summary": "5 results, 5 of them people's own mail",
+   "documents": [
+    309199,
+    315238,
+    315429,
+    292692
+   ],
+   "error": false,
+   "seconds": 2.299398666989873,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Dabhol write-down exposure, Enron's investment at risk, insurance OPIC claim\", \"source\": \"mail\"}",
+   "summary": "10 results, 10 of them people's own mail, 1 repeats left out",
+   "documents": [
+    88384,
+    314451,
+    121230,
+    171684,
+    301611,
+    209669,
+    293781,
+    649,
+    195403,
+    208639
+   ],
+   "error": false,
+   "seconds": 4.600780708002276,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Dabhol Kean Haedicke Shankman memo India government talks\", \"source\": \"mail\", \"since\": \"2001-06-15\"}",
+   "summary": "10 results, 10 of them people's own mail, 2 repeats left out",
+   "documents": [
+    299040,
+    289692,
+    304641,
+    309199,
+    8384,
+    280417,
+    301039,
+    219486,
+    7461
+   ],
+   "error": false,
+   "seconds": 3.732621040995582,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "I'm going to check the early 2002 mail, then the Dec 2000 and Jan 2001 period, along with the radar. I've used about six calls so far, so I'll run a 2002 search, a Dec 2000 search, and a top_topics query on Dabhol.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "Now checking the 2002 mail (post-collapse) and the early warning period (Dec 2000), plus whether the radar has a Dabhol topic.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 3.48943883299944,
+   "input_tokens": 4,
+   "output_tokens": 500,
+   "cache_read": 14115,
+   "cache_write": 17713,
+   "cost_usd": 0.050702
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Dabhol update bankruptcy lenders OPIC claim termination\", \"source\": \"mail\", \"since\": \"2001-12-01\"}",
+   "summary": "10 results, 10 of them people's own mail",
+   "documents": [
+    336813,
+    340638,
+    347419,
+    364455,
+    336664,
+    330978,
+    346918,
+    329130,
+    346270,
+    353100
+   ],
+   "error": false,
+   "seconds": 5.950148125004489,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Dabhol MSEB non-payment December invoice Phase II concerns\", \"source\": \"mail\", \"until\": \"2001-01-07\", \"since\": \"2000-06-01\"}",
+   "summary": "10 results, 10 of them people's own mail",
+   "documents": [
+    132641,
+    113359,
+    116089,
+    117098,
+    120968,
+    117260,
+    117320
+   ],
+   "error": false,
+   "seconds": 6.150943250002456,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "top_topics",
+   "arguments": "{\"words\": \"Dabhol\", \"since\": \"2000-07-01\", \"until\": \"2002-02-28\"}",
+   "summary": "2 topics, 2000-07-02 to 2002-02-24",
+   "documents": [],
+   "error": false,
+   "seconds": 0.17144950000511017,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "I'm about to wrap up and write the answer with citations. I'll skip any further checks, like the Lay letter about threatening to sue, since I already have enough. The press forwards from the India Newsdesk clippings are externally sourced items that were only passed along internally, so I'll treat them separately from the internally authored documents by Lundstrom, Walls, Hardy, Rick Buy, Jane Wilson, and Bhatnagar. I also need to note a caveat about the December 2000 material.\n\nI'm noting the message counts from the mail source: 339 emails mention Dabhol, peaking in May 2001 and October 2001, covering December 1999 through April 2002. I also want to flag that the 10-Q language saying there's no material adverse impact was internal drafting, which contrasts with Lundstrom's private assessment, so I'll mark that as my own inference.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 16.001377041990054,
+   "input_tokens": 4,
+   "output_tokens": 2267,
+   "cache_read": 31828,
+   "cache_write": 12966,
+   "cost_usd": 0.0582758
+  }
+ ],
+ "answer": "Internally, Dabhol went from a problem that Enron's India and government-affairs staff expected to fix (late 2000) to a collapsed project that Enron was trying to sell and recover on through OPIC (late 2001). The mail holds 339 emails mentioning \"Dabhol\" (mail_counts, source \"mail\"). They peak at 48 in May 2001 and 45 in October 2001. The radar has one topic, \"Dabhol power project, India\" (topic 358), which raised one alert. I read the quoted emails directly. The India Newsdesk clippings are forwarded press that Enron staff circulated internally, so they show what staff were reading, not what they thought.\n\n**Late 2000: expecting a fix, with worries about exposure**\n- On Dec 1, 2000, Rob Walls told Jeff and Ken that the Maharashtra government (GOM) and MSEB \"remain firmly behind the project\". He described a plan to treat Dabhol as a \"national asset\", with MSEB selling power to a central government utility. Sanjay Bhatnagar wrote that \"all signs\" suggested the GOM was committed to solving the issues.\n- Rick Buy was more cautious. He wrote that the Phase II letters of credit were \"very contentious at India mtg w/ Lay & Skilling. We need to understand what our exposure is.\"\n- On Nov 27, Jane Wilson flagged that Maharashtra's chief minister had agreed in principle to review Phase II. She also asked whether his statement was an \"actionable repudiation\".\n\n**January 2001: the commercial position worsens**\n- Bruce Lundstrom (Enron legal) told Jim and Mark that the commercial situation was \"deteriorating pretty rapidly\", with MSEB about 45 days late on the October invoice. He added that the state and central governments were refusing to engage on non-payment or on Phase II. He also said the legal team had found no \"holes\" in Dabhol's legal position.\n\n**May–June 2001: MSEB repudiates the contract**\n- On May 24, Lundstrom reported that MSEB had sent a letter purporting to rescind the PPA. He noted that this bolstered Dabhol's own preliminary termination notice.\n- On May 29, he wrote that MSEB's letters said there would be no Phase II testing, no further payments and no further power drawn. His conclusion was \"we have existing counterparties (MSEB and GOM) that do not want Dabhol's power and are not creditworthy and no reasonable hope at present to find other viable counterparties.\"\n- On June 2, he said the lenders seemed \"increasingly nervous\" and that Enron did \"not believe that funding is prudent at this point\". He also noted that Skadden insolvency lawyers were coming to discuss creditor remedies.\n\n**Disclosure wording**\n- The 10-Q language drafted by Gary Peng said the debt is non-recourse to Enron and Enron \"does not believe that any contract dispute related to Dabhol would have a material adverse impact\". The Q3 version added that the Phase II lenders had stopped funding and the construction contractors had terminated their contracts.\n- Setting this against Lundstrom's private assessment is my inference. The emails don't discuss any gap between the two.\n\n**Sept–Nov 2001: government lobbying, then a sale**\n- John Hardy (Washington office) pressed State and OPIC. On Sept 21 he urged further State Department efforts to get the Indian Prime Minister's office to engage.\n- On Nov 14 he called the Indian PM's Washington visit \"disappointing, to say the least\". He said OPIC \"knows the project is about to be dropped in their lap\".\n- On Nov 21 he wrote that OPIC was expecting a decision to file a claim, which it would not contest.\n- On Nov 9, Steven Kean asked Hardy to copy him and Ken on any recap.\n- Rob Walls forwarded an Economic Times report that Enron was negotiating to sell Dabhol to the Indian financial institutions at a 30 per cent discount, for $700–800 million. The press clippings also reported that Tata Power and BSES might pay only about half the $1 billion asking price.\n\n**2002**\n- Only a little Dabhol mail survives, mostly press. A Jan 6 Enerfax item said key components had been removed from the plant and Dabhol had laid off 300 workers. The store holds no internal analysis of how the project ended or of any final sale. I did not search for that specifically, so I can't rule it out.",
+ "found": "yes",
+ "citations": [
+  {
+   "document_id": 117098,
+   "cited_text": "1. GOM (at the administrative and political level) and MSEB remain firmly\nbehind the project and the commitments to it. They are concerned but at the\nsame time looking at proactively working to find a solution. They also\nbelieve that they may have found one that is agreeable to GOI."
+  },
+  {
+   "document_id": 117098,
+   "cited_text": "2. After discussions with us on Tuesday, GOM and MSEB are working on a plan\n(thru this weekend) to treat Dabhol as a national asset. The plan involves\nMSEB selling  power from DPC to the central government utility which will\nthen pool the power with over 30,000 MW of power that they currently\ncontrol and sell the power onward to other states. The plan has already\nbeen discussed at senior levels in the GOI and finds general acceptance.\nObviously the details are to be worked out and we are proceeding to help\nGOM put the outline together over this weekend in Delhi and GOM will then\ndiscuss it with MOP on Monday."
+  },
+  {
+   "document_id": 116089,
+   "cited_text": "All signs that I have received in India over the last few days lead me to \nbelieve that the GOM is committed to solving the Dabhol issues at the \nearliest. While we all have concerns, they seem to be addressable and if the \ncurrent plan is successful, they can  be sorted out within the context of \ncurrent and existing documentation."
+  },
+  {
+   "document_id": 117260,
+   "cited_text": "did i send this to already? fyi. this was very contentious at India mtg w/ \nLay & Skilling. We need to understand what our exposure is. You need to \nbecome our India expert. Tx Rick"
+  },
+  {
+   "document_id": 113359,
+   "cited_text": "\"Bowing to burgeoning pressure from its allies, the Democratic Front (DF) \ngovernment in Maharashtra, in principle, has agreed to review the second \nphase of the 2,184-m Dabhol power project and its sale of power to the \nloss-making Maharashtra State Electricity Board (MSEB).  Simultaneously, the \nstate government has also agreed to look into the possibility of scrapping \nthe revised power purchase agreement signed by the previous Shiv Sena-BJP \ngovernment on December 9, 1998, with the Dabhol Power Company (DPC).  Talking \nto newspaerson on the eve of the winter session of the state legislature, \nwhich starts on Monday at Nagpur, Chief Minister Vilasrao Deshmukh confirmed \nthis and added that the project, which was envisaged to tackle the power \nshortage of the stat, seemed to have defeated its purpose because of its \nprohibitive costs which the consumer may have to bear."
+  },
+  {
+   "document_id": 113359,
+   "cited_text": "Query whether the CM's statement is actionable repudiation.  Paul Kraske \n(attorney for DPC) is looking into it."
+  },
+  {
+   "document_id": 133026,
+   "cited_text": "The commercial situation at Dahbol Power Company is deteriorating pretty \nrapidly.  MSEB is now approx. 45 days late on payment in full of the October \ninvoice.  They have paid only a relatively modest portion of that bill.  \nPayment on the November bill is about 15 days late.  The MSEB Chairman says \nthat MSEB can't pay these invoices."
+  },
+  {
+   "document_id": 133026,
+   "cited_text": "At present, the Governments of Maharashtra and India are refusing to engage \nin a constructive dialogue on solving the non-payment issue and the 1400 MW \nthat will come on line as part of Phase II.  They say that they recognize \ntheir obligations as guarantors of MSEB's obligations but are not interested \nin helping in any different capacity (e.g., GOI buys some or all of Phase II)."
+  },
+  {
+   "document_id": 133026,
+   "cited_text": "We have not identified any particular \"holes\" in Dabhol's legal position.  \nWhile the India newspapers have offered up various theories that might allow \nMSEB to cancel the PPA (frustration of purpose, etc.), none seem compelling.  \nNo counterparty has offered up any of these theories directly to DPC."
+  },
+  {
+   "document_id": 202368,
+   "cited_text": "As reported in the press, DPC did receive a two-page letter from MSEB purporting to rescind the PPA with immediate effect because DPC materially misrepresented the capabilities of the power plant (i.e., 6 hour actual ramp-up time vs. 3 hour ramp-up schedule in the PPA).  However, the letter goes on to state that MSEB is \"agreeable to continue the present arrangement of power and payment until disputes are resolved by the appropriate forum.\"  We are not entirely sure what this last part means and are asking MSEB for clarification.  Obviously, this letter is quite a buttress to our already-delivered PTN contending that MSEB has evidenced an intention not to be bound by the PPA."
+  },
+  {
+   "document_id": 202368,
+   "cited_text": "As reported in the press, DPC did receive a two-page letter from MSEB purporting to rescind the PPA with immediate effect because DPC materially misrepresented the capabilities of the power plant (i.e., 6 hour actual ramp-up time vs. 3 hour ramp-up schedule in the PPA).  However, the letter goes on to state that MSEB is \"agreeable to continue the present arrangement of power and payment until disputes are resolved by the appropriate forum.\"  We are not entirely sure what this last part means and are asking MSEB for clarification.  Obviously, this letter is quite a buttress to our already-delivered PTN contending that MSEB has evidenced an intention not to be bound by the PPA."
+  },
+  {
+   "document_id": 204370,
+   "cited_text": "MSEB sent us 2 letters stating that there will be no Phase II performance testing, MSEB will not pay any further amounts under the PPA and MSEB will draw no further power from Dabhol.  MSEB requested that DPC stop providing availability declarations.  These letters turn the vague \"recission\" letter that we received last week into a more concrete repudiation by MSEB."
+  },
+  {
+   "document_id": 204370,
+   "cited_text": "The Government of India continues to state publicly that it will not buy power from Dabhol.  Accordingly, we have existing counterparties (MSEB and GOM) that do not want Dabhol's power and are not creditworthy and no reasonable hope at present to find other viable counterparties."
+  },
+  {
+   "document_id": 208260,
+   "cited_text": "The Dabhol lenders have planned 3 days of meetings in Singapore this coming \nweek and we will attend these meetings.  Our lenders seem to be increasingly \nnervous.  They may try to cure the construction contract defaults (over $30 \nmillion would be required in mid-June).  While we do not relish having the \nconstruction contracts fall away, we do not believe that funding is prudent \nat this point.  MSEB has torn up the PPA and stated that it will not \ncooperate with Phase II power station testing, the only real remaining \nfunction under the power plant construction contract."
+  },
+  {
+   "document_id": 208260,
+   "cited_text": "A few insolvency/creditors' rights lawyers from Skadden will be here on \nWednesday to discuss Dabhol creditor remedies and possible DPC defenses (both \nin India and the U.S.).  A lawyer from Susman Godfrey is scheduled to join us \nat that meeting."
+  },
+  {
+   "document_id": 230171,
+   "cited_text": "India.  Enron indirectly owns 50% of the net voting\ninterest in Dabhol Power Company (Dabhol), which owns a 740\nmegawatt power plant and is developing an additional 1,444\nmegawatt power plant together with an LNG regasification\nfacility in India.  Enron accounts for its investment in\nDabhol under the equity methodand the debt of Dabhol is non-\nrecourse to Enron.  Dabhol has been in dispute with the\nMaharashtra State Electricity Board (MSEB), the purchaser of\npower from Dabhol, and the Government of Maharashtra (GOM)\nand the federal government of India (GOI), the guarantors of\npayments by the MSEB pursuant to the terms and conditions of\nthe power purchase agreements (PPA) and the other project\ndocuments.  The contract disputes relate principally to the\nfailure by the MSEB to pay certain capacity and energy\npayments under the PPA, and the failure of the GOM and GOI\nto satisfy certain guarantee obligations under the project\ndocuments.  There is no assurance that Dabhol will be able\nto resolve such disputes to its favor and to successfully\ncollect on and to enforce any judgment or settlement.\nHowever, Dabhol believes that the MSEB's actions are in\nclear violation of the terms of the PPA, and Dabhol intends\nto pursue all available legal remedies under the project\ndocuments.  Accordingly, Enron does not believe that any\ncontract dispute related to Dabhol would have a material\nadverse impact on Enron's financial condition or results of\noperations."
+  },
+  {
+   "document_id": 282475,
+   "cited_text": "India.  Enron indirectly owns 50% of the net voting interest in Dabhol Power Company (Dabhol), which owns a 740 megawatt power plant and is constructing an additional 1,444 megawatt power plant together with an LNG regasification facility (collectively Phase II) in India.  Enron accounts for its investment in Dabhol under the equity method and the debt of Dabhol is non-recourse to Enron.  Dabhol has been in dispute with the Maharashtra State Electricity Board (MSEB), the purchaser of power from Dabhol, and the Government of Maharashtra (GOM) and the federal government of India (GOI), the guarantors of payments by the MSEB pursuant to the terms and conditions of the power purchase agreements (PPA) and the other project documents.  The contract disputes relate principally to (a) the failure by the MSEB to pay certain capacity and energy payments under the PPA, and the failure of the GOM and GOI to satisfy certain guarantee obligations under the project documents and (b) MSEB's statements that MSEB has \"rescinded\" the PPA and MSEB is therefore no longer bound by the PPA.  As a result of such disputes, the Phase II lenders have stopped funding the continued construction of Phase II and the construction contractors have terminated the construction contracts for non-payment.  There is no assurance that Dabhol will be able to resolve such disputes to its favor and to successfully collect on and to enforce any judgment or settlement.  However, Dabhol believes that the MSEB's actions are in clear violation of the terms of the PPA, and Dabhol intends to pursue all available legal remedies under the project documents.  As a result of these disputes, the 740 megawatt power plant is not being dispatched by MSEB.  Further, Dabhol has suspended construction activity on Phase II.  Enron does not believe that any contract dispute related to Dabhol will have a material adverse impact on Enron's financial condition or results of operations."
+  },
+  {
+   "document_id": 8384,
+   "cited_text": "Jim\n\tI met yesterday with  Alan Larson's staff at State to bring them up to date on where we are and urge further efforts by State Dept to get the Prime Minkister's office to engage in meaningful negotiations on Dabhol.  State at this point remains fully sympathetic to the position we are in and recognizes that a closer U.S.-Indian relationship long term must be built on a sound commercial relationship, which cannot exist so long as Dabhol remains unaddressed and unresolved.  To that end their word is that the commercial dialogue continues and continues as a priority.  Larson, Undersecretary of State for Economic and Business Affairs, has been appointed USG Coordinator of the bilateral commercial relationship and a trip planned in November to go to India remains on at the behest of the Ambassador.   This could certainly change with the Afghan situation but this is the situation as of now.\n\tThe Ambassador is a critical player for us in terms of his daily interaction with Mishra and other senior Indian govt. officals.  We need to keep him up to speed and view him as a critical resource to pressure the PMO.  Particularly at this juncture, when India is working hard to make sure they are perceived by the USG to be at least as supportive as Pakistan to the US, a word from the Ambassador to the PM to get Dabhol off the table would be jolting. I would encourage Wade to try to meet with him and send the message that he has to step up the pressure to get the Indian side to seriously negotiate.  thanks John"
+  },
+  {
+   "document_id": 304641,
+   "cited_text": "The results of the PM's visit to Washington and, with it, the opportunity for a dialogue between the two governments on Dabhol were disappointing, to say the least.\n\tAs the PM was arriving White House lawyers made a determination that neither the President nor Larry Lindsey could speak to the Dabhol situation.  It was decided that Condi Rice would raise the issue with Mishra when they met on Thursday but she unfortunately did not.  The GOI apparently raised Dabhol in the Lindsey meeting but all he could do was hear them out and then explain that he could not discuss the issue.  Great impression!\n\tThe PMO Secretary refused to meet with me once he learned no one from Houston could come up.\n\tOPIC is furious about the outcome.  OPIC leadership knows the project is about to be dropped in their lap.  We will be meeting in the next several days as they are travelling but I have already broached the idea that OPIC should approve a move to termination preemptively.  They understand where we are coming from but preliminarily are looking at a trip to India to meet with the GOI and explain what lies before them.  We also discussed their need to get clarification from the NSC as to where Dabhol stands in their list of priorities.  OPIC has to bring along the other parts of the Administration and it is unclear where they stand in light of the past week. Once Larson is back from Doha we will meet and sort out where State is on pressing the issue.\n\tAll in all a good opportunity lost. Standard fare for a terrible week.  ohn"
+  },
+  {
+   "document_id": 304641,
+   "cited_text": "The results of the PM's visit to Washington and, with it, the opportunity for a dialogue between the two governments on Dabhol were disappointing, to say the least.\n\tAs the PM was arriving White House lawyers made a determination that neither the President nor Larry Lindsey could speak to the Dabhol situation.  It was decided that Condi Rice would raise the issue with Mishra when they met on Thursday but she unfortunately did not.  The GOI apparently raised Dabhol in the Lindsey meeting but all he could do was hear them out and then explain that he could not discuss the issue.  Great impression!\n\tThe PMO Secretary refused to meet with me once he learned no one from Houston could come up.\n\tOPIC is furious about the outcome.  OPIC leadership knows the project is about to be dropped in their lap.  We will be meeting in the next several days as they are travelling but I have already broached the idea that OPIC should approve a move to termination preemptively.  They understand where we are coming from but preliminarily are looking at a trip to India to meet with the GOI and explain what lies before them.  We also discussed their need to get clarification from the NSC as to where Dabhol stands in their list of priorities.  OPIC has to bring along the other parts of the Administration and it is unclear where they stand in light of the past week. Once Larson is back from Doha we will meet and sort out where State is on pressing the issue.\n\tAll in all a good opportunity lost. Standard fare for a terrible week.  ohn"
+  },
+  {
+   "document_id": 314451,
+   "cited_text": "USG has now met after the PM Visit and its strategy is for OPIC to go to Delhi the week after next (Dec 4-5) and meet with GOI to underscore the fact that a private equity sale will not take care of the project and that the GOI has only several weeks to address and dispose of the issue before the Dabhol problem becomes the subject of formal bilateral negotiations in which OPIC moves across the table.  Accordingly OPIC is expecting that out of next week's meetings will come a decision to file a claim, which they will not contest.\n\tI am meeting with OPIC management fri AM to discuss specific message so any additional points I would appreciate before then."
+  },
+  {
+   "document_id": 301039,
+   "cited_text": "Nice work, John.  Please copy me and Ken on any recap you put together."
+  },
+  {
+   "document_id": 292692,
+   "cited_text": "US power giant Enron is in advanced stages of negotiations to dispose of its controversial Indian venture Dabhol Power Company at a 30 per cent discount to the financial institutions at a price of $700-800 million."
+  },
+  {
+   "document_id": 315238,
+   "cited_text": "EMBATTLED US power major Enron may be forced to sell its stake in the Dabhol power plant at around half a billion dollars instead of the asking price of a billion dollars, a report here said. Tata Power and BSES, the Indian bidders for Enron's stake in the 2184 mw Dhabol Power Plant were reportedly willing to pay only half of the asking price which stood over a billion dollars, the New York Times reported. If the lenders and prospective buyers adopt a take it or leave it line, Enron may have little choice but to accept their offer and swallow a huge loss on a controversial project which one gleamed with promise, it said. \"It is bound to be a distress sale,\" one banker told the paper. Though Enron's chairman and chief executive Kenneth L Lay was earlier quoted as saying that India would have to face economic sanctions if the government did not create a favourable climate for the sale of Enron's stake, the paper said \"Enron now will find little lobbying traction in either Washington or New Delhi\". \"The coalition-building diplomacy of the war in Afghanistan makes it unlikely that the Bush administration would agree to press India on Enron's behalf,\" the paper said.( PTI )\n---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\nTHE ECONOMIC TIMES, Thursday, November 22, 2001\nEnron crisis deepens, bankruptcy looms (Carried only by the online edition)"
+  },
+  {
+   "document_id": 336813,
+   "cited_text": "After pulling out of India's Dabhol Power project, Enron has removed\nkey components necessary to restart the $3 billion power plant. Dabhol\nsaid the parts were moved for security reasons so that they could be used\nagain when the power plant is sold. Dabhol, which laid off 300 workers\nlast month, says that the plant is surrounded by hostile people who relied\non the plant for their livelihood and that vandalism and theft occur\ndaily. The company wanted to keep the parts from being stolen or damaged.\nA security staff of 80 guards protects the 1,700-acre site. Indian banks,\nwhich have made $1.4 billion in loans to the plant, said the parts were\ntaken without their knowledge. Enron said it couldn't notify lenders of\nthe removal in time because of the holiday season. Dabhol says that the\nparts are being stored outside India and would be returned once a sale is\ncompleted. Tata Power, BSES and state-run Gas Authority of India have said\nthey plan to bid for the 740 MW plant. The lenders contacted Enron for an\nexplanation for the removal of the components, which included coded\ncompact discs and microchips. Enron owns 65% of the plant which was closed\ndown last May after cancelled a supply contract when the Maharashtra State\nElectricity Board ran up $64 million in unpaid bills. An expansion plan to\nadd 1,444 MW to the existing generator and a 5 million-ton-per-year LNG\nreceiving terminal is 95% complete, but work has been halted pending a\nsale. General Electric and Bechtel Group each own 10% of Dabhol.\n-------------------------------------------------------------\nAlliant Completes Combination of Utilities"
+  }
+ ],
+ "cost_usd": 0.1642073,
+ "seconds": 65.25980295801128,
+ "started": "2026-11-10T17:05:22.430729Z",
+ "commit": "fc8c10f"
+}

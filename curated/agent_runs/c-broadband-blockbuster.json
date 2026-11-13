@@ -1,0 +1,399 @@
+{
+ "question": "What were people saying about Enron Broadband and the Blockbuster deal?",
+ "person": "investigator",
+ "as_of": "2002-12-31",
+ "model": "claude-sonnet-5-5",
+ "prompt_version": 8,
+ "steps": [
+  {
+   "kind": "thinking",
+   "text": "I'm going to lay out a plan first: find the emails about Enron Broadband Services and the Blockbuster video-on-demand deal from 2000 to 2001, then check the timing with mail counts, look for internal views on it, and see how the deal ended.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "Plan: (1) find when \"Blockbuster\" mail peaks, using counts; (2) read what insiders wrote about the deal at the start (2000); (3) look for what they said later, when it faltered or ended (2001); (4) check the press against the internal views.\n\nChecking when Blockbuster mail appears and for what it was about.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 3.313654999990831,
+   "input_tokens": 4,
+   "output_tokens": 360,
+   "cache_read": 0,
+   "cache_write": 4198,
+   "cost_usd": 0.014103
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "mail_counts",
+   "arguments": "{\"words\": [\"Blockbuster\"], \"by\": \"month\"}",
+   "summary": "240 emails, 2000-01-21 to 2002-02-06",
+   "documents": [],
+   "error": false,
+   "seconds": 0.05674129200633615,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Enron Broadband Services Blockbuster video on demand agreement\", \"source\": \"mail\"}",
+   "summary": "10 results, 10 of them people's own mail",
+   "documents": [
+    67366,
+    242448,
+    107372,
+    158783,
+    214353,
+    186377,
+    88038,
+    62190,
+    166081,
+    181645
+   ],
+   "error": false,
+   "seconds": 14.768061167007545,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "Next I'm looking at the later spikes from October 2001 to January 2002, probably tied to litigation or the Blockbuster mentions around the collapse. I also want to check for internal doubts back in 2000, like the analyst meeting or what Skilling said, so I'm searching for internal concerns.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "Next I'm looking for what insiders thought, and for the late-2001 spike, which is probably post-bankruptcy talk about the deal.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 3.2556667500030017,
+   "input_tokens": 2,
+   "output_tokens": 389,
+   "cache_read": 0,
+   "cache_write": 12090,
+   "cost_usd": 0.034119
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Blockbuster trial pilot problems content not available, movies, concern about the deal\", \"source\": \"mail\", \"since\": \"2000-08-01\", \"until\": \"2001-07-31\"}",
+   "summary": "10 results, 10 of them people's own mail, 5 repeats left out",
+   "documents": [
+    214353,
+    161620,
+    107386,
+    156319,
+    134324,
+    186377,
+    85585,
+    102952,
+    127286,
+    196882
+   ],
+   "error": false,
+   "seconds": 4.2763295830081915,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Blockbuster video on demand EBS profit recognized, mark-to-market, Raptor, LJM, Enron valuation\", \"since\": \"2001-10-01\"}",
+   "summary": "10 results, 7 of them people's own mail",
+   "documents": [
+    343559,
+    301022,
+    354457,
+    343318,
+    342695,
+    261166,
+    293735
+   ],
+   "error": false,
+   "seconds": 7.30304833399714,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "I'm planning one more search on Braveheart, looking at the late-2001 Blockbuster angle and the March 2001 statement, and possibly checking internal material and staff skepticism around the 2000 launch.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "note",
+   "text": "Checking the late-2001 mail on the Blockbuster-linked Braveheart structure, to see what insiders and press said after the deal ended.",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 2.5384439159970498,
+   "input_tokens": 4,
+   "output_tokens": 267,
+   "cache_read": 12090,
+   "cache_write": 13655,
+   "cost_usd": 0.0380245
+  },
+  {
+   "kind": "tool",
+   "text": "",
+   "tool": "search",
+   "arguments": "{\"query\": \"Braveheart Blockbuster EBS Content Systems Enron value projections Nette Fastow\", \"since\": \"2001-10-01\"}",
+   "summary": "10 results, 0 of them people's own mail, 1 repeats left out",
+   "documents": [
+    343559,
+    300027,
+    352667,
+    345549,
+    335071,
+    344493,
+    288879
+   ],
+   "error": false,
+   "seconds": 7.125496749999002,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "thinking",
+   "text": "I'm wrapping up and writing the answer now. The 2002 items are press clippings that were forwarded by mail, so I'll keep the citations brief.\n\n",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 0.0,
+   "input_tokens": 0,
+   "output_tokens": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "cost_usd": 0.0
+  },
+  {
+   "kind": "turn",
+   "text": "",
+   "tool": "",
+   "arguments": "",
+   "summary": "",
+   "documents": [],
+   "error": false,
+   "seconds": 13.677603042000555,
+   "input_tokens": 4,
+   "output_tokens": 2019,
+   "cache_read": 25745,
+   "cache_write": 8022,
+   "cost_usd": 0.0428275
+  }
+ ],
+ "answer": "The talk changed over time: it was upbeat when the deal was announced in July 2000, defensive when it fell apart in March 2001, and critical in late 2001 and early 2002, when press clips described the Braveheart partnership. The Blockbuster count is 240 emails (mail_counts), peaking at 26 in June 2001 and 33 in October 2001. Much of the 2001–02 material is forwarded press or newsletters, and I label that below.\n\n**Launch, mid-2000 (internal announcements)**\n- On 19 July 2000, Enron Broadband Services announced a 20-year exclusive agreement with Blockbuster to deliver \"entertainment on demand\" to consumers.\n- An EBS update in June had already listed it among \"landmark long-term agreements\" for video on demand.\n- In September, an Enron staffer noted that Blockbuster and Enron had entered into an agreement with nCUBE to provide video streaming appliances and software.\n\n**Trouble in the content, late 2000 to early 2001 (internal mail)**\n- In November 2000, talking points for Vivendi's chairman said negotiations with Universal had stalled because Universal would not sign long-term agreements without Vivendi's support.\n- Those talking points also said Blockbuster had refused to renew its Universal VHS/DVD agreement until Universal granted digital VOD rights.\n- On 5 March 2001, a PR contact circulated standby statements that were \"NONE OF THESE IS A NEWS RELEASE TO PROACTIVELY ISSUE.\"\n- One of the three versions was for \"if and when we cancel the contract,\" and she added that Blockbuster's CEO had said at a conference that Enron \"won't extend the trial due to small movie selection.\"\n\n**The split, 9 March 2001**\n- Enron told employees it was discontinuing the exclusive relationship in order to build direct relationships with content providers and distribution partners.\n- Its stated reason was that the exclusivity \"has not yielded the quantity and quality of movies needed to drive demand.\"\n- It also claimed the trial had rolled out in Seattle, Portland, Salt Lake City and New York in December, and that subscribers were buying movies.\n\n**Analyst and press reaction (forwarded in the EBS newsletter and clippings)**\n- Lehman called it \"more bark than bite\" and Merrill Lynch said it could accelerate Enron's content strategy.\n- One analyst, however, cut EBS earnings targets to $8.40/share because of the failed deal.\n- A trade newsletter said the news \"unnerved investors\" and sent shares from around $70 to a low of $55 on 22 March.\n- EBS Europe's Steve Elliott blamed the failure on Blockbuster not securing the content Enron expected, which meant the predicted demand did not materialise.\n- A June 2001 article quoted an analyst saying \"no one had any earnings (from Blockbuster) in the company projections for several years at best.\"\n\n**Cleanup, August 2001**\n- Enron's legal staff told employees who may have been exposed to Blockbuster's confidential information to review all files and documentation and \"destroy all Confidential Information in your possession immediately.\" The email gives no reason beyond the Master Agreement. This was before the October 2001 document-preservation order, which named EBS among its subjects (item 4 on its list).\n\n**After the collapse, late 2001 to January 2002 (press clippings circulated inside Enron)**\n- The Braveheart partnership dominated this coverage. Enron obtained a $115.2 million investment in it from CIBC World Markets.\n- Enron claimed a $53 million profit from Braveheart for Q4 2000, when the Blockbuster pilot was only two weeks old and not generating profit.\n- A former employee said: \"How can they monetize this asset when we're still putting it together?\"\n- Blockbuster's spokeswoman said, \"It was nothing but a pilot project. I don't know how anyone could have been booking revenues.\" She also said Blockbuster didn't know about Braveheart at the time.\n- The October 2001 third-quarter loss included a reversal of the $110.9 million in Braveheart profits.\n- Current CFO McMahon said he had nothing to do with Braveheart.\n\n**Gaps**\n- The mailbox holds little candid internal debate about the Blockbuster deal itself; most insider commentary on its merits is in the PR and newsletter material.\n- The accounting claims come from press accounts, not from internal finance emails I found.",
+ "found": "yes",
+ "citations": [
+  {
+   "document_id": 67366,
+   "cited_text": "Today Enron Broadband Services announced a 20-year exclusive agreement with \nBlockbuster to deliver a revolutionary new \"entertainment on demand\" service \nto consumers.   Consumers will be able to order movies from the convenience \nof their homes, and watch them on their televisions whenever they want.  To \nlearn more about this exciting announcement and view a webcast featuring \ninterviews with Ken Lay and Blockbuster CEO John Antioco, visit \nhttp://www.ebentertainmentondemand.com/."
+  },
+  {
+   "document_id": 62190,
+   "cited_text": "The EBS Content Services business consists of our content delivery services \nand distribution network.  During the first half of 2000 we signed landmark \nlong-term agreements with several key content providers including Blockbuster \nInc., which will be publicly announced shortly, to provide video on demand \n(VOD) services for Blockbuster\u0001,s large full-length movie base, and Bridge \nInformation Systems to deliver financial content and real time business news \nto enterprises."
+  },
+  {
+   "document_id": 88038,
+   "cited_text": "I wanted to advise you that Ken has joined another board - nCUBE, Corp.  \nnCUBE is in the video on-demand business.  Blockbuster and Enron have entered \ninto an agreement with nCUBE that it will provide video streaming media \nappliances, software applications, technology consulting and design for the \non-demand service."
+  },
+  {
+   "document_id": 107372,
+   "cited_text": "The negotiations have stalled because Universal has not been willing to sign \nany long-term agreements without Vivendi's support."
+  },
+  {
+   "document_id": 107372,
+   "cited_text": "Blockbuster has refused to renew their agreement with Universal for VHS/DVD \nrentals until Universal agrees to grant digital VOD rights.  This will be \ndetrimental to both parties."
+  },
+  {
+   "document_id": 156319,
+   "cited_text": "Attached are three versions of standby statements on our Blockbuster contract \nand sets of questions and answers, albeit with many missing answers.  NONE OF \nTHESE IS A NEWS RELEASE TO PROACTIVELY ISSUE.  THEY ARE TO USE ONLY IF \nASKED.  The statements are:"
+  },
+  {
+   "document_id": 156319,
+   "cited_text": "3. If and when we cancel the contract.  It would be preferable to offer a \njoint, amiable statement with BB so we don't go to war in the media, but \nthis  statement assumes that we'd have our own."
+  },
+  {
+   "document_id": 156319,
+   "cited_text": "We need to deal with versions 1 and 2 shortly since Blockbuster continues to \nmake comments (like at the Kagan conference this week, where Antioco said we \nwon't extend the trial due to small movie selection.)"
+  },
+  {
+   "document_id": 158783,
+   "cited_text": "As you are aware, Enron signed an agreement with Blockbuster Inc. last summer \nto launch an entertainment on-demand service.  We announced today that we are \ndiscontinuing our exclusive relationship with Blockbuster in order to expand \nthe offering by developing direct relationships with content providers and \ndistribution partners."
+  },
+  {
+   "document_id": 158783,
+   "cited_text": "However, the exclusive relationship with Blockbuster has not yielded the \nquantity and quality of movies needed to drive demand for this exciting, new \non-demand service.  Now that we have proven the concept, we want to take our \nservice to the next level by adding content and subscribers on an accelerated \nbasis.  We feel that this can be best achieved by pursuing entertainment \non-demand independently."
+  },
+  {
+   "document_id": 158783,
+   "cited_text": "We have made tremendous progress toward our goal of becoming the leading \nprovider of entertainment on-demand over a digital platform.  We rolled out \nthe trial service in Seattle, Portland, Salt Lake City and New York in \nDecember, and today subscribers are buying movies on-demand using the service \nwe created."
+  },
+  {
+   "document_id": 166081,
+   "cited_text": "\"Termination of agreement with Blockbuster is more bark than bite as delivery \nplatform technically sound, content-light.  No change in estimates or \nfundamental outlook.  \n -- Lehman Brothers"
+  },
+  {
+   "document_id": 166081,
+   "cited_text": "\"While the separation from such a high profile name is disappointing, we do \nnot view this as negative.  In addition to having no impact on our EPS \nestimates, this could in fact actually accelerate Enron's content delivery \nstrategy.  Importantly, Enron has proven its technical ability to deliver \nmovies on demand.  Now ENE is free to pursue relationships directly with the \nstudios and other entertainment conglomerates looking to provide EOD over \nthen internet (rather than with a middle-man distributor such as \nBlockbuster).\"\n -- Merrill Lynch"
+  },
+  {
+   "document_id": 161620,
+   "cited_text": "target of $102 a share, with EBS accounting for $25 of that.\nOne analyst remained skeptical of the content delivery plans.\n\"Where they go from here is one of things they have to tell the market in a \nconvincing fashion,\" said Commerzbank Securities analyst Andre Meade, who \nraised Enron to accumulate from hold on Thursday.\nBut he also cut earnings targets for the EBS segment to $8.40/share because \nof the failed Blockbuster deal.\nHeady cash-flow projections figured heavily in Enron's guidance for 2001, \nwhich called for a stock price of $126, of which EBS would account for $40, \nMeade said.\nMeade, whose company initiated coverage on Enron in late May 2000, had been \nalone among Enron analysts in keeping a hold rating on the stock.\nMerrill Lynch analyst Donato Eassey on Monday released a note reiterating his \nbuy recommendation with a $99/share price target.\n\"While the separation from such a high-profile name is disappointing, we do \nnot view this as negative,\" Eassey wrote. \"This could in fact actually \naccelerate Enron's content delivery strategy.\"\nEassey pointed out that Enron and Blockbuster's trial in Seattle, Salt Lake \nCity, New York and Portland, Ore., proved Enron can deliver movies on demand.\nThat gives them a track record to show to potential customers like movie \nstudios and other entertainment concerns that want to provide content \ndirectly through their Web sites, he said.\nEnron's stock closed on Thursday at $66.53, up $3.78, compared with its \n52-week range of $59.99 to $90.5626."
+  },
+  {
+   "document_id": 186377,
+   "cited_text": "News of the Blockbuster deal collapse on March 9 unnerved investors and sent \nEnron\u0001,s shares \nplummeting from around $70 to a monthly low of $55 on March 22. They had yet \nto recover at \npress time."
+  },
+  {
+   "document_id": 186377,
+   "cited_text": "Steve Elliott, managing director of EBS Europe, says the venture with \nBlockbuster, which was only four \nmonths old, failed because Blockbuster had not secured the quality and \nquantity of content Enron \nexpected \u0001) therefore, the predicted demand had not materialised."
+  },
+  {
+   "document_id": 214353,
+   "cited_text": "\"I don't see Blockbuster as being a broadband killer for Enron ,\" Bob Christensen, a utilities equity analyst at First Albany Corp., tells Broadband Networking News. \"I think they will probably [get] one or two anchor tenants before the year is out. I am optimistic.\"  The deal with Electronics Boutique and the failure of the deal with Blockbuster emphasize the importance Enron is placing on securing content for its broadband network. Yet its main revenues from the telecom arena will continue to be derived from its bandwidth intermediation business, which uses pooling points to provide the physical interconnectivity between bandwidth buyers and sellers, allowing users to provide bandwidth on demand. This is Enron 's core telecom business.  The content deals, while important, are not being factored into most analysts' forecasts on the company.   \"I am confident that the content delivery business will be successful,\" says Ray Niles, a utilities equity analyst at Salomon Smith Barney. \"The fact of the matter is they did get another deal. It was not as large as the Blockbuster deal, but they did get another one in there. We are not putting numbers in our model and our earnings forecast for content delivery. Whether it is very successful or not very successful, in our forecasts, we are not assuming any particular forecast for the content delivery business. I think bandwidth intermediation is their competitive advantage.\"  \"The reality is that no one had any earnings (from Blockbuster) in the company projections for several years at best,\" Yannello adds. \"It was a big name and was portrayed to be the killer app. It is disappointing, but I do think they will be able to bounce back with other deals. I also think in an early sense this gaming announcement is probably the tip of the iceberg of what they will be able to bring in.\"  Enron, which produced revenues of over $101 billion in 2000 from its various businesses, is still rated highly by analysts, despite the failure of the Blockbuster deal."
+  },
+  {
+   "document_id": 242448,
+   "cited_text": "You are instructed to review all files and documentation including computer files for Confidential Information and destroy all Confidential Information in your possession immediately."
+  },
+  {
+   "document_id": 293735,
+   "cited_text": "1.      The LJM Deal \n        2.      Azurix \n        3.      New Power Co. \n        4.      EBS \n        5.      Chewco Investments L.P.\n        6.      Accounting for any Enron investments \n        7.      Any Enron public statement made to the investment public \n        8.      Any Enron public filing with the SEC or other regulatory bodies"
+  },
+  {
+   "document_id": 344493,
+   "cited_text": "When Enron Corp. and Blockbuster Inc. joined forces in mid-2000, it looked like they were on to something big. The companies announced they would soon be allowing consumers across America to choose from among thousands of movies, including hot new features, sent via telephone lines to watch on their TVs at home. \nAnnouncing the partnership in July, 2000, Enron chairman Kenneth Lay called it the \"killer app for the entertainment industry.\" Blockbuster chairman John Antioco said the two companies had come up with the \"ultimate bricks-clicks-and-flicks strategy.\" Oracle Corp. chairman Larry Ellison later committed his private company, nCube Corp., to provide critical computer hardware and $2-million (U.S.). Mr. Ellison said he was \"proud\" to be part of the venture.\nIt looked like another brilliant move by Enron, already a hero on Wall Street. But within eight months of its launch, the partners had split. Enron's impatience \"didn't add up,\" says Blockbuster spokeswoman Karen Raskopf. \nAs it turns out, Blockbuster didn't know the half of it. Within months of inking the deal, Enron had set up an affiliated partnership, code-named Project Braveheart, an apparent allusion to the 1995 Mel Gibson movie. Enron obtained a $115.2-million investment in the partnership from CIBC World Markets, the investment-banking arm of Canadian Imperial Bank of Commerce in Toronto. In return, CIBC received a promise of almost all earnings from Enron's share of the venture for the first 10 years. Blockbuster didn't know about Braveheart at the time, Ms. Raskopf says."
+  },
+  {
+   "document_id": 343559,
+   "cited_text": "meeting. The capital investments included Enron's plans to expand trading of\nsuch things as broadband access. \n  A lawyer for Mr. Fastow didn't return a phone call seeking comment. \n  Enron began using Braveheart for accounting purposes in the fourth quarter of\n2000. For that period, Enron claimed its ownership of Braveheart resulted in a\n$53 million profit, even though the Blockbuster venture was only two weeks into\nits pilot program and not generating any profit at all. \n  One of the former Enron employees familiar with Braveheart recalls wondering\nat the time, \" `How can they monetize this asset when we're still putting it\ntogether?' It didn't make any sense to me.\" \n  In the following quarter, the first of 2001, Enron claimed an additional\n$57.9 million gain from Braveheart. \"I was just floored,\" says the former\nemployee. \"I mean, I couldn't believe it.\" At the time, the Blockbuster venture\nwas just starting in New York, Seattle, Portland, Ore., and Salt Lake City, the\nformer employees say. \n  The profits Enron claimed in its public financial disclosures contributed to\nthe impression that its broadband unit was promising, although still losing\nmoney overall, and that the parent company's earnings were growing in line with\nEnron's rising stock price. As a result of Braveheart's contribution, Enron\nBroadband's losses were limited to a total of $67 million during the two\nquarters. \n  At a stock analysts' meeting in Houston in January 2001, Enron presented\nprinted material in which it said it had achieved \"critical mass roll-out of\nbroadband services strategy\" in 2000. The material added that Enron's \"premium\ncontent-delivery business [was] firmly established.\" Enron told the analysts\nthat the broadband-content business eventually would generate $45 billion in\nrevenue, although it wasn't stated over what time period that would occur. \n  Analysts around this time continued recommending Enron stock as a \"strong"
+  },
+  {
+   "document_id": 343559,
+   "cited_text": "meeting. The capital investments included Enron's plans to expand trading of\nsuch things as broadband access. \n  A lawyer for Mr. Fastow didn't return a phone call seeking comment. \n  Enron began using Braveheart for accounting purposes in the fourth quarter of\n2000. For that period, Enron claimed its ownership of Braveheart resulted in a\n$53 million profit, even though the Blockbuster venture was only two weeks into\nits pilot program and not generating any profit at all. \n  One of the former Enron employees familiar with Braveheart recalls wondering\nat the time, \" `How can they monetize this asset when we're still putting it\ntogether?' It didn't make any sense to me.\" \n  In the following quarter, the first of 2001, Enron claimed an additional\n$57.9 million gain from Braveheart. \"I was just floored,\" says the former\nemployee. \"I mean, I couldn't believe it.\" At the time, the Blockbuster venture\nwas just starting in New York, Seattle, Portland, Ore., and Salt Lake City, the\nformer employees say. \n  The profits Enron claimed in its public financial disclosures contributed to\nthe impression that its broadband unit was promising, although still losing\nmoney overall, and that the parent company's earnings were growing in line with\nEnron's rising stock price. As a result of Braveheart's contribution, Enron\nBroadband's losses were limited to a total of $67 million during the two\nquarters. \n  At a stock analysts' meeting in Houston in January 2001, Enron presented\nprinted material in which it said it had achieved \"critical mass roll-out of\nbroadband services strategy\" in 2000. The material added that Enron's \"premium\ncontent-delivery business [was] firmly established.\" Enron told the analysts\nthat the broadband-content business eventually would generate $45 billion in\nrevenue, although it wasn't stated over what time period that would occur. \n  Analysts around this time continued recommending Enron stock as a \"strong"
+  },
+  {
+   "document_id": 344493,
+   "cited_text": "The partnership had no separate staff and no assets other than Enron's stake in the venture with Blockbuster, which was barely getting off the ground in late 2000. Still, in an audacious accounting move, Enron claimed $110.9-million in profits from Braveheart in the fourth quarter of 2000 and the first quarter of 2001. That amount sharply limited the overall losses suffered by Enron's fibre-optics division in the two periods. \nAt its peak, in March, 2001, the venture with Blockbuster provided only about 1,000 test customers with movies in four U.S. cities. Many of those customers didn't even pay. \"It was nothing but a pilot project,\" says Blockbuster's Ms. Raskopf. \"I don't know how anyone could have been booking revenues.\" \nBlockbuster, a unit of Viacom Inc., never accounted for any financial gain or loss from the short-lived venture, she says. \nProject Braveheart was one of dozens of outside partnerships that Enron officials created to burnish the company's financial results at a time when it felt under pressure to show high profits that would justify its soaring stock price, according to current and former company executives. One of the reasons Enron began sliding toward bankruptcy court last fall was the abandonment of some of these accounting manoeuvres, which contributed to huge losses and the collapse of its stock. \nSome of the partnerships were designed to shift large debts off Enron's balance sheet and make the company appear more robust in the eyes of investors and credit-rating agencies. Others, such as Braveheart, raised fast cash needed to fund Enron's ever-expanding array of new businesses. \nEnron's current chief financial officer, Jeffrey McMahon, says he had nothing to do with Braveheart or related partnerships. \"I'm not going to defend them,\" he says. An Enron spokeswoman says the company has no other comment."
+  },
+  {
+   "document_id": 344493,
+   "cited_text": "When Enron Corp. and Blockbuster Inc. joined forces in mid-2000, it looked like they were on to something big. The companies announced they would soon be allowing consumers across America to choose from among thousands of movies, including hot new features, sent via telephone lines to watch on their TVs at home. \nAnnouncing the partnership in July, 2000, Enron chairman Kenneth Lay called it the \"killer app for the entertainment industry.\" Blockbuster chairman John Antioco said the two companies had come up with the \"ultimate bricks-clicks-and-flicks strategy.\" Oracle Corp. chairman Larry Ellison later committed his private company, nCube Corp., to provide critical computer hardware and $2-million (U.S.). Mr. Ellison said he was \"proud\" to be part of the venture.\nIt looked like another brilliant move by Enron, already a hero on Wall Street. But within eight months of its launch, the partners had split. Enron's impatience \"didn't add up,\" says Blockbuster spokeswoman Karen Raskopf. \nAs it turns out, Blockbuster didn't know the half of it. Within months of inking the deal, Enron had set up an affiliated partnership, code-named Project Braveheart, an apparent allusion to the 1995 Mel Gibson movie. Enron obtained a $115.2-million investment in the partnership from CIBC World Markets, the investment-banking arm of Canadian Imperial Bank of Commerce in Toronto. In return, CIBC received a promise of almost all earnings from Enron's share of the venture for the first 10 years. Blockbuster didn't know about Braveheart at the time, Ms. Raskopf says."
+  },
+  {
+   "document_id": 343559,
+   "cited_text": "buy.\" The stock was trading at close to its all-time peak of $90. \n  Mr. McMahon, who replaced Mr. Fastow as Enron's chief financial officer in\nOctober, now says that timing and atmosphere were critical to obtaining the\nCIBC investment in Braveheart. In late 2000, \"the whole thought was that the\nmarket was hot for broadband services,\" he says. \n  But by March 2001, the marriage between Blockbuster and Enron was on the\nrocks. Both sides pointed fingers about what went wrong. After terminating the\npilot program, the two companies vowed to press ahead on their own in\ndelivering video on demand. \n  Termination of the Blockbuster deal, though, created accounting problems for\nEnron. Braveheart had lost its source of potential revenue. \n  Pressed by analysts and investors to explain its many opaque partnership\ndeals, Enron in October announced a stunning third-quarter loss of $618\nmillion. Lumped into that amount were losses from Braveheart -- basically a\nreversal of the $110.9 million in profits it had claimed earlier -- as well as\nlosses related to soured investments in water-utilities and retail-energy\nbusinesses. \n  Within weeks, there were more disastrous financial announcements, word that\nthe Securities and Exchange Commission was investigating and a growing sense\nthat the once-mighty company was headed for insolvency."
+  },
+  {
+   "document_id": 344493,
+   "cited_text": "The partnership had no separate staff and no assets other than Enron's stake in the venture with Blockbuster, which was barely getting off the ground in late 2000. Still, in an audacious accounting move, Enron claimed $110.9-million in profits from Braveheart in the fourth quarter of 2000 and the first quarter of 2001. That amount sharply limited the overall losses suffered by Enron's fibre-optics division in the two periods. \nAt its peak, in March, 2001, the venture with Blockbuster provided only about 1,000 test customers with movies in four U.S. cities. Many of those customers didn't even pay. \"It was nothing but a pilot project,\" says Blockbuster's Ms. Raskopf. \"I don't know how anyone could have been booking revenues.\" \nBlockbuster, a unit of Viacom Inc., never accounted for any financial gain or loss from the short-lived venture, she says. \nProject Braveheart was one of dozens of outside partnerships that Enron officials created to burnish the company's financial results at a time when it felt under pressure to show high profits that would justify its soaring stock price, according to current and former company executives. One of the reasons Enron began sliding toward bankruptcy court last fall was the abandonment of some of these accounting manoeuvres, which contributed to huge losses and the collapse of its stock. \nSome of the partnerships were designed to shift large debts off Enron's balance sheet and make the company appear more robust in the eyes of investors and credit-rating agencies. Others, such as Braveheart, raised fast cash needed to fund Enron's ever-expanding array of new businesses. \nEnron's current chief financial officer, Jeffrey McMahon, says he had nothing to do with Braveheart or related partnerships. \"I'm not going to defend them,\" he says. An Enron spokeswoman says the company has no other comment."
+  }
+ ],
+ "cost_usd": 0.129074,
+ "seconds": 56.31834816701303,
+ "started": "2026-11-10T17:03:56.137864Z",
+ "commit": "fc8c10f"
+}

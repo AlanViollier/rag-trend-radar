@@ -16,6 +16,7 @@ from rag_trend_radar.schema import AgentRun, AgentStep, SearchStage
 from rag_trend_radar.site import investigator
 from rag_trend_radar.site.investigator import baseline, replay
 from rag_trend_radar.site.investigator.records import (
+    Baseline,
     Hit,
     InvestigatorPage,
     Note,
@@ -26,7 +27,6 @@ from rag_trend_radar.site.investigator.records import (
     Turn,
 )
 
-RUNS = Path("evals/investigator_runs.jsonl")
 CONN = cast(psycopg.Connection[Any], None)
 
 
@@ -65,7 +65,7 @@ def _tool(name: str, documents: tuple[int, ...] = (), arguments: str = "{}") -> 
 
 
 def test_the_picked_runs_are_questions_of_the_sets_once_each() -> None:
-    picked = investigator.chosen(RUNS)
+    picked = investigator.chosen(investigator.PICKS)
     ids = [p.id for p in picked]
     asked = {q.id for name in checks.SETS for q in checks.questions(name)}
     assert len(ids) == len(set(ids))
@@ -165,3 +165,14 @@ def test_a_card_shaped_number_stops_the_write(tmp_path: Path) -> None:
     with pytest.raises(ExportRefused, match="card-shaped"):
         investigator.write(_page("4111 1111 1111 1111"), out)
     assert not out.exists()
+
+
+def test_an_answer_kept_with_another_prompt_is_not_reused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(baseline, "KEPT", tmp_path)
+    saved = Baseline(text="no", found="no", seconds=1.0, cost=0.01, system="prompt v1")
+    (tmp_path / "c-raptor.json").write_text(saved.model_dump_json())
+    assert baseline.kept("c-raptor", "prompt v1") == saved
+    assert baseline.kept("c-raptor", "prompt v2") is None
+    assert baseline.kept("c-other", "prompt v1") is None
