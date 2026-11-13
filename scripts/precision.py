@@ -27,7 +27,7 @@ from rag_trend_radar.records import EvalQuestion, SearchHit, read_records
 from rag_trend_radar.search import vector
 
 DEPTH = 50
-METRICS = ("recall@1", "recall@10", "recall@50", "mrr@10")
+METRICS = ("hit_rate@1", "hit_rate@10", "hit_rate@50", "mrr@10")
 
 
 def main(paths: list[Path]) -> None:

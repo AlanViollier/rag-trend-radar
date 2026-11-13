@@ -32,10 +32,10 @@ def store() -> None:
             autocommit=True,
             connect_timeout=3,
         )
-    except psycopg.OperationalError as error:
+    except psycopg.OperationalError:
         if os.environ.get("RADAR_REQUIRE_DB"):
             raise
-        pytest.skip(f"Postgres not reachable, database tests skipped ({error})")
+        pytest.skip(f"no Postgres at {settings.db_host}:{settings.db_port}: database tests skipped")
     with admin:
         exists = admin.execute(
             "SELECT 1 FROM pg_database WHERE datname = %s", (settings.db_name,)

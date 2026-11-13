@@ -4,10 +4,7 @@ from numpy.typing import NDArray
 
 from rag_trend_radar.radar import clustering
 from rag_trend_radar.radar.words import keywords, reading_text
-
-
-def _unit(v: NDArray[np.float32]) -> NDArray[np.float32]:
-    return (v / np.linalg.norm(v, axis=1, keepdims=True)).astype(np.float32)
+from tests.factories import unit
 
 
 def _clusters() -> NDArray[np.float32]:
@@ -15,7 +12,7 @@ def _clusters() -> NDArray[np.float32]:
     centres = np.eye(16, dtype=np.float32)[:5]
     tight = [centres[n] + rng.normal(0, 0.01, (40, 16)) for n in range(5)]
     stray = rng.normal(0, 1, (10, 16))
-    return _unit(np.vstack([*tight, stray]).astype(np.float32))
+    return unit(np.vstack([*tight, stray]).astype(np.float32))
 
 
 def test_clusters_are_found_without_being_told_how_many() -> None:
@@ -91,7 +88,7 @@ def test_a_cluster_of_one_long_document_is_not_a_topic() -> None:
 
 def test_a_cluster_of_unrelated_mail_is_too_loose_to_be_a_topic() -> None:
     tight = _clusters()
-    loose = _unit(np.random.default_rng(1).normal(0, 1, (40, 16)).astype(np.float32))
+    loose = unit(np.random.default_rng(1).normal(0, 1, (40, 16)).astype(np.float32))
     vectors = np.vstack([tight[:40], loose])
     labels = np.array([0] * 40 + [1] * 40, dtype=np.int64)
     kept = clustering.drop_loose(labels, vectors)

@@ -6,12 +6,9 @@ from numpy.typing import NDArray
 from rag_trend_radar.radar import signals
 from rag_trend_radar.radar.clustering import Pool
 from rag_trend_radar.radar.frames import Frame
+from tests.factories import unit
 
 WEEK = date(2001, 6, 3)
-
-
-def _unit(v: NDArray[np.float32]) -> NDArray[np.float32]:
-    return (v / np.linalg.norm(v, axis=1, keepdims=True)).astype(np.float32)
 
 
 def _pool(vectors: NDArray[np.float32], days: list[date], press: list[bool]) -> Pool:
@@ -34,7 +31,7 @@ def test_a_stray_near_one_cluster_counts_for_it_and_one_between_two_doesnt() -> 
     near = np.eye(8, dtype=np.float32)[0][None]
     between = (np.eye(8, dtype=np.float32)[0] + np.eye(8, dtype=np.float32)[1])[None]
     far = np.eye(8, dtype=np.float32)[5][None]
-    vectors = _unit(np.vstack([a, b, near, between, far]).astype(np.float32))
+    vectors = unit(np.vstack([a, b, near, between, far]).astype(np.float32))
     labels = np.array([0] * 30 + [1] * 30 + [-1] * 3, dtype=np.int64)
     counted = signals.counted(Frame(WEEK, np.arange(63, dtype=np.int64), labels), vectors)
     assert counted[60:].tolist() == [0, -1, -1]

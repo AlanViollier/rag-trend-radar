@@ -6,6 +6,7 @@ from numpy.typing import NDArray
 
 from rag_trend_radar import embed as embedding
 from rag_trend_radar.exceptions import EmbeddingFailed
+from tests.factories import unit
 
 DIMS = 8
 
@@ -22,7 +23,7 @@ class _Model:
         if len(texts) > self.broken_past or "poison" in texts:
             # Out of memory: normalised, finite, and wrong.
             rng = np.random.default_rng(len(self.calls))
-            return _unit(rng.normal(size=(len(texts), DIMS)))
+            return unit(rng.normal(size=(len(texts), DIMS)))
         return np.stack([_vector(t) for t in texts])
 
     encode_query = encode_document
@@ -30,11 +31,7 @@ class _Model:
 
 def _vector(text: str) -> NDArray[np.float32]:
     seed = int.from_bytes(hashlib.blake2b(text.encode(), digest_size=4).digest())
-    return np.asarray(_unit(np.random.default_rng(seed).normal(size=(1, DIMS)))[0], np.float32)
-
-
-def _unit(v: NDArray[np.float64]) -> NDArray[np.float32]:
-    return (v / np.linalg.norm(v, axis=1, keepdims=True)).astype(np.float32)
+    return np.asarray(unit(np.random.default_rng(seed).normal(size=(1, DIMS)))[0], np.float32)
 
 
 @pytest.fixture

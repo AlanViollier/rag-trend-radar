@@ -84,3 +84,5 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# UMAP says a fixed seed makes it single-threaded; the seed is the point.
+filterwarnings = ["ignore:n_jobs value 1 overridden to 1 by setting random_state:UserWarning"]

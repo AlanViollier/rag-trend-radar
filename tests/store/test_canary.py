@@ -11,7 +11,6 @@ from zoneinfo import ZoneInfo
 import numpy as np
 import psycopg
 import pytest
-from numpy.typing import NDArray
 from pgvector import HalfVector
 from psycopg import sql
 from psycopg.rows import TupleRow
@@ -23,6 +22,7 @@ from rag_trend_radar.evals import leaks
 from rag_trend_radar.evals.retrieval import rankings
 from rag_trend_radar.records import Document, EvalQuestion
 from rag_trend_radar.search import hybrid, keyword, vector
+from tests.factories import unit
 
 MODEL, DIMS = "test/fake", 8
 CHICAGO = ZoneInfo("America/Chicago")
@@ -52,10 +52,6 @@ def _document(external_id: str, body: str, reader: str, sent_at: datetime) -> Do
     )
 
 
-def _unit(v: NDArray[np.float32]) -> NDArray[np.float32]:
-    return (v / np.linalg.norm(v)).astype(np.float32)
-
-
 @pytest.fixture(scope="module")
 def world(store: None) -> None:
     rng = np.random.default_rng(0)
@@ -70,12 +66,12 @@ def world(store: None) -> None:
         ),
     ]
     vectors = {
-        "secret": _unit(np.array([0.8, 0.6, 0, 0, 0, 0, 0, 0], dtype=np.float32)),
+        "secret": unit(np.array([0.8, 0.6, 0, 0, 0, 0, 0, 0], dtype=np.float32)),
         "quoting-kim": np.eye(DIMS, dtype=np.float32)[1],
         "quoting-rowe": np.eye(DIMS, dtype=np.float32)[2],
         "old-note": QUOTED_VECTOR,
         **{
-            f"crowd-{n}": _unit(QUERY + rng.normal(0, 0.01, DIMS).astype(np.float32))
+            f"crowd-{n}": unit(QUERY + rng.normal(0, 0.01, DIMS).astype(np.float32))
             for n in range(300)
         },
     }
@@ -109,7 +105,7 @@ def _found(person: str, as_of: date) -> dict[str, bool]:
             "keyword": keyword.search(conn, "zephyr quokka", as_of, 10),
             "vector": vector.search(
                 conn,
-                _unit(np.array([0.8, 0.6, 0, 0, 0, 0, 0, 0], dtype=np.float32)),
+                unit(np.array([0.8, 0.6, 0, 0, 0, 0, 0, 0], dtype=np.float32)),
                 MODEL,
                 as_of,
                 10,

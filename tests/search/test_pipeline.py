@@ -11,10 +11,7 @@ from rag_trend_radar.records import Ranked, SearchHit
 from rag_trend_radar.search import hybrid, pipeline
 from rag_trend_radar.search.mix import RESULTS
 from rag_trend_radar.search.pipeline import final
-
-
-def _hit(chunk_id: int, text: str, score: float) -> SearchHit:
-    return SearchHit(chunk_id=chunk_id, document_id=chunk_id, text=text, score=score)
+from tests.factories import hit
 
 
 def _mail(n: int) -> str:
@@ -24,18 +21,18 @@ def _mail(n: int) -> str:
 
 
 def test_a_repeat_of_a_better_result_drops() -> None:
-    hits = [_hit(1, _mail(1), 0.9), _hit(2, _mail(1), 0.8), _hit(3, _mail(3), 0.7)]
+    hits = [hit(1, _mail(1), 0.9), hit(2, _mail(1), 0.8), hit(3, _mail(3), 0.7)]
     assert [h.chunk_id for h in final(hits, 50)] == [1, 3]
 
 
 def test_no_more_results_than_reach_claude() -> None:
-    hits = [_hit(n, _mail(n), 1 - n / 100) for n in range(1, RESULTS + 6)]
+    hits = [hit(n, _mail(n), 1 - n / 100) for n in range(1, RESULTS + 6)]
     assert len(final(hits, 50)) == RESULTS
 
 
 def _reranked(monkeypatch: pytest.MonkeyPatch, **narrow: Any) -> tuple[Ranked, dict[str, str]]:
     """Run reranked on two found chunks, one press; return it and the models it asked for."""
-    found = [_hit(1, _mail(1), 0.9), _hit(2, "Subject: x\nFrom: a@enron.com\n\n(AP) - wire", 0.8)]
+    found = [hit(1, _mail(1), 0.9), hit(2, "Subject: x\nFrom: a@enron.com\n\n(AP) - wire", 0.8)]
     asked: dict[str, str] = {}
 
     def search(_conn: object, _q: str, _v: object, model: str, *_rest: object) -> list[SearchHit]:
