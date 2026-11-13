@@ -15,9 +15,9 @@ ENDS = [START + timedelta(weeks=i) for i in range(6)]
 WORDS = ("gas", "pipeline", "storage")
 
 
-def _seen(blob: int, week: int, *, shown: bool = True, mail: int = 100) -> export.Seen:
+def _seen(cluster: int, week: int, *, shown: bool = True, mail: int = 100) -> export.Seen:
     return export.Seen(
-        blob=blob,
+        cluster=cluster,
         shown=shown,
         week=ENDS[week],
         centre=np.ones(4, dtype=np.float32),
@@ -60,19 +60,19 @@ def flat_map(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(places, "lift", rise)
 
 
-def test_a_gap_is_filled_and_a_blob_runs_first_to_last_week() -> None:
-    blob = export.page(_tables(), [], [], ENDS).blobs[0]
-    assert (blob.id, blob.first, len(blob.mail), len(blob.x)) == (1, 0, 3, 3)
+def test_a_gap_is_filled_and_a_cluster_runs_first_to_last_week() -> None:
+    cluster = export.page(_tables(), [], [], ENDS).clusters[0]
+    assert (cluster.id, cluster.first, len(cluster.mail), len(cluster.x)) == (1, 0, 3, 3)
 
 
-def test_a_blob_has_a_flat_and_a_lifted_place_every_week() -> None:
-    blob = export.page(_tables(), [], [], ENDS).blobs[0]
-    assert len(blob.x) == len(blob.lifted_z) == 3
+def test_a_cluster_has_a_flat_and_a_lifted_place_every_week() -> None:
+    cluster = export.page(_tables(), [], [], ENDS).clusters[0]
+    assert len(cluster.x) == len(cluster.lifted_z) == 3
 
 
 def test_a_moment_fills_in_its_numbers_and_makes_its_alert_bold() -> None:
     fired = export.Fired(ENDS[3], 1, 1234.0, 2.4, ENDS[0])
-    moment = Moment(day=ENDS[3], blob=1, text="{observed} against {normal}, {mail} that week")
+    moment = Moment(day=ENDS[3], cluster=1, text="{observed} against {normal}, {mail} that week")
     data = export.page(_tables([fired]), [], [moment], ENDS)
     assert (data.moments[0].week, data.moments[0].text) == (3, "1,234 against 2, 0 that week")
     assert (data.alerts[0].note, data.alerts[0].weight) == (data.moments[0].text, "bold")
@@ -81,7 +81,7 @@ def test_a_moment_fills_in_its_numbers_and_makes_its_alert_bold() -> None:
 def test_a_moment_says_how_long_after_its_event() -> None:
     fired = export.Fired(ENDS[3], 1, 10.0, 2.0, ENDS[0])
     event = PageEvent(id="x", day=ENDS[3] - timedelta(days=12), title="Something")
-    moment = Moment(day=ENDS[3], blob=1, text="t", event="x")
+    moment = Moment(day=ENDS[3], cluster=1, text="t", event="x")
     data = export.page(_tables([fired]), [event], [moment], ENDS)
     assert data.alerts[0].follows == "12 days after: Something"
 
@@ -89,27 +89,31 @@ def test_a_moment_says_how_long_after_its_event() -> None:
 def test_a_moment_naming_an_unknown_event_stops_the_export() -> None:
     fired = export.Fired(ENDS[3], 1, 10.0, 2.0, ENDS[0])
     with pytest.raises(ExportRefused):
-        export.page(_tables([fired]), [], [Moment(day=ENDS[3], blob=1, text="t", event="x")], ENDS)
+        export.page(
+            _tables([fired]), [], [Moment(day=ENDS[3], cluster=1, text="t", event="x")], ENDS
+        )
 
 
 def _named(kind: Literal["topic", "newsletter"] = "topic", first: date = ENDS[0]) -> Naming:
     names = ((first, "Gas"), (ENDS[2], "Pipes"))
-    return Naming(blob=1, first=first, kind=kind, family="Trading", names=names)
+    return Naming(cluster=1, first=first, kind=kind, family="Trading", names=names)
 
 
-def test_a_read_blob_takes_its_names_and_family() -> None:
-    blob = export.page(_tables(), [], [], ENDS, [_named()]).blobs[0]
-    assert (blob.names, blob.family) == (((0, "Gas"), (2, "Pipes")), "Trading")
+def test_a_read_cluster_takes_its_names_and_family() -> None:
+    cluster = export.page(_tables(), [], [], ENDS, [_named()]).clusters[0]
+    assert (cluster.names, cluster.family) == (((0, "Gas"), (2, "Pipes")), "Trading")
 
 
-def test_a_blob_nobody_read_keeps_its_rough_name() -> None:
-    blobs = {b.id: b for b in export.page(_tables(), [], [], ENDS, [_named()]).blobs}
-    assert (blobs[2].family, len(blobs[2].names)) == ("", 1)
+def test_a_cluster_nobody_read_keeps_its_rough_name() -> None:
+    clusters = {b.id: b for b in export.page(_tables(), [], [], ENDS, [_named()]).clusters}
+    assert (clusters[2].family, len(clusters[2].names)) == ("", 1)
 
 
-def test_a_blob_read_as_a_newsletter_leaves_the_map() -> None:
-    blobs = {b.id: b for b in export.page(_tables(), [], [], ENDS, [_named("newsletter")]).blobs}
-    assert (blobs[1].shown, blobs[2].shown) == (False, True)
+def test_a_cluster_read_as_a_newsletter_leaves_the_map() -> None:
+    clusters = {
+        b.id: b for b in export.page(_tables(), [], [], ENDS, [_named("newsletter")]).clusters
+    }
+    assert (clusters[1].shown, clusters[2].shown) == (False, True)
 
 
 def test_a_name_for_the_wrong_first_week_stops_the_export() -> None:
@@ -119,13 +123,13 @@ def test_a_name_for_the_wrong_first_week_stops_the_export() -> None:
 
 def test_a_read_alert_takes_its_weight_and_note() -> None:
     fired = export.Fired(ENDS[3], 1, 80.0, 2.0, ENDS[0])
-    note = AlertNote(day=ENDS[3], blob=1, weight="muted", headline="Gift ads", note="Junk.")
+    note = AlertNote(day=ENDS[3], cluster=1, weight="muted", headline="Gift ads", note="Junk.")
     alert = export.page(_tables([fired]), [], [], ENDS, read_alerts=[note]).alerts[0]
     assert (alert.weight, alert.headline, alert.note) == ("muted", "Gift ads", "Junk.")
 
 
 def test_a_note_on_no_alert_stops_the_export() -> None:
-    note = AlertNote(day=ENDS[3], blob=1, weight="bold", note="x")
+    note = AlertNote(day=ENDS[3], cluster=1, weight="bold", note="x")
     with pytest.raises(ExportRefused):
         export.page(_tables(), [], [], ENDS, read_alerts=[note])
 
@@ -137,11 +141,11 @@ def test_dust_arrives_the_week_it_was_sent() -> None:
 
 def test_a_moment_with_no_alert_stops_the_export() -> None:
     with pytest.raises(ExportRefused):
-        export.page(_tables(), [], [Moment(day=ENDS[3], blob=1, text="x")], ENDS)
+        export.page(_tables(), [], [Moment(day=ENDS[3], cluster=1, text="x")], ENDS)
 
 
-def test_a_blob_not_on_the_main_map_comes_last_and_still_has_a_place() -> None:
-    last = export.page(_tables(), [], [], ENDS).blobs[-1]
+def test_a_cluster_not_on_the_main_map_comes_last_and_still_has_a_place() -> None:
+    last = export.page(_tables(), [], [], ENDS).clusters[-1]
     assert (last.id, last.shown, len(last.mail), len(last.lifted_z)) == (9, False, 1, 1)
 
 
@@ -156,11 +160,18 @@ def test_a_week_counts_only_its_own_mail() -> None:
     assert [w.mail for w in weeks[:3]] == [5, 7, 0]
 
 
-def test_live_blobs_counts_shown_blobs_only() -> None:
-    assert [w.live_blobs for w in export.page(_tables(), [], [], ENDS).weeks] == [1, 1, 1, 1, 0, 0]
+def test_live_clusters_counts_shown_clusters_only() -> None:
+    assert [w.live_clusters for w in export.page(_tables(), [], [], ENDS).weeks] == [
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+    ]
 
 
-def test_an_alert_on_a_young_blob_is_new_on_an_older_one_speeding() -> None:
+def test_an_alert_on_a_young_cluster_is_new_on_an_older_one_speeding() -> None:
     young = export.Fired(ENDS[3], 1, 80.4, 2.0, ENDS[0])
     older = export.Fired(ENDS[4], 1, 90.0, 10.0, ENDS[0])
     alerts = export.page(_tables([young, older]), [], [], ENDS).alerts

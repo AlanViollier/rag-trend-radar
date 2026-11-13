@@ -18,7 +18,7 @@ def test_a_dead_week_stays_dead() -> None:
     assert np.isnan(placed[0, 1]).all()
 
 
-def test_a_blob_drifts_towards_a_new_place_instead_of_jumping() -> None:
+def test_a_cluster_drifts_towards_a_new_place_instead_of_jumping() -> None:
     want = np.array([[[0.2, 0.2], [0.8, 0.8]]])
     placed = places.pack(want, np.full((1, 2), 100.0))
     assert abs(placed[0, 1, 0] - placed[0, 0, 0]) < 0.1

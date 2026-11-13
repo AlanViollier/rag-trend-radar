@@ -15,7 +15,7 @@ def test_word_order_alone_doesnt_change_a_name() -> None:
     assert len(rough(list(range(24)), words)) == 1
 
 
-def test_a_passing_subject_doesnt_rename_a_blob() -> None:
+def test_a_passing_subject_doesnt_rename_a_cluster() -> None:
     words = [GAS] * 12 + [POWER] * 2 + [GAS] * 12
     assert [name for _, name in rough(list(range(26)), words)] == ["gas pipeline storage"]
 

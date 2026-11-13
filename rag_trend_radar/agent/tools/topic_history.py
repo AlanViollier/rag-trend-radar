@@ -14,15 +14,15 @@ change, its alerts, and the people who wrote the most in it. Take the id from to
 alerts. Investigator only."""
 MAX_SENDERS = 10
 
-BLOB = "SELECT kind, first_week, last_week FROM blobs WHERE id = %s"
+CLUSTER = "SELECT kind, first_week, last_week FROM clusters WHERE id = %s"
 WEEKS = (
-    "SELECT week, mail, recent, recent_press, surge, keywords FROM blob_weeks"
-    " WHERE blob_id = %s AND week BETWEEN %s AND %s ORDER BY week"
+    "SELECT week, mail, recent, recent_press, surge, keywords FROM cluster_weeks"
+    " WHERE cluster_id = %s AND week BETWEEN %s AND %s ORDER BY week"
 )
 SENDERS = (
-    "SELECT e.sender, count(DISTINCT d.id) FROM blob_chunks bc JOIN chunks c ON c.id = bc.chunk_id"
+    "SELECT e.sender, count(DISTINCT d.id) FROM cluster_chunks bc JOIN chunks c ON c.id = bc.chunk_id"
     " JOIN documents d ON d.id = c.document_id JOIN emails e ON e.document_id = d.id"
-    " WHERE bc.blob_id = %s AND d.sent_at >= %s AND d.sent_at < %s"
+    " WHERE bc.cluster_id = %s AND d.sent_at >= %s AND d.sent_at < %s"
     " GROUP BY e.sender ORDER BY 2 DESC LIMIT %s"
 )
 
@@ -37,10 +37,10 @@ class Input(ToolInput):
 
 def run(desk: Desk, given: Input) -> ToolResult:
     """Its weeks in range as lines, keywords only where they changed."""
-    blob = desk.conn.execute(BLOB, (given.topic,)).fetchall()
-    if not blob:
+    cluster = desk.conn.execute(CLUSTER, (given.topic,)).fetchall()
+    if not cluster:
         return ToolResult([text(f"No topic {given.topic}.")], "no topic")
-    kind, first_week, _ = blob[0]
+    kind, first_week, _ = cluster[0]
     until = desk.until(given.until)
     first, last = topics.weeks(given.since or first_week, until)
     rows = desk.conn.execute(WEEKS, (given.topic, first, last)).fetchall()
@@ -62,7 +62,7 @@ def run(desk: Desk, given: Input) -> ToolResult:
         lines.append(f"{week}  {mail}  {recent} ({press})  {surge:+.0f}  {words}".rstrip())
         previous = keywords[:6]
     alerts = desk.conn.execute(
-        "SELECT day, observed, expected FROM alerts WHERE blob_id = %s AND day BETWEEN %s AND %s ORDER BY day",
+        "SELECT day, observed, expected FROM alerts WHERE cluster_id = %s AND day BETWEEN %s AND %s ORDER BY day",
         (given.topic, first, last),
     ).fetchall()
     lines += [

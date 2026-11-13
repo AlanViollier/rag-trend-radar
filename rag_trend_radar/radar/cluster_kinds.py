@@ -1,7 +1,7 @@
-"""Enron's mail: which blobs are newsletters, footers or chatter rather than a subject.
+"""Enron's mail: which clusters are newsletters, footers or chatter rather than a subject.
 
-The one file here that knows this corpus. `blobs.kind` is judged over a blob's whole life, with
-hindsight; an alert judges a blob on its weeks so far. The naming pass's reading replaces this on
+The one file here that knows this corpus. `clusters.kind` is judged over a cluster's whole life, with
+hindsight; an alert judges a cluster on its weeks so far. The naming pass's reading replaces this on
 the page, never for alerts: what's read with hindsight can't decide what fires.
 """
 
@@ -29,12 +29,12 @@ _CHATTY_WORDS = (
 )
 CHATTY = set(_CHATTY_WORDS.split())
 ONE_SENDER, EMPTY_SUBJECTS = 0.8, 0.15
-# Set on a blob's top 6 keywords; a blob-week stores 10.
+# Set on a cluster's top 6 keywords; a cluster-week stores 10.
 CHATTY_KEYWORDS = 6
 
 
 class Kind(StrEnum):
-    """What a blob is. Only a topic goes on the map."""
+    """What a cluster is. Only a topic goes on the map."""
 
     TOPIC = "topic"
     NEWSLETTER = "newsletter"
@@ -53,7 +53,7 @@ class Mail:
 
 @dataclass(frozen=True)
 class Trait:
-    """A blob in one week, for judging it."""
+    """A cluster in one week, for judging it."""
 
     chunks: int
     top_sender: float
@@ -72,7 +72,7 @@ def read(texts: Sequence[str]) -> Mail:
 
 
 def trait(mail: Mail, rows: NDArray[np.int64], words: Sequence[str]) -> Trait:
-    """A blob's week, from the pool rows it held and its keywords."""
+    """A cluster's week, from the pool rows it held and its keywords."""
     picked = rows.tolist()
     return Trait(
         chunks=len(picked),
@@ -84,7 +84,7 @@ def trait(mail: Mail, rows: NDArray[np.int64], words: Sequence[str]) -> Trait:
 
 
 def kind(weeks: Sequence[Trait]) -> Kind:
-    """A blob's kind from its whole life: one sender, footers, or mail with nothing to say."""
+    """A cluster's kind from its whole life: one sender, footers, or mail with nothing to say."""
     if np.median([w.top_sender for w in weeks]) >= ONE_SENDER:
         return Kind.NEWSLETTER
     footer = [w.footers >= 0.5 for w in weeks]

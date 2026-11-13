@@ -19,8 +19,8 @@ DEFAULT_SPAN = timedelta(weeks=4)
 LOOK_BACK = timedelta(weeks=8)
 
 ROWS = (
-    "SELECT bw.blob_id, b.kind, bw.week, bw.recent, bw.mail, bw.keywords FROM blob_weeks bw"
-    " JOIN blobs b ON b.id = bw.blob_id"
+    "SELECT bw.cluster_id, b.kind, bw.week, bw.recent, bw.mail, bw.keywords FROM cluster_weeks bw"
+    " JOIN clusters b ON b.id = bw.cluster_id"
     " WHERE b.kind = 'topic' AND b.shown AND bw.week BETWEEN %s AND %s ORDER BY bw.week"
 )
 
@@ -44,7 +44,7 @@ def run(desk: Desk, given: Input) -> ToolResult:
 
     Growth counts from the week before the first: a one-week range measured from its own first
     week gave every topic +0 and hid the Dynegy merger the week it fell apart (2026-11-10). A
-    topic missing that week (blobs skip weeks) takes its last week before it, up to `LOOK_BACK`.
+    topic missing that week (clusters skip weeks) takes its last week before it, up to `LOOK_BACK`.
     """
     until = desk.until(given.until)
     first, last = topics.weeks(given.since or until - DEFAULT_SPAN, until)
@@ -54,39 +54,39 @@ def run(desk: Desk, given: Input) -> ToolResult:
         return ToolResult([text(f"No radar weeks between {first} and {last}.")], "no weeks")
     weeks: dict[int, dict[date, tuple[int, int, list[str]]]] = defaultdict(dict)
     baseline: dict[int, int] = {}
-    for blob, built, week, recent, mail, keywords in rows:
-        if topics.kind(blob, built) != "topic":
+    for cluster, built, week, recent, mail, keywords in rows:
+        if topics.kind(cluster, built) != "topic":
             continue
         if week <= before:
-            baseline[blob] = recent  # rows come oldest first: the last one before the range wins
+            baseline[cluster] = recent  # rows come oldest first: the last one before the range wins
         else:
-            weeks[blob][week] = (recent, mail, keywords)
+            weeks[cluster][week] = (recent, mail, keywords)
     alerts: dict[int, int] = dict(
         desk.conn.execute(
-            "SELECT blob_id, count(*) FROM alerts WHERE day BETWEEN %s AND %s GROUP BY blob_id",
+            "SELECT cluster_id, count(*) FROM alerts WHERE day BETWEEN %s AND %s GROUP BY cluster_id",
             (first, last),
         ).fetchall()
     )
     found = []
-    for blob, seen in weeks.items():
+    for cluster, seen in weeks.items():
         latest = max(seen)
-        label = topics.name(blob, latest, seen[latest][2])
+        label = topics.name(cluster, latest, seen[latest][2])
         wanted = f"{label} {' '.join(w for row in seen.values() for w in row[2])}".lower()
         if given.words and not all(word in wanted for word in given.words.lower().split()):
             continue
-        start, end = baseline.get(blob, 0), (seen[last][0] if last in seen else 0)
+        start, end = baseline.get(cluster, 0), (seen[last][0] if last in seen else 0)
         size = sum(mail for _, mail, _ in seen.values()) / len(seen)
         found.append(
-            (blob, label, start, end, max(r for r, _, _ in seen.values()), size, seen[latest][2])
+            (cluster, label, start, end, max(r for r, _, _ in seen.values()), size, seen[latest][2])
         )
     key = (lambda t: t[3] - t[2]) if given.order == "growth" else (lambda t: t[5])
     found.sort(key=key, reverse=True)
     lines = [
         f"Topics, weeks ending {first} to {last}, by {given.order} since week ending {before}:"
     ] + [
-        f"topic {blob} · {label} · recent mail {start} → {end} ({end - start:+}) · peak {peak}"
-        f" · {size:.0f} mail a week · {alerts.get(blob, 0)} alerts · keywords: {', '.join(kw[:6])}"
-        for blob, label, start, end, peak, size, kw in found[: min(given.limit, MAX_TOPICS)]
+        f"topic {cluster} · {label} · recent mail {start} → {end} ({end - start:+}) · peak {peak}"
+        f" · {size:.0f} mail a week · {alerts.get(cluster, 0)} alerts · keywords: {', '.join(kw[:6])}"
+        for cluster, label, start, end, peak, size, kw in found[: min(given.limit, MAX_TOPICS)]
     ]
     if not found:
         lines.append("none match")

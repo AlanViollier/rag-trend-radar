@@ -81,17 +81,17 @@ def world(store: None) -> Iterator[dict[str, int]]:
             conn, MODEL, [i for i, _, _ in rows], np.eye(DIMS, dtype=np.float32)[: len(rows)]
         )
         conn.execute(
-            "INSERT INTO blobs (id, model, first_week, last_week, kind, shown)"
+            "INSERT INTO clusters (id, model, first_week, last_week, kind, shown)"
             " VALUES (900001, 'test', '2001-10-07', '2001-10-28', 'topic', true)"
         )
         for week, recent in (("2001-10-07", 2), ("2001-10-28", 40)):
             conn.execute(
-                "INSERT INTO blob_weeks VALUES (900001, %s, 0, '[1,0,0,0]', '{quokka,ledger}',"
+                "INSERT INTO cluster_weeks VALUES (900001, %s, 0, '[1,0,0,0]', '{quokka,ledger}',"
                 " %s, %s, %s, 0, 5.0, 0.0, true)",
                 (week, recent, recent, recent),
             )
         conn.execute(
-            "INSERT INTO alerts (day, blob_id, observed, expected) VALUES ('2001-10-28', 900001, 40, 2)"
+            "INSERT INTO alerts (day, cluster_id, observed, expected) VALUES ('2001-10-28', 900001, 40, 2)"
         )
     yield {external_id: document_id for _, external_id, document_id in rows}
     db.reset_radar()
@@ -189,7 +189,7 @@ def test_the_radar_is_for_the_investigator_only() -> None:
             with pytest.raises(ToolRefused):
                 call(desk, tool, {})
         # And if a tool were offered by mistake, row-level security still gives it nothing.
-        assert conn.execute("SELECT count(*) FROM blob_weeks").fetchall() == [(0,)]
+        assert conn.execute("SELECT count(*) FROM cluster_weeks").fetchall() == [(0,)]
 
 
 @pytest.mark.usefixtures("world")

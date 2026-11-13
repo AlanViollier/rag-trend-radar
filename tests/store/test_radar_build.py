@@ -1,4 +1,4 @@
-"""The blob tables from frames made by hand: what's written, and that a rebuild changes nothing."""
+"""The cluster tables from frames made by hand: what's written, and that a rebuild changes nothing."""
 
 from collections.abc import Iterator
 from datetime import date, timedelta
@@ -21,7 +21,7 @@ SIZE = 30
 
 @pytest.fixture
 def world(store: None) -> Iterator[tuple[Pool, list[int]]]:
-    """A blob about gas sent by many, a newsletter from one sender, with mail spread over the weeks."""
+    """A cluster about gas sent by many, a newsletter from one sender, with mail spread over the weeks."""
     rng = np.random.default_rng(0)
     axes = np.eye(DIMS, dtype=np.float32)
     ids, documents, texts, vectors, days = [], [], [], [], []
@@ -87,18 +87,18 @@ def _dump(table: str) -> list[tuple[object, ...]]:
         return conn.execute(f"SELECT * FROM {table} ORDER BY 1, 2").fetchall()  # noqa: S608
 
 
-def test_a_build_writes_blobs_weeks_chunks_and_days(world: tuple[Pool, list[int]]) -> None:
+def test_a_build_writes_clusters_weeks_chunks_and_days(world: tuple[Pool, list[int]]) -> None:
     chosen, ids = world
     made = _frames(WEEKS)
     with db.connect() as conn:
         found = build.write(conn, chosen, made, made, MODEL)
-    assert found["blobs"] == 2
-    assert found["blob_weeks"] == 2 * len(WEEKS)
-    assert found["blob_chunks"] == len(ids)
+    assert found["clusters"] == 2
+    assert found["cluster_weeks"] == 2 * len(WEEKS)
+    assert found["cluster_chunks"] == len(ids)
     with db.connect() as conn:
-        kinds = conn.execute("SELECT kind, shown FROM blobs ORDER BY id").fetchall()
+        kinds = conn.execute("SELECT kind, shown FROM clusters ORDER BY id").fetchall()
         held = conn.execute(
-            "SELECT min(first_week), max(last_week) FROM blob_chunks WHERE blob_id = 0"
+            "SELECT min(first_week), max(last_week) FROM cluster_chunks WHERE cluster_id = 0"
         ).fetchall()
         day = conn.execute(
             "SELECT sum(documents), sum(chunks), max(mailboxes), sum(radar_chunks) FROM day_totals"
@@ -111,7 +111,7 @@ def test_a_build_writes_blobs_weeks_chunks_and_days(world: tuple[Pool, list[int]
 def test_a_rebuild_changes_nothing(world: tuple[Pool, list[int]]) -> None:
     chosen, _ = world
     made = _frames(WEEKS)
-    tables = ("blobs", "blob_weeks", "blob_chunks", "day_totals", "alerts")
+    tables = ("clusters", "cluster_weeks", "cluster_chunks", "day_totals", "alerts")
     with db.connect() as conn:
         build.write(conn, chosen, made, made, MODEL)
     first = {t: _dump(t) for t in tables}
@@ -120,17 +120,17 @@ def test_a_rebuild_changes_nothing(world: tuple[Pool, list[int]]) -> None:
     assert {t: _dump(t) for t in tables} == first
 
 
-def test_a_blob_the_other_seed_never_found_isnt_shown(world: tuple[Pool, list[int]]) -> None:
+def test_a_cluster_the_other_seed_never_found_isnt_shown(world: tuple[Pool, list[int]]) -> None:
     chosen, _ = world
     with db.connect() as conn:
         build.write(conn, chosen, _frames(WEEKS), _frames(WEEKS, agree=False), MODEL)
     with db.connect() as conn:
-        shown = conn.execute("SELECT id, shown FROM blobs ORDER BY id").fetchall()
+        shown = conn.execute("SELECT id, shown FROM clusters ORDER BY id").fetchall()
     assert shown[0] == (0, True)
     assert shown[1] == (1, False)
 
 
-def test_a_short_lived_blob_isnt_shown_unless_the_mail_ended_first(
+def test_a_short_lived_cluster_isnt_shown_unless_the_mail_ended_first(
     world: tuple[Pool, list[int]],
 ) -> None:
     chosen, _ = world
@@ -141,16 +141,16 @@ def test_a_short_lived_blob_isnt_shown_unless_the_mail_ended_first(
     with db.connect() as conn:
         build.write(conn, chosen, middle, middle, MODEL)
     with db.connect() as conn:
-        assert conn.execute("SELECT count(*) FROM blobs WHERE shown").fetchall() == [(1,)]
+        assert conn.execute("SELECT count(*) FROM clusters WHERE shown").fetchall() == [(1,)]
     final = [Frame(w, rows, both if i >= 10 else steady) for i, w in enumerate(WEEKS)]
     with db.connect() as conn:
         build.write(conn, chosen, final, final, MODEL)
     with db.connect() as conn:
-        kinds = conn.execute("SELECT shown FROM blobs ORDER BY id").fetchall()
+        kinds = conn.execute("SELECT shown FROM clusters ORDER BY id").fetchall()
     assert kinds == [(True,), (False,)]
 
 
-def test_a_delete_then_a_rebuild_takes_the_chunk_out_and_leaves_other_blobs_their_mail(
+def test_a_delete_then_a_rebuild_takes_the_chunk_out_and_leaves_other_clusters_their_mail(
     world: tuple[Pool, list[int]], tmp_path: Path
 ) -> None:
     chosen, ids = world
@@ -161,7 +161,7 @@ def test_a_delete_then_a_rebuild_takes_the_chunk_out_and_leaves_other_blobs_thei
     saved = frames.load(chosen, WEEKS, tmp_path)
     with db.connect() as conn:
         build.write(conn, chosen, saved, saved, MODEL)
-    letters = _without_surge(_dump("blob_weeks")[len(WEEKS) :])
+    letters = _without_surge(_dump("cluster_weeks")[len(WEEKS) :])
     gone = ids[3]
     with db.connect() as conn:
         document = conn.execute("SELECT document_id FROM chunks WHERE id = %s", (gone,)).fetchall()
@@ -170,11 +170,11 @@ def test_a_delete_then_a_rebuild_takes_the_chunk_out_and_leaves_other_blobs_thei
     after = frames.load(left, WEEKS, tmp_path)
     with db.connect() as conn:
         build.write(conn, left, after, after, MODEL)
-        held = conn.execute("SELECT count(*) FROM blob_chunks WHERE chunk_id = %s", (gone,))
-        sizes = conn.execute("SELECT DISTINCT chunks FROM blob_weeks WHERE blob_id = 0")
+        held = conn.execute("SELECT count(*) FROM cluster_chunks WHERE chunk_id = %s", (gone,))
+        sizes = conn.execute("SELECT DISTINCT chunks FROM cluster_weeks WHERE cluster_id = 0")
         assert (held.fetchall(), sizes.fetchall()) == ([(0,)], [(SIZE - 1,)])
-    # Surge moves a little: it compares each blob against all mail, now one chunk less.
-    assert _without_surge(_dump("blob_weeks")[len(WEEKS) :]) == letters
+    # Surge moves a little: it compares each cluster against all mail, now one chunk less.
+    assert _without_surge(_dump("cluster_weeks")[len(WEEKS) :]) == letters
 
 
 def _without_surge(rows: list[tuple[object, ...]]) -> list[tuple[object, ...]]:

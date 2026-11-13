@@ -13,24 +13,24 @@ from psycopg.rows import TupleRow
 
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.days import cutoff
-from rag_trend_radar.radar import alerts, blob_kinds, links, signals
+from rag_trend_radar.radar import alerts, cluster_kinds, links, signals
 from rag_trend_radar.radar.clustering import NOISE, Pool
 from rag_trend_radar.radar.frames import Frame
 from rag_trend_radar.radar.words import keywords, reading_text
 
-# Seen across fewer than 9 weekly frames, a blob is a blip, unless the mail ends before it could prove itself.
+# Seen across fewer than 9 weekly frames, a cluster is a blip, unless the mail ends before it could prove itself.
 LASTING_WEEKS = 9
 ALIVE_AT_END = 2
 AGREED = 0.5
-# Enough to find what a blob is about; a blob's 7,000th chunk changes nothing, and costs memory.
+# Enough to find what a cluster is about; a cluster's 7,000th chunk changes nothing, and costs memory.
 KEYWORD_CHUNKS = 1500
 
 
 @dataclass(frozen=True)
-class BlobWeek:
-    """One blob in one week, seeing mail up to that week only."""
+class ClusterWeek:
+    """One cluster in one week, seeing mail up to that week only."""
 
-    blob: int
+    cluster: int
     week: date
     label: int
     centre: NDArray[np.float32]
@@ -40,8 +40,8 @@ class BlobWeek:
     other_seed: bool
 
 
-def blob_weeks(pool: Pool, frames: Sequence[Frame], other: Sequence[Frame]) -> list[BlobWeek]:
-    """Every blob's every week, oldest first, with `other` the second seed's frames."""
+def cluster_weeks(pool: Pool, frames: Sequence[Frame], other: Sequence[Frame]) -> list[ClusterWeek]:
+    """Every cluster's every week, oldest first, with `other` the second seed's frames."""
     lineage = links.lineages(frames)
     middle = {f.end: signals.centres(f, pool.vectors) for f in frames}
     index = {f.end: i for i, f in enumerate(frames)}
@@ -58,8 +58,8 @@ def blob_weeks(pool: Pool, frames: Sequence[Frame], other: Sequence[Frame]) -> l
         words = _words(frame, pool)
         agreed = set(links.same(twin, frame))
         found += [
-            BlobWeek(
-                blob=lineage[(frame.end, label)],
+            ClusterWeek(
+                cluster=lineage[(frame.end, label)],
                 week=frame.end,
                 label=label,
                 centre=middle[frame.end][label],
@@ -80,70 +80,72 @@ def write(
     other: Sequence[Frame],
     model: str,
 ) -> dict[str, int]:
-    """Replace the blob tables and the daily totals; the same frames give the same rows."""
-    weeks = blob_weeks(pool, frames, other)
-    by_blob: defaultdict[int, list[BlobWeek]] = defaultdict(list)
+    """Replace the cluster tables and the daily totals; the same frames give the same rows."""
+    weeks = cluster_weeks(pool, frames, other)
+    by_cluster: defaultdict[int, list[ClusterWeek]] = defaultdict(list)
     for week in weeks:
-        by_blob[week.blob].append(week)
+        by_cluster[week.cluster].append(week)
     frame_of = {f.end: f for f in frames}
     index = {f.end: i for i, f in enumerate(frames)}
-    mail = blob_kinds.read(pool.texts)
+    mail = cluster_kinds.read(pool.texts)
     traits = {
-        blob: [blob_kinds.trait(mail, _members(frame_of[w.week], w.label), w.words) for w in life]
-        for blob, life in by_blob.items()
+        cluster: [
+            cluster_kinds.trait(mail, _members(frame_of[w.week], w.label), w.words) for w in life
+        ]
+        for cluster, life in by_cluster.items()
     }
-    conn.execute("TRUNCATE blobs CASCADE")
-    shown = _write_blobs(conn, by_blob, traits, index, model)
+    conn.execute("TRUNCATE clusters CASCADE")
+    shown = _write_clusters(conn, by_cluster, traits, index, model)
     _write_weeks(conn, weeks)
     held = _held_weeks(pool, weeks, frame_of)
     _write_held(conn, held)
     days = _write_days(conn, pool)
     everything = {f.end: _recent_everywhere(f, pool) for f in frames}
-    raised = _write_alerts(conn, by_blob, traits, index, everything)
+    raised = _write_alerts(conn, by_cluster, traits, index, everything)
     return {
-        "blobs": len(by_blob),
+        "clusters": len(by_cluster),
         "shown": shown,
-        "blob_weeks": len(weeks),
-        "blob_chunks": len(held),
+        "cluster_weeks": len(weeks),
+        "cluster_chunks": len(held),
         "days": days,
         "alerts": raised,
     }
 
 
-def _write_blobs(
+def _write_clusters(
     conn: psycopg.Connection[TupleRow],
-    by_blob: Mapping[int, Sequence[BlobWeek]],
-    traits: Mapping[int, Sequence[blob_kinds.Trait]],
+    by_cluster: Mapping[int, Sequence[ClusterWeek]],
+    traits: Mapping[int, Sequence[cluster_kinds.Trait]],
     index: Mapping[date, int],
     model: str,
 ) -> int:
     shown = 0
     with conn.cursor() as cursor:
-        for blob, life in by_blob.items():
-            kind = blob_kinds.kind(traits[blob])
+        for cluster, life in by_cluster.items():
+            kind = cluster_kinds.kind(traits[cluster])
             visible = (
-                kind is blob_kinds.Kind.TOPIC
+                kind is cluster_kinds.Kind.TOPIC
                 and _lasted(index[life[0].week], index[life[-1].week], len(index))
                 and float(np.mean([w.other_seed for w in life])) >= AGREED
             )
             shown += visible
             cursor.execute(
-                "INSERT INTO blobs (id, model, first_week, last_week, kind, shown)"
+                "INSERT INTO clusters (id, model, first_week, last_week, kind, shown)"
                 " VALUES (%s, %s, %s, %s, %s, %s)",
-                (blob, model, life[0].week, life[-1].week, kind.value, visible),
+                (cluster, model, life[0].week, life[-1].week, kind.value, visible),
             )
     return shown
 
 
-def _write_weeks(conn: psycopg.Connection[TupleRow], weeks: Sequence[BlobWeek]) -> None:
+def _write_weeks(conn: psycopg.Connection[TupleRow], weeks: Sequence[ClusterWeek]) -> None:
     with conn.cursor() as cursor:
         cursor.executemany(
-            "INSERT INTO blob_weeks (blob_id, week, label, centre, keywords, chunks, mail, recent,"
+            "INSERT INTO cluster_weeks (cluster_id, week, label, centre, keywords, chunks, mail, recent,"
             " recent_press, surge, moving, other_seed)"
             " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
             [
                 (
-                    w.blob,
+                    w.cluster,
                     w.week,
                     w.label,
                     HalfVector(w.centre),
@@ -167,40 +169,40 @@ def _write_held(
     with (
         conn.cursor() as cursor,
         cursor.copy(
-            "COPY blob_chunks (blob_id, chunk_id, first_week, last_week) FROM STDIN"
+            "COPY cluster_chunks (cluster_id, chunk_id, first_week, last_week) FROM STDIN"
         ) as copy,
     ):
-        for (blob, chunk), (first, last) in held.items():
-            copy.write_row((blob, chunk, first, last))
+        for (cluster, chunk), (first, last) in held.items():
+            copy.write_row((cluster, chunk, first, last))
 
 
 def _write_alerts(
     conn: psycopg.Connection[TupleRow],
-    by_blob: Mapping[int, Sequence[BlobWeek]],
-    traits: Mapping[int, Sequence[blob_kinds.Trait]],
+    by_cluster: Mapping[int, Sequence[ClusterWeek]],
+    traits: Mapping[int, Sequence[cluster_kinds.Trait]],
     index: Mapping[date, int],
     everything: Mapping[date, int],
 ) -> int:
     raised = alerts.surges(
         {
-            blob: [
+            cluster: [
                 alerts.Week(index[w.week], w.week, w.counts.recent, w.counts.surge, w.other_seed, t)
-                for w, t in zip(life, traits[blob], strict=True)
+                for w, t in zip(life, traits[cluster], strict=True)
             ]
-            for blob, life in by_blob.items()
+            for cluster, life in by_cluster.items()
         },
         everything,
     )
     with conn.cursor() as cursor:
         cursor.executemany(
-            "INSERT INTO alerts (day, blob_id, observed, expected) VALUES (%s, %s, %s, %s)",
-            [(a.day, a.blob, a.observed, a.expected) for a in raised],
+            "INSERT INTO alerts (day, cluster_id, observed, expected) VALUES (%s, %s, %s, %s)",
+            [(a.day, a.cluster, a.observed, a.expected) for a in raised],
         )
     return len(raised)
 
 
 def _recent_everywhere(frame: Frame, pool: Pool) -> int:
-    """All the radar's chunks in the frame's last 4 weeks, in a blob or not."""
+    """All the radar's chunks in the frame's last 4 weeks, in a cluster or not."""
     days = np.array([pool.days[i].toordinal() for i in frame.rows.tolist()])
     return int((days > frame.end.toordinal() - signals.RECENT_DAYS).sum())
 
@@ -224,14 +226,14 @@ def _words(frame: Frame, pool: Pool) -> dict[int, list[str]]:
 
 
 def _held_weeks(
-    pool: Pool, weeks: Sequence[BlobWeek], frame_of: dict[date, Frame]
+    pool: Pool, weeks: Sequence[ClusterWeek], frame_of: dict[date, Frame]
 ) -> dict[tuple[int, int], tuple[date, date]]:
-    """(blob, chunk) → the first and last week the blob held it."""
+    """(cluster, chunk) → the first and last week the cluster held it."""
     held: dict[tuple[int, int], tuple[date, date]] = {}
     for w in weeks:
         for chunk in pool.chunk_ids[_members(frame_of[w.week], w.label)].tolist():
-            first = held.get((w.blob, chunk), (w.week, w.week))[0]
-            held[(w.blob, chunk)] = (first, w.week)
+            first = held.get((w.cluster, chunk), (w.week, w.week))[0]
+            held[(w.cluster, chunk)] = (first, w.week)
     return held
 
 

@@ -41,8 +41,8 @@ def _rows(
     frames.make(chosen, ends, 1, folder, RunLog("test", {}), min_size=20)
     made = frames.load(chosen, ends, folder)
     return {
-        (w.blob, w.week): (w.label, w.centre.tolist(), w.words, w.counts, w.moving, w.other_seed)
-        for w in build.blob_weeks(chosen, made, made)
+        (w.cluster, w.week): (w.label, w.centre.tolist(), w.words, w.counts, w.moving, w.other_seed)
+        for w in build.cluster_weeks(chosen, made, made)
     }
 
 
@@ -107,7 +107,7 @@ def test_a_deleted_chunk_drops_out_of_its_week_and_nothing_else_moves(tmp_path: 
     assert after == {k: v for k, v in before.items() if k != gone}
 
 
-def test_blobs_made_after_a_delete_still_line_up_with_the_saved_chunks(tmp_path: Path) -> None:
+def test_clusters_made_after_a_delete_still_line_up_with_the_saved_chunks(tmp_path: Path) -> None:
     chosen = _world(0)
     frames.make(chosen, [D], 1, tmp_path, RunLog("test", {}), min_size=20)
     next(tmp_path.glob("*-labels-*.npy")).unlink()

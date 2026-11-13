@@ -262,8 +262,8 @@ def _line_hash(line: str) -> int:
     return int.from_bytes(hashlib.blake2b(line.encode(), digest_size=8).digest())
 
 
-def _unpack(blob: bytes) -> Iterator[int]:
-    return (int.from_bytes(blob[i : i + 8]) for i in range(0, len(blob), 8))
+def _unpack(cluster: bytes) -> Iterator[int]:
+    return (int.from_bytes(cluster[i : i + 8]) for i in range(0, len(cluster), 8))
 
 
 def _collapsed_hash(text: str) -> str:

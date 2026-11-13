@@ -25,7 +25,7 @@ from rag_trend_radar.pages.radar.records import (
     Moment,
     Naming,
     PageAlert,
-    PageBlob,
+    PageCluster,
     PageData,
     PageDust,
     PageEvent,
@@ -34,9 +34,9 @@ from rag_trend_radar.pages.radar.records import (
 )
 from rag_trend_radar.records import Record
 
-# Weeks either side that calm a blob's size and its place, and its faster-moving numbers.
+# Weeks either side that calm a cluster's size and its place, and its faster-moving numbers.
 _SLOW, _QUICK = 4, 2
-_NEW_BLOB_DAYS = 28
+_NEW_CLUSTER_DAYS = 28
 # A sample of the chunks no cluster ever took, enough for a glow. Bulk mail is dropped after
 # sampling, as the radar drops it, so more are read than kept.
 _DUST, _DUST_READ = 4000, 6000
@@ -51,9 +51,9 @@ SHAPES = {
 
 @dataclass(frozen=True)
 class Seen:
-    """A blob in one week, as its table row holds it."""
+    """A cluster in one week, as its table row holds it."""
 
-    blob: int
+    cluster: int
     shown: bool
     week: date
     centre: NDArray[np.float32]
@@ -65,10 +65,10 @@ class Seen:
 
 @dataclass(frozen=True)
 class Fired:
-    """An alert's row, with when its blob was born."""
+    """An alert's row, with when its cluster was born."""
 
     day: date
-    blob: int
+    cluster: int
     observed: float
     expected: float
     born: date
@@ -105,19 +105,19 @@ class Tables:
 
 
 def read(conn: psycopg.Connection[TupleRow], model: str, dims: int, ends: Sequence[date]) -> Tables:
-    """Every blob, the alerts, and the store day by day."""
+    """Every cluster, the alerts, and the store day by day."""
     seen = [
         Seen(b, s, w, c.to_numpy(), tuple(k), m, r, u)
         for b, s, w, c, k, m, r, u in conn.execute(
             "SELECT b.id, b.shown, w.week, w.centre, w.keywords, w.mail, w.recent, w.surge"
-            " FROM blobs b JOIN blob_weeks w ON w.blob_id = b.id ORDER BY b.id, w.week"
+            " FROM clusters b JOIN cluster_weeks w ON w.cluster_id = b.id ORDER BY b.id, w.week"
         ).fetchall()
     ]
     fired = [
         Fired(*row)
         for row in conn.execute(
-            "SELECT a.day, a.blob_id, a.observed, a.expected, b.first_week FROM alerts a"
-            " JOIN blobs b ON b.id = a.blob_id ORDER BY a.day, a.blob_id"
+            "SELECT a.day, a.cluster_id, a.observed, a.expected, b.first_week FROM alerts a"
+            " JOIN clusters b ON b.id = a.cluster_id ORDER BY a.day, a.cluster_id"
         ).fetchall()
     ]
     days = [
@@ -146,7 +146,7 @@ def _dust(
             "SELECT v.embedding, (d.sent_at AT TIME ZONE %s)::date, c.text FROM chunks c"
             " JOIN documents d ON d.id = c.document_id JOIN {} v ON v.chunk_id = c.id"
             " WHERE d.sent_at >= %s AND d.sent_at < %s AND c.quote_chars = 0"
-            " AND NOT EXISTS (SELECT 1 FROM blob_chunks b WHERE b.chunk_id = c.id)"
+            " AND NOT EXISTS (SELECT 1 FROM cluster_chunks b WHERE b.chunk_id = c.id)"
             " ORDER BY c.text_hash LIMIT %s"
         ).format(vectors_identifier(model, dims)),
         (
@@ -174,30 +174,30 @@ def page(
     named: Sequence[Naming] = (),
     read_alerts: Sequence[AlertNote] = (),
 ) -> PageData:
-    """The whole page: every shown blob smoothed and placed, its names, the alerts, the weeks.
+    """The whole page: every shown cluster smoothed and placed, its names, the alerts, the weeks.
     What's been read by hand replaces the rough names and decides what's on the map."""
     where = {end: i for i, end in enumerate(ends)}
-    reading = {n.blob: n for n in named}
+    reading = {n.cluster: n for n in named}
     lives: defaultdict[int, list[Seen]] = defaultdict(list)
     for row in _as_read(tables.seen, named, where):
-        lives[row.blob].append(row)
+        lives[row.cluster].append(row)
     ordered = _shown_first(lives)
     flat, lifted, dust_flat, dust_lifted = _places(
         [life for _, life in ordered], tables.dust, where, len(ends)
     )
-    blobs = [
-        _blob(blob, life, where, flat[row], lifted[row], reading.get(blob))
-        for row, (blob, life) in enumerate(ordered)
+    clusters = [
+        _cluster(cluster, life, where, flat[row], lifted[row], reading.get(cluster))
+        for row, (cluster, life) in enumerate(ordered)
     ]
-    weeks = _weeks(tables, ends, blobs)
+    weeks = _weeks(tables, ends, clusters)
     stops = _moments(moments, tables.fired, where, weeks, events)
-    notes = {(m.day, m.blob): m for m in stops}
+    notes = {(m.day, m.cluster): m for m in stops}
     judged = _judged(read_alerts, tables.fired)
     return PageData(
         weeks=weeks,
-        blobs=tuple(blobs),
+        clusters=tuple(clusters),
         alerts=tuple(
-            _alert(f, where, notes.get((f.day, f.blob)), judged.get((f.day, f.blob)))
+            _alert(f, where, notes.get((f.day, f.cluster)), judged.get((f.day, f.cluster)))
             for f in tables.fired
         ),
         events=tuple(events),
@@ -221,25 +221,27 @@ def write(data: PageData, out: Path) -> int:
 def _as_read(
     seen: Sequence[Seen], named: Sequence[Naming], where: Mapping[date, int]
 ) -> list[Seen]:
-    """Each blob on or off the map as it was read. A name that fits no blob stops the export."""
+    """Each cluster on or off the map as it was read. A name that fits no cluster stops the export."""
     born: dict[int, date] = {}
     for row in seen:
-        born.setdefault(row.blob, row.week)
+        born.setdefault(row.cluster, row.week)
     for reading in named:
-        if born.get(reading.blob) != reading.first or any(w not in where for w, _ in reading.names):
-            raise ExportRefused(f"the names for blob {reading.blob} don't fit its weeks")
-    topics = {n.blob: n.kind == "topic" for n in named}
-    return [replace(r, shown=topics[r.blob]) if r.blob in topics else r for r in seen]
+        if born.get(reading.cluster) != reading.first or any(
+            w not in where for w, _ in reading.names
+        ):
+            raise ExportRefused(f"the names for cluster {reading.cluster} don't fit its weeks")
+    topics = {n.cluster: n.kind == "topic" for n in named}
+    return [replace(r, shown=topics[r.cluster]) if r.cluster in topics else r for r in seen]
 
 
 def _judged(
     read_alerts: Sequence[AlertNote], fired: Sequence[Fired]
 ) -> dict[tuple[date, int], AlertNote]:
-    alerts = {(f.day, f.blob) for f in fired}
+    alerts = {(f.day, f.cluster) for f in fired}
     for note in read_alerts:
-        if (note.day, note.blob) not in alerts:
-            raise ExportRefused(f"the note on {note.day} names no alert on blob {note.blob}")
-    return {(n.day, n.blob): n for n in read_alerts}
+        if (note.day, note.cluster) not in alerts:
+            raise ExportRefused(f"the note on {note.day} names no alert on cluster {note.cluster}")
+    return {(n.day, n.cluster): n for n in read_alerts}
 
 
 def _shown_first(lives: Mapping[int, list[Seen]]) -> list[tuple[int, list[Seen]]]:
@@ -252,7 +254,7 @@ def _places(
     where: Mapping[date, int],
     weeks: int,
 ) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
-    """Each blob's flat and lifted place every week, then the dust's. Only shown blobs shape the
+    """Each cluster's flat and lifted place every week, then the dust's. Only shown clusters shape the
     map or push apart."""
     main = [life for life in lives if life[0].shown]
     others = [life for life in lives if not life[0].shown]
@@ -330,14 +332,14 @@ def _wanted(
     return want
 
 
-def _blob(
-    blob: int,
+def _cluster(
+    cluster: int,
     life: Sequence[Seen],
     where: Mapping[date, int],
     flat: NDArray[np.float64],
     lifted: NDArray[np.float64],
     reading: Naming | None,
-) -> PageBlob:
+) -> PageCluster:
     seen = [where[r.week] for r in life]
     named = (
         tuple((where[week], name) for week, name in reading.names)
@@ -349,8 +351,8 @@ def _blob(
         return smooth.median(smooth.fill(seen, values), weeks)
 
     span = np.arange(seen[0], seen[-1] + 1)
-    return PageBlob(
-        id=blob,
+    return PageCluster(
+        id=cluster,
         first=seen[0],
         shown=life[0].shown,
         names=named,
@@ -366,7 +368,9 @@ def _blob(
     )
 
 
-def _weeks(tables: Tables, ends: Sequence[date], blobs: Sequence[PageBlob]) -> tuple[PageWeek, ...]:
+def _weeks(
+    tables: Tables, ends: Sequence[date], clusters: Sequence[PageCluster]
+) -> tuple[PageWeek, ...]:
     documents, chunks = tables.documents_before, tables.chunks_before
     days = iter(tables.days)
     day = next(days, None)
@@ -386,7 +390,9 @@ def _weeks(tables: Tables, ends: Sequence[date], blobs: Sequence[PageBlob]) -> t
                 chunks=chunks,
                 mail=sum(d.documents for d in this_week),
                 senders=max((d.senders for d in this_week), default=0),
-                live_blobs=sum(b.shown and b.first <= i < b.first + len(b.mail) for b in blobs),
+                live_clusters=sum(
+                    b.shown and b.first <= i < b.first + len(b.mail) for b in clusters
+                ),
             )
         )
     return tuple(weeks)
@@ -399,13 +405,15 @@ def _moments(
     weeks: Sequence[PageWeek],
     events: Sequence[PageEvent],
 ) -> tuple[PageMoment, ...]:
-    found = {(f.day, f.blob): f for f in fired}
+    found = {(f.day, f.cluster): f for f in fired}
     happened = {e.id: e for e in events}
     stops = []
     for moment in moments:
-        alert = found.get((moment.day, moment.blob))
+        alert = found.get((moment.day, moment.cluster))
         if alert is None:
-            raise ExportRefused(f"the moment on {moment.day} names no alert on blob {moment.blob}")
+            raise ExportRefused(
+                f"the moment on {moment.day} names no alert on cluster {moment.cluster}"
+            )
         week = where[moment.day]
         text = moment.text.format(
             observed=f"{round(alert.observed):,}",
@@ -419,7 +427,9 @@ def _moments(
             event = happened[moment.event]
             follows = f"{(moment.day - event.day).days} days after: {event.title}"
         stops.append(
-            PageMoment(day=moment.day, blob=moment.blob, text=text, week=week, follows=follows)
+            PageMoment(
+                day=moment.day, cluster=moment.cluster, text=text, week=week, follows=follows
+            )
         )
     return tuple(stops)
 
@@ -432,10 +442,10 @@ def _alert(
     return PageAlert(
         day=fired.day,
         week=where[fired.day],
-        blob=fired.blob,
+        cluster=fired.cluster,
         observed=round(fired.observed),
         normal=round(fired.expected, 1),
-        kind="new" if (fired.day - fired.born).days < _NEW_BLOB_DAYS else "speeding",
+        kind="new" if (fired.day - fired.born).days < _NEW_CLUSTER_DAYS else "speeding",
         headline=read.headline if read else "",
         note=moment.text if moment else note,
         follows=moment.follows if moment else "",

@@ -1,4 +1,4 @@
-"""When a blob earns an alert: it grows fast against its own normal, judged on mail up to its week.
+"""When a cluster earns an alert: it grows fast against its own normal, judged on mail up to its week.
 
 Tuned by eye over the whole run (owner 2026-11-07): about one alert every 9 days. Whether one
 mattered is read in the naming pass, as an investigator would.
@@ -8,9 +8,9 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 
-from rag_trend_radar.radar import blob_kinds
+from rag_trend_radar.radar import cluster_kinds
 
-# Times its own normal: a blob that doubles is busy, one that quadruples is news.
+# Times its own normal: a cluster that doubles is busy, one that quadruples is news.
 GROWTH = 4
 # Share of all the radar's mail in the same 4 weeks, so the bar follows how busy the company is.
 FLOOR = 0.01
@@ -19,22 +19,22 @@ QUIET_WEEKS = 8
 
 @dataclass(frozen=True)
 class Week:
-    """One blob in one week, as an alert sees it then."""
+    """One cluster in one week, as an alert sees it then."""
 
     index: int
     week: date
     recent: int
     surge: float
     other_seed: bool
-    trait: blob_kinds.Trait
+    trait: cluster_kinds.Trait
 
 
 @dataclass(frozen=True)
 class Alert:
-    """A blob growing fast on `day`: `observed` chunks in the last 4 weeks against `expected` normal."""
+    """A cluster growing fast on `day`: `observed` chunks in the last 4 weeks against `expected` normal."""
 
     day: date
-    blob: int
+    cluster: int
     observed: int
     expected: float
 
@@ -42,10 +42,10 @@ class Alert:
 def surges(lives: Mapping[int, Sequence[Week]], everything: Mapping[date, int]) -> list[Alert]:
     """Every growth alert, oldest first; `everything` is all radar mail in each week's last 4 weeks.
 
-    A blob's kind is judged on its weeks so far, never its whole life.
+    A cluster's kind is judged on its weeks so far, never its whole life.
     """
     raised = []
-    for blob, weeks in lives.items():
+    for cluster, weeks in lives.items():
         fired = -QUIET_WEEKS - 1
         for seen, w in enumerate(weeks):
             normal = w.recent - w.surge
@@ -54,8 +54,9 @@ def surges(lives: Mapping[int, Sequence[Week]], everything: Mapping[date, int]) 
                 and w.recent >= FLOOR * everything[w.week]
                 and w.other_seed
                 and w.index - fired > QUIET_WEEKS
-                and blob_kinds.kind([x.trait for x in weeks[: seen + 1]]) is blob_kinds.Kind.TOPIC
+                and cluster_kinds.kind([x.trait for x in weeks[: seen + 1]])
+                is cluster_kinds.Kind.TOPIC
             ):
-                raised.append(Alert(w.week, blob, w.recent, normal))
+                raised.append(Alert(w.week, cluster, w.recent, normal))
                 fired = w.index
-    return sorted(raised, key=lambda a: (a.day, a.blob))
+    return sorted(raised, key=lambda a: (a.day, a.cluster))

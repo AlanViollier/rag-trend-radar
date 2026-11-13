@@ -1,7 +1,7 @@
-"""One map and one set of blobs per week over the last 26 weeks of mail, each map started from the last.
+"""One map and one set of clusters per week over the last 26 weeks of mail, each map started from the last.
 
 Saved as files: a map takes a minute or two, and everything else is recomputed from them. Each week
-keeps the chunk ids it was made from, so a chunk deleted later just drops out of its blob. Those ids
+keeps the chunk ids it was made from, so a chunk deleted later just drops out of its cluster. Those ids
 are only good in the store that handed them out, so each folder records that store and refuses another.
 """
 
@@ -18,8 +18,8 @@ from rag_trend_radar.radar import clustering
 from rag_trend_radar.radar.clustering import NOISE
 from rag_trend_radar.run_log import RunLog
 
-# Locked with the owner 2026-11-05. 26 weeks: 8 and 16 kept a blob too briefly (median life, mail in
-# lasting blobs). First window Jan–Jul 2000: too little mail before. After Feb 2002 mailboxes empty out.
+# Locked with the owner 2026-11-05. 26 weeks: 8 and 16 kept a cluster too briefly (median life, mail in
+# lasting clusters). First window Jan–Jul 2000: too little mail before. After Feb 2002 mailboxes empty out.
 WEEKS, FIRST, LAST = 26, date(2000, 7, 2), date(2002, 2, 24)
 SEEDS = (1, 2)
 # Bump by hand when the clustering changes: a code hash would re-cluster 174 frames, about 3 hours,
@@ -31,7 +31,7 @@ STAMP = "store.txt"
 
 @dataclass(frozen=True)
 class Frame:
-    """One week: which pool rows its window holds, and each row's blob."""
+    """One week: which pool rows its window holds, and each row's cluster."""
 
     end: date
     rows: NDArray[np.int64]
@@ -58,7 +58,7 @@ def make(
     log: RunLog,
     min_size: int = clustering.MIN_SIZE,
 ) -> None:
-    """Fill `folder` with each week's map and blobs; a week already there is kept, so it resumes."""
+    """Fill `folder` with each week's map and clusters; a week already there is kept, so it resumes."""
     folder.mkdir(parents=True, exist_ok=True)
     if not any(folder.iterdir()):
         (folder / STAMP).write_text(pool.store)
@@ -84,7 +84,7 @@ def make(
         previous = rows, points
         labels_file = _labels_file(folder, end)
         if not labels_file.exists():
-            with log.stage("blobs") as handled:
+            with log.stage("clusters") as handled:
                 labels = clustering.drop_thin(
                     clustering.cluster(points, min_size), pool.document_ids[rows]
                 )

@@ -1,15 +1,15 @@
-"""A blob's rough name from its keywords, which changes only when the subject really does."""
+"""A cluster's rough name from its keywords, which changes only when the subject really does."""
 
 from collections import Counter
 from collections.abc import Sequence
 
-from rag_trend_radar.radar.blob_kinds import CHATTY
+from rag_trend_radar.radar.cluster_kinds import CHATTY
 
 NAME_WORDS = 3
 WIRE_NAME = "dow jones clips"
 # Weeks either side whose keywords count towards a week's name.
 _AROUND = 4
-# A blob-week's best words count, the best ones more.
+# A cluster-week's best words count, the best ones more.
 _READ = 6
 # A new name must hold for three quarters of the next 8 weeks.
 _AHEAD, _HOLD = 8, 0.75
@@ -23,7 +23,7 @@ _SAYS_NOTHING = CHATTY | set(_SAYS_NOTHING_WORDS.split())
 
 
 def rough(seen: Sequence[int], words: Sequence[Sequence[str]]) -> list[tuple[int, str]]:
-    """The blob's names as (week it starts, name), given the weeks it was seen and their keywords."""
+    """The cluster's names as (week it starts, name), given the weeks it was seen and their keywords."""
     first, last = seen[0], seen[-1]
     raw = {week: _words_around(week, seen, words) for week in range(first, last + 1)}
     current = raw[first]

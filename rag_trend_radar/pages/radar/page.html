@@ -163,12 +163,12 @@ button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-const { weeks, blobs, alerts, events, moments, dust } = JSON.parse(document.getElementById("data").textContent);
+const { weeks, clusters, alerts, events, moments, dust } = JSON.parse(document.getElementById("data").textContent);
 const WEEKS = weeks.length;
-const rows = blobs;
+const rows = clusters;
 const COUNT = rows.length;
-const MAIN = blobs.filter((b) => b.shown).length;
-const blobById = new Map(blobs.map((b) => [b.id, b]));
+const MAIN = clusters.filter((b) => b.shown).length;
+const clusterById = new Map(clusters.map((b) => [b.id, b]));
 const rowById = new Map(rows.map((b, row) => [b.id, row]));
 
 const RADIUS_PER_ROOT = 0.00085, RADIUS_BASE = 0.002;
@@ -184,27 +184,27 @@ const cells = () => new Float32Array(COUNT * WEEKS);
 const flatX = cells(), flatY = cells(), liftX = cells(), liftY = cells(), liftZ = cells(), size = cells();
 const alive = new Uint8Array(COUNT * WEEKS);
 
-rows.forEach((blob, row) => {
-  const last = blob.first + blob.mail.length - 1;
-  blob.mail.forEach((mail, k) => {
-    const week = blob.first + k, cell = at(row, week);
-    flatX[cell] = blob.x[k];
-    flatY[cell] = blob.y[k];
-    liftX[cell] = blob.lifted_x[k];
-    liftY[cell] = blob.lifted_y[k];
-    liftZ[cell] = blob.lifted_z[k];
+rows.forEach((cluster, row) => {
+  const last = cluster.first + cluster.mail.length - 1;
+  cluster.mail.forEach((mail, k) => {
+    const week = cluster.first + k, cell = at(row, week);
+    flatX[cell] = cluster.x[k];
+    flatY[cell] = cluster.y[k];
+    liftX[cell] = cluster.lifted_x[k];
+    liftY[cell] = cluster.lifted_y[k];
+    liftZ[cell] = cluster.lifted_z[k];
     alive[cell] = 1;
-    const growing = blob.first > 0 ? (k + 1) / FADE_WEEKS : 1;
+    const growing = cluster.first > 0 ? (k + 1) / FADE_WEEKS : 1;
     const dying = last < WEEKS - 1 ? (last - week + 1) / FADE_WEEKS : 1;
     size[cell] = mail * Math.min(growing, dying, 1);
   });
 });
 
-const value = (blob, series, week) => blob[series][week - blob.first];
+const value = (cluster, series, week) => cluster[series][week - cluster.first];
 
-function nameAt(blob, week) {
-  let name = blob.names[0][1];
-  for (const [from, text] of blob.names) if (from <= week) name = text;
+function nameAt(cluster, week) {
+  let name = cluster.names[0][1];
+  for (const [from, text] of cluster.names) if (from <= week) name = text;
   return name;
 }
 
@@ -415,7 +415,7 @@ function drawOver(placed, week, now) {
   over.lineJoin = "round";
   const lists = ranked[week];
   const order = [...lists.surge.slice(0, LABELLED_SURGE), ...lists.active.slice(0, LABELLED_ACTIVE)];
-  if (stopped && rowById.has(stopped.blob)) order.unshift(rowById.get(stopped.blob));
+  if (stopped && rowById.has(stopped.cluster)) order.unshift(rowById.get(stopped.cluster));
   const wanted = new Map();
   order.forEach((row, i) => { if (!wanted.has(row)) wanted.set(row, i); });
   const rank = (b) => wanted.get(b.row) ?? Infinity;
@@ -491,7 +491,7 @@ function drawPanel(week, now) {
   el("stats").innerHTML = [
     ["emails stored", number(w.documents)],
     ["this week", number(w.mail) + change(week)],
-    ["live clusters", number(w.live_blobs)],
+    ["live clusters", number(w.live_clusters)],
   ].map(([k, v]) => `<span>${k}</span><span>${v}</span>`).join("");
   const landed = feed.filter((item) => item.week <= week);
   if (landed.length !== feedCount) {
@@ -501,13 +501,13 @@ function drawPanel(week, now) {
       const what = item.kind === "new" ? "new subject" : "speeding up";
       const follows = item.follows ? `<small class="follows">${esc(item.follows)}</small>` : "";
       const note = item.note ? `<p>${esc(item.note)}</p>` : "";
-      return `<div class="alert ${item.weight}"><span class="name">${esc(item.headline || nameAt(blobById.get(item.blob), item.week))}</span><small>${shortFormat.format(parse(item.day))} · ${what} · ${number(item.observed)} in 4 weeks, normal ${number(Math.round(item.normal))}</small>${follows}${note}</div>`;
+      return `<div class="alert ${item.weight}"><span class="name">${esc(item.headline || nameAt(clusterById.get(item.cluster), item.week))}</span><small>${shortFormat.format(parse(item.day))} · ${what} · ${number(item.observed)} in 4 weeks, normal ${number(Math.round(item.normal))}</small>${follows}${note}</div>`;
     }).join("");
     el("alerts").scrollTop = 0;
   }
   if (playing && previous >= 0 && week > previous && week - previous <= 2) {
     for (const alert of alerts) {
-      if (alert.week > previous && alert.week <= week && rowById.has(alert.blob)) rings.push({ row: rowById.get(alert.blob), start: now });
+      if (alert.week > previous && alert.week <= week && rowById.has(alert.cluster)) rings.push({ row: rowById.get(alert.cluster), start: now });
     }
   }
 }
@@ -637,8 +637,8 @@ function frame(now) {
   current = placed;
   const week = Math.round(time);
   drawPanel(week, now);
-  if (stopped && now >= ringAt && rowById.has(stopped.blob)) {
-    rings.push({ row: rowById.get(stopped.blob), start: now });
+  if (stopped && now >= ringAt && rowById.has(stopped.cluster)) {
+    rings.push({ row: rowById.get(stopped.cluster), start: now });
     ringAt = now + RING_MS;
   }
   if (stopped) el("caption-left").style.transform = `scaleX(${Math.max(0, (stopUntil - now) / stopLength)})`;
@@ -650,32 +650,32 @@ function frame(now) {
 }
 
 function drawCard(week) {
-  const blob = rows[hovered];
-  if (week < blob.first || week >= blob.first + blob.mail.length) return;
-  el("c-name").textContent = nameAt(blob, week);
-  const peak = blob.recent.indexOf(Math.max(...blob.recent));
-  el("c-was").textContent = `born ${dateFormat.format(parse(weeks[blob.first].day))} · peak ${number(blob.recent[peak])} on ${shortFormat.format(parse(weeks[blob.first + peak].day))}${blob.shown ? "" : " · not one of the main subjects"}`;
-  el("c-now").textContent = `${number(value(blob, "recent", week))} emails in the last 4 weeks`;
-  const fired = alerts.filter((a) => a.blob === blob.id);
+  const cluster = rows[hovered];
+  if (week < cluster.first || week >= cluster.first + cluster.mail.length) return;
+  el("c-name").textContent = nameAt(cluster, week);
+  const peak = cluster.recent.indexOf(Math.max(...cluster.recent));
+  el("c-was").textContent = `born ${dateFormat.format(parse(weeks[cluster.first].day))} · peak ${number(cluster.recent[peak])} on ${shortFormat.format(parse(weeks[cluster.first + peak].day))}${cluster.shown ? "" : " · not one of the main subjects"}`;
+  el("c-now").textContent = `${number(value(cluster, "recent", week))} emails in the last 4 weeks`;
+  const fired = alerts.filter((a) => a.cluster === cluster.id);
   el("c-alerts").textContent = fired.length ? `${fired.length} alert${fired.length > 1 ? "s" : ""}` : "";
   const canvas = el("c-spark"), box = canvas.getBoundingClientRect(), ratio = window.devicePixelRatio || 1;
   canvas.width = box.width * ratio;
   canvas.height = box.height * ratio;
   const c = canvas.getContext("2d");
   c.setTransform(ratio, 0, 0, ratio, 0, 0);
-  const most = Math.max(...blob.recent, 1), last = blob.recent.length - 1 || 1;
+  const most = Math.max(...cluster.recent, 1), last = cluster.recent.length - 1 || 1;
   const across = (i) => (i / last) * box.width, up = (v) => box.height - 3 - (v / most) * (box.height - 9);
   c.strokeStyle = "#EDE6D8";
   c.lineWidth = 1;
   c.beginPath();
-  blob.recent.forEach((v, i) => { if (i) c.lineTo(across(i), up(v)); else c.moveTo(across(i), up(v)); });
+  cluster.recent.forEach((v, i) => { if (i) c.lineTo(across(i), up(v)); else c.moveTo(across(i), up(v)); });
   c.stroke();
   c.fillStyle = "#EA580C";
-  c.fillRect(across(week - blob.first), 0, 1, box.height);
+  c.fillRect(across(week - cluster.first), 0, 1, box.height);
   c.fillStyle = "#F06A25";
   for (const alert of fired) {
     c.beginPath();
-    c.arc(across(alert.week - blob.first), up(blob.recent[alert.week - blob.first]), 3, 0, 7);
+    c.arc(across(alert.week - cluster.first), up(cluster.recent[alert.week - cluster.first]), 3, 0, 7);
     c.fill();
   }
 }

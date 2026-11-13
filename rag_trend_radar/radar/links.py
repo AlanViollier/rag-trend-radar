@@ -1,4 +1,4 @@
-"""Which blob this week is which blob last week: by the chunks they share, chained into lineages."""
+"""Which cluster this week is which cluster last week: by the chunks they share, chained into lineages."""
 
 from collections import defaultdict
 from collections.abc import Sequence
@@ -10,16 +10,16 @@ import numpy as np
 from rag_trend_radar.radar.clustering import NOISE
 from rag_trend_radar.radar.frames import Frame
 
-# Same blob: each other's biggest overlap, with this share of each side. Weaker counts as nothing:
+# Same cluster: each other's biggest overlap, with this share of each side. Weaker counts as nothing:
 # seed noise alone produces links under 10 chunks.
 SHARE, MIN_SHARED = 0.3, 10
-# Eight weeks of absence at most: a blob near the size limit drops out and returns.
+# Eight weeks of absence at most: a cluster near the size limit drops out and returns.
 BRIDGE = 7
 
 
 @dataclass(frozen=True)
 class Overlap:
-    """Chunks two blobs share, and that as a share of what each side shared with anything."""
+    """Chunks two clusters share, and that as a share of what each side shared with anything."""
 
     shared: int
     of_first: float
@@ -27,7 +27,7 @@ class Overlap:
 
 
 def overlaps(first: Frame, second: Frame) -> dict[tuple[int, int], Overlap]:
-    """Every pair of blobs sharing enough chunks, from the rows in a blob in both frames."""
+    """Every pair of clusters sharing enough chunks, from the rows in a cluster in both frames."""
     _, in_first, in_second = np.intersect1d(first.rows, second.rows, return_indices=True)
     a, b = first.labels[in_first], second.labels[in_second]
     placed = (a != NOISE) & (b != NOISE)
@@ -47,7 +47,7 @@ def overlaps(first: Frame, second: Frame) -> dict[tuple[int, int], Overlap]:
 
 
 def same(first: Frame, second: Frame) -> dict[int, int]:
-    """Second-frame blob → the first-frame blob it continues."""
+    """Second-frame cluster → the first-frame cluster it continues."""
     found = overlaps(first, second)
     best_out: dict[int, int] = {}
     best_in: dict[int, int] = {}
@@ -67,12 +67,12 @@ def same(first: Frame, second: Frame) -> dict[int, int]:
 
 
 def lineages(frames: Sequence[Frame], bridge: int = BRIDGE) -> dict[tuple[date, int], int]:
-    """A lineage number per (week, blob), going forward only: no later week changes an earlier one."""
+    """A lineage number per (week, cluster), going forward only: no later week changes an earlier one."""
     found: dict[tuple[date, int], int] = {}
     fresh = 0
     for i, frame in enumerate(frames):
         continued = same(frames[i - 1], frame) if i else {}
-        for label in _blobs(frame):
+        for label in _clusters(frame):
             if label in continued:
                 found[(frame.end, label)] = found[(frames[i - 1].end, continued[label])]
             else:
@@ -81,7 +81,7 @@ def lineages(frames: Sequence[Frame], bridge: int = BRIDGE) -> dict[tuple[date, 
         if not i:
             continue
         settled = set(continued)
-        taken = {found[(frames[i - 1].end, label)] for label in _blobs(frames[i - 1])}
+        taken = {found[(frames[i - 1].end, label)] for label in _clusters(frames[i - 1])}
         for back in range(2, min(bridge, i - 1) + 2):
             earlier = frames[i - back]
             for v, u in same(earlier, frame).items():
@@ -90,9 +90,9 @@ def lineages(frames: Sequence[Frame], bridge: int = BRIDGE) -> dict[tuple[date, 
                     found[(frame.end, v)] = lineage
                     settled.add(v)
                     taken.add(lineage)
-            taken |= {found[(earlier.end, label)] for label in _blobs(earlier)}
+            taken |= {found[(earlier.end, label)] for label in _clusters(earlier)}
     return found
 
 
-def _blobs(frame: Frame) -> list[int]:
+def _clusters(frame: Frame) -> list[int]:
     return sorted(set(frame.labels.tolist()) - {NOISE})

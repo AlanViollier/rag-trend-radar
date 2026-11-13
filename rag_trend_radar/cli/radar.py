@@ -31,7 +31,7 @@ def radar_reset() -> None:
 
 @app.command()
 def radar_frames(first: str = "", last: str = "") -> None:
-    """Make each week's map and blobs on both seeds, saved as files; resumes where it stopped (free).
+    """Make each week's map and clusters on both seeds, saved as files; resumes where it stopped (free).
 
     About 2 minutes a week per seed. Leaves the store alone: `radar-build` reads the files.
     """
@@ -53,7 +53,7 @@ def radar_frames(first: str = "", last: str = "") -> None:
 
 @app.command()
 def radar_build() -> None:
-    """Rebuild the blob tables and daily totals from the saved frames; changes nothing if rerun (free)."""
+    """Rebuild the cluster tables and daily totals from the saved frames; changes nothing if rerun (free)."""
     settings = get_settings()
     log = RunLog("build", {"model": settings.embedding_model})
     ends = frames.week_ends()
@@ -88,10 +88,14 @@ def radar_export(out: Path = PAGE) -> None:
             export.records_from(NAMES, Naming),
             export.records_from(ALERT_NOTES, AlertNote),
         )
-        handled.items = len(data.blobs)
+        handled.items = len(data.clusters)
     with log.stage("write"):
         log.results["bytes"] = export.write(data, out)
-    log.results |= {"weeks": len(data.weeks), "blobs": len(data.blobs), "alerts": len(data.alerts)}
+    log.results |= {
+        "weeks": len(data.weeks),
+        "clusters": len(data.clusters),
+        "alerts": len(data.alerts),
+    }
     path = log.save(settings.data_dir / "reports" / "radar")
     _show(log.run())
     show(f"{out}, saved → {path}", file=sys.stderr)

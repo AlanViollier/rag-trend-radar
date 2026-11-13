@@ -25,23 +25,24 @@ def radar(store: None) -> Iterator[None]:
             " SELECT id, 0, 'Gas prices.', 'radar-test-hash' FROM documents"
             " WHERE source = 'radar-test' RETURNING id"
         ).fetchall()[0][0]
-        blob = conn.execute(
-            "INSERT INTO blobs (id, model, first_week, last_week, kind, shown)"
+        cluster = conn.execute(
+            "INSERT INTO clusters (id, model, first_week, last_week, kind, shown)"
             " VALUES (1, 'test', '2001-09-09', '2001-09-09', 'topic', true) RETURNING id"
         ).fetchall()[0][0]
         conn.execute(
-            "INSERT INTO blob_weeks VALUES"
+            "INSERT INTO cluster_weeks VALUES"
             " (%s, '2001-09-09', 0, %s, '{gas}', 1, 1, 1, 0, 0.5, 0.0, true)",
-            (blob, VECTOR),
+            (cluster, VECTOR),
         )
         conn.execute(
-            "INSERT INTO blob_chunks VALUES (%s, %s, '2001-09-09', '2001-09-09')", (blob, chunk)
+            "INSERT INTO cluster_chunks VALUES (%s, %s, '2001-09-09', '2001-09-09')",
+            (cluster, chunk),
         )
         conn.execute("INSERT INTO day_totals VALUES ('2001-09-10', 1, 1, 1, 1, 1, 0)")
         conn.execute(
-            "INSERT INTO alerts (day, blob_id, observed, expected)"
+            "INSERT INTO alerts (day, cluster_id, observed, expected)"
             " VALUES ('2001-09-10', %s, 0.2, 0.1)",
-            (blob,),
+            (cluster,),
         )
     yield
     db.reset_radar()
@@ -81,19 +82,19 @@ def test_a_radar_reset_empties_the_radar_and_leaves_the_store() -> None:
 
 
 @pytest.mark.usefixtures("radar")
-def test_a_deleted_chunk_leaves_the_blob() -> None:
+def test_a_deleted_chunk_leaves_the_cluster() -> None:
     with db.connect() as conn:
         conn.execute(
             "DELETE FROM chunks WHERE document_id IN"
             " (SELECT id FROM documents WHERE source = 'radar-test')"
         )
-    assert _count(None, "blob_chunks") == 0
+    assert _count(None, "cluster_chunks") == 0
 
 
 @pytest.mark.usefixtures("radar")
 def test_re_raising_the_same_alert_is_refused() -> None:
     with db.connect() as conn, pytest.raises(psycopg.errors.UniqueViolation):
         conn.execute(
-            "INSERT INTO alerts (day, blob_id, observed, expected)"
-            " SELECT day, blob_id, observed, expected FROM alerts"
+            "INSERT INTO alerts (day, cluster_id, observed, expected)"
+            " SELECT day, cluster_id, observed, expected FROM alerts"
         )

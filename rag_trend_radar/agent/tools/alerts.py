@@ -14,9 +14,9 @@ MAX_ALERTS = 60
 DEFAULT_SPAN = timedelta(weeks=8)
 
 ALERTS = (
-    "SELECT a.day, a.blob_id, b.kind, a.observed, a.expected, (SELECT bw.keywords FROM blob_weeks bw"
-    " WHERE bw.blob_id = a.blob_id AND bw.week <= a.day ORDER BY bw.week DESC LIMIT 1)"
-    " FROM alerts a JOIN blobs b ON b.id = a.blob_id"
+    "SELECT a.day, a.cluster_id, b.kind, a.observed, a.expected, (SELECT bw.keywords FROM cluster_weeks bw"
+    " WHERE bw.cluster_id = a.cluster_id AND bw.week <= a.day ORDER BY bw.week DESC LIMIT 1)"
+    " FROM alerts a JOIN clusters b ON b.id = a.cluster_id"
     " WHERE a.day BETWEEN %s AND %s ORDER BY a.day LIMIT %s"
 )
 
@@ -34,16 +34,16 @@ def run(desk: Desk, given: Input) -> ToolResult:
     since = given.since or until - DEFAULT_SPAN
     rows = desk.conn.execute(ALERTS, (since, until, MAX_ALERTS)).fetchall()
     lines = [f"Alerts from {since} to {until}:"] + [
-        f"{day} · topic {blob} · {topics.name(blob, day, keywords or [])}{_unless_topic(blob, built)}"
+        f"{day} · topic {cluster} · {topics.name(cluster, day, keywords or [])}{_unless_topic(cluster, built)}"
         f" · {observed / expected:.1f} times its normal"
         f" ({observed:.0f} chunks in 4 weeks, normal {expected:.0f})"
-        for day, blob, built, observed, expected, keywords in rows
+        for day, cluster, built, observed, expected, keywords in rows
     ]
     if not rows:
         lines.append("none")
     return ToolResult([text("\n".join(lines))], f"{len(rows)} alerts, {since} to {until}")
 
 
-def _unless_topic(blob: int, built: str) -> str:
-    sort = topics.kind(blob, built)
+def _unless_topic(cluster: int, built: str) -> str:
+    sort = topics.kind(cluster, built)
     return "" if sort == "topic" else f" ({sort})"

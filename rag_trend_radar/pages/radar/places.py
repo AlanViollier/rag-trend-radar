@@ -1,4 +1,4 @@
-"""Where each blob sits: one map for the whole run, then pushed apart week by week so bubbles don't overlap."""
+"""Where each cluster sits: one map for the whole run, then pushed apart week by week so bubbles don't overlap."""
 
 from typing import cast
 
@@ -10,12 +10,12 @@ from rag_trend_radar.pages.radar import smooth
 
 # A bubble's radius, as a share of the map's side: area follows the mail.
 RADIUS_PER_ROOT, RADIUS_BASE = 0.00085, 0.002
-# 60 neighbours keeps a blob's weeks together, and the map's large shape over the whole run.
+# 60 neighbours keeps a cluster's weeks together, and the map's large shape over the whole run.
 _NEIGHBOURS, _MIN_DIST, _SEED = 60, 0.6, 1
 # How a lifted map begins: the flat one at UMAP's own scale, with some depth to grow from.
 _START_SCALE, _START_DEPTH = 10.0, 1.0
 _MARGIN = 0.06
-# Each week starts mostly where the last ended, so a blob drifts instead of jumping.
+# Each week starts mostly where the last ended, so a cluster drifts instead of jumping.
 _KEEP = 0.925
 _ROOM, _PUSHES, _PUSH, _PULL = 1.25, 50, 0.25, 0.01
 _EDGE = 0.02
@@ -30,7 +30,7 @@ def radius(mail: NDArray[np.float64]) -> NDArray[np.float64]:
 def map_points(
     main: NDArray[np.float32], others: NDArray[np.float32]
 ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-    """Blob-week centres as points in the unit square: `main` shapes the map, `others` join it."""
+    """Cluster-week centres as points in the unit square: `main` shapes the map, `others` join it."""
     reducer = UMAP(
         n_components=2,
         n_neighbors=_NEIGHBOURS,
@@ -44,7 +44,7 @@ def map_points(
 def lift(
     main: NDArray[np.float32], flat: NDArray[np.float64], others: NDArray[np.float32]
 ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-    """The same blob-weeks in three dimensions, started from the flat map so neighbours stay put."""
+    """The same cluster-weeks in three dimensions, started from the flat map so neighbours stay put."""
     depth = np.random.default_rng(_SEED).normal(0, _START_DEPTH, len(flat))
     reducer = UMAP(
         n_components=3,
@@ -58,9 +58,9 @@ def lift(
 
 
 def pack(want: NDArray[np.float64], mail: NDArray[np.float64]) -> NDArray[np.float64]:
-    """Where each blob (row) goes each week (column), given where it wants to be and its mail.
+    """Where each cluster (row) goes each week (column), given where it wants to be and its mail.
 
-    NaN in `want` means the blob isn't alive that week, and stays NaN.
+    NaN in `want` means the cluster isn't alive that week, and stays NaN.
     """
     alive = ~np.isnan(want[:, :, 0])
     placed = np.full_like(want, np.nan)

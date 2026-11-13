@@ -1,4 +1,4 @@
-"""The data inside the page. A blob's lists run week by week from its `first` week."""
+"""The data inside the page. A cluster's lists run week by week from its `first` week."""
 
 from datetime import date
 from pathlib import Path
@@ -16,11 +16,11 @@ class PageWeek(Record):
     chunks: int
     mail: int
     senders: int
-    live_blobs: int
+    live_clusters: int
 
 
-class PageBlob(Record):
-    """A blob smoothed for the picture, later mail allowed. `shown` false: only in the full view."""
+class PageCluster(Record):
+    """A cluster smoothed for the picture, later mail allowed. `shown` false: only in the full view."""
 
     id: int
     first: int
@@ -38,11 +38,11 @@ class PageBlob(Record):
 
 
 class PageAlert(Record):
-    """An alert as it fired. `new` is a blob under 4 weeks old, whose normal is close to nothing."""
+    """An alert as it fired. `new` is a cluster under 4 weeks old, whose normal is close to nothing."""
 
     day: date
     week: int
-    blob: int
+    cluster: int
     observed: int
     normal: float
     kind: Literal["new", "speeding"]
@@ -60,15 +60,15 @@ class PageEvent(Record):
     title: str
 
 
-# Every blob as the naming pass read it, one Naming a line.
-NAMES = Path("curated/radar/blob_names.jsonl")
+# Every cluster as the naming pass read it, one Naming a line.
+NAMES = Path("curated/radar/cluster_names.jsonl")
 
 
 class Naming(Record):
-    """A blob as a person read it, for the page only: alerts never see this. `names` are (week it
+    """A cluster as a person read it, for the page only: alerts never see this. `names` are (week it
     starts, name); only a `topic` goes on the map."""
 
-    blob: int
+    cluster: int
     first: date
     kind: Literal["topic", "newsletter", "footer", "chatter"]
     family: str
@@ -79,7 +79,7 @@ class AlertNote(Record):
     """An alert as a person read it: bold for a real story, muted for junk, empty for routine."""
 
     day: date
-    blob: int
+    cluster: int
     weight: Literal["bold", "", "muted"]
     headline: str = ""
     note: str = ""
@@ -90,7 +90,7 @@ class Moment(Record):
     `event` is the id of the real event it follows, if there's one."""
 
     day: date
-    blob: int
+    cluster: int
     text: str
     event: str = ""
 
@@ -117,7 +117,7 @@ class PageData(Record):
     """Everything the replay draws."""
 
     weeks: tuple[PageWeek, ...]
-    blobs: tuple[PageBlob, ...]
+    clusters: tuple[PageCluster, ...]
     alerts: tuple[PageAlert, ...]
     events: tuple[PageEvent, ...]
     moments: tuple[PageMoment, ...]

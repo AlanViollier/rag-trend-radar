@@ -1,4 +1,4 @@
-"""Find blobs: the chunks a period's clustering runs on, the map they're clustered on, the clusters."""
+"""Find clusters: the chunks a period's clustering runs on, the map they're clustered on, the clusters."""
 
 from dataclasses import dataclass
 from datetime import date, timedelta
@@ -21,7 +21,7 @@ NOISE = -1
 # 100 on the weekly windows (2026-11-05): 50 neighbours moved the map more and broke a frame.
 SQUASH, NEIGHBORS, MIN_SIZE, MIN_SAMPLES = 5, 15, 100, 5
 MIN_DOCUMENTS = 5
-# HDBSCAN can keep one blob of 95% of a frame at cohesion .837, which `drop_loose` then dumps whole.
+# HDBSCAN can keep one cluster of 95% of a frame at cohesion .837, which `drop_loose` then dumps whole.
 # A cap on every frame costs 2.5 points of noise, so only a frame that would break gets one.
 GIANT, CAP = 0.3, 0.05
 # Topics from Jan–Jun 2000 start at about .86 (5th percentile); the one that swallowed the mail, .83.
@@ -116,7 +116,7 @@ def squash(
 
     In 768 numbers every chunk sits about as far from every other, so density-based clustering
     only finds near-copies. A fixed seed makes it reproducible and single-threaded. `start` is where
-    each chunk begins: the last map, so the new one moves 5x less for nearly the same blobs.
+    each chunk begins: the last map, so the new one moves 5x less for nearly the same clusters.
     """
     return np.asarray(
         UMAP(
@@ -134,7 +134,7 @@ def squash(
 def cluster(
     points: NDArray[np.float32], min_size: int = MIN_SIZE, min_samples: int = MIN_SAMPLES
 ) -> NDArray[np.int64]:
-    """A cluster number per row, `NOISE` for a row in none; no blob swallows the frame.
+    """A cluster number per row, `NOISE` for a row in none; no cluster swallows the frame.
 
     On length-1 vectors straight-line distance orders pairs as cosine does, and the trees that keep
     memory flat need a metric like it: pairwise cosine would hold every pair, ~5 GB at 25k chunks.

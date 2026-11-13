@@ -14,9 +14,9 @@ RADAR_SQL = Path(__file__).with_name("radar.sql")
 RADAR_TABLES = (
     "alerts",
     "day_totals",
-    "blob_chunks",
-    "blob_weeks",
-    "blobs",
+    "cluster_chunks",
+    "cluster_weeks",
+    "clusters",
 )
 INVESTIGATOR = "investigator"
 # The graph walk keeps this many candidates (default 40). A filter drops most of them, so at 40

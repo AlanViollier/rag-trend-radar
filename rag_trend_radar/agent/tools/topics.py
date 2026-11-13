@@ -15,29 +15,29 @@ def weeks(since: date, until: date) -> tuple[date, date]:
     return week_of(since), last if last <= until else last - timedelta(weeks=1)
 
 
-def name(blob: int, week: date, keywords: Sequence[str]) -> str:
-    """The name the naming pass gave a blob by `week`, or its top keywords when it has none.
+def name(cluster: int, week: date, keywords: Sequence[str]) -> str:
+    """The name the naming pass gave a cluster by `week`, or its top keywords when it has none.
 
-    Names were written reading each blob's whole life; only names dated on or before `week` show,
+    Names were written reading each cluster's whole life; only names dated on or before `week` show,
     so a topic isn't called what it later became.
     """
-    reading = _named().get(blob)
+    reading = _named().get(cluster)
     known = [label for start, label in reading.names if start <= week] if reading else []
     return known[-1] if known else ", ".join(keywords[:4])
 
 
-def kind(blob: int, built: str) -> str:
+def kind(cluster: int, built: str) -> str:
     """Topic, newsletter, footer or chatter: the naming pass's reading, else the build's rule."""
-    reading = _named().get(blob)
+    reading = _named().get(cluster)
     return reading.kind if reading else built
 
 
-def every_name(blob: int, until: date) -> list[tuple[date, str]]:
-    """Every name a blob had up to `until`, with the week it started."""
-    reading = _named().get(blob)
+def every_name(cluster: int, until: date) -> list[tuple[date, str]]:
+    """Every name a cluster had up to `until`, with the week it started."""
+    reading = _named().get(cluster)
     return [(start, label) for start, label in reading.names if start <= until] if reading else []
 
 
 @cache
 def _named() -> dict[int, Naming]:
-    return {reading.blob: reading for reading in records_from(NAMES, Naming)}
+    return {reading.cluster: reading for reading in records_from(NAMES, Naming)}

@@ -1,4 +1,4 @@
-"""What a blob is doing in a week, from mail up to that week only: size, activity, surge, movement."""
+"""What a cluster is doing in a week, from mail up to that week only: size, activity, surge, movement."""
 
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -9,20 +9,20 @@ from numpy.typing import NDArray
 from rag_trend_radar.radar.clustering import NOISE, Pool
 from rag_trend_radar.radar.frames import Frame
 
-# A chunk in no blob counts for one when it's closer than the blob's own loosest tenth, and clearly
+# A chunk in no cluster counts for one when it's closer than the cluster's own loosest tenth, and clearly
 # nearer than the runner-up. For counting only: linking with them lowers seed agreement.
 NEAR_PERCENTILE, NEAR_MARGIN = 10, 0.01
 RECENT_DAYS = 28
-# Keeps a blob with almost no older mail from dividing by nothing's worth of history.
+# Keeps a cluster with almost no older mail from dividing by nothing's worth of history.
 _PRIOR = 5
 # Half-lives in weeks. Centres wobble about as much as they move in one week, so raw weekly steps
-# or a blob's speed find mostly noise; two averages apart find a direction it's been holding.
+# or a cluster's speed find mostly noise; two averages apart find a direction it's been holding.
 FAST, SLOW = 2, 8
 
 
 @dataclass(frozen=True)
 class Counts:
-    """A blob's mail in one week's window."""
+    """A cluster's mail in one week's window."""
 
     chunks: int
     mail: int
@@ -32,7 +32,7 @@ class Counts:
 
 
 def centres(frame: Frame, vectors: NDArray[np.float32]) -> dict[int, NDArray[np.float32]]:
-    """Each blob's centre in the full 768 numbers, length 1."""
+    """Each cluster's centre in the full 768 numbers, length 1."""
     window = vectors[frame.rows]
     found = {}
     for label in sorted(set(frame.labels.tolist()) - {NOISE}):
@@ -42,7 +42,7 @@ def centres(frame: Frame, vectors: NDArray[np.float32]) -> dict[int, NDArray[np.
 
 
 def counted(frame: Frame, vectors: NDArray[np.float32]) -> NDArray[np.int64]:
-    """`frame.labels` with the near chunks given to the blob they're near."""
+    """`frame.labels` with the near chunks given to the cluster they're near."""
     labels = frame.labels.copy()
     middle = centres(frame, vectors)
     strays = np.flatnonzero(labels == NOISE)
@@ -64,7 +64,7 @@ def counted(frame: Frame, vectors: NDArray[np.float32]) -> NDArray[np.int64]:
 
 
 def counts(frame: Frame, pool: Pool, near: NDArray[np.int64]) -> dict[int, Counts]:
-    """Every blob's counts in this week; `near` is `counted`'s labels."""
+    """Every cluster's counts in this week; `near` is `counted`'s labels."""
     days = np.array([d.toordinal() for d in pool.days])[frame.rows]
     press = np.array(pool.press, dtype=bool)[frame.rows]
     recent = days > frame.end.toordinal() - RECENT_DAYS
@@ -84,15 +84,15 @@ def counts(frame: Frame, pool: Pool, near: NDArray[np.int64]) -> dict[int, Count
 
 
 def surge(recent: int, before: int, all_recent: int, all_before: int) -> float:
-    """Chunks above normal: what the blob got, less its usual share of everything that came in.
+    """Chunks above normal: what the cluster got, less its usual share of everything that came in.
 
-    Mail swings tenfold in late 2001, so a raw count would call every blob a surge.
+    Mail swings tenfold in late 2001, so a raw count would call every cluster a surge.
     """
     return recent - (before + _PRIOR) * max(all_recent, 1) / max(all_before, 1)
 
 
 def moving(weeks: Sequence[int], points: Sequence[NDArray[np.float32]]) -> list[float]:
-    """How far a blob's recent centre sits from its slower average, per week it was seen."""
+    """How far a cluster's recent centre sits from its slower average, per week it was seen."""
     fast = slow = points[0].copy()
     found = []
     for i, (week, point) in enumerate(zip(weeks, points, strict=True)):
