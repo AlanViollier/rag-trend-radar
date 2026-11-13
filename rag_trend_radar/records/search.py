@@ -30,6 +30,13 @@ class SearchHit(Record):
         return f"{self.text}\n\n{self.context}" if self.context else self.text
 
 
+class Ranked(Record):
+    """A search's chunks, best first, and how long each of its stages took."""
+
+    hits: tuple[SearchHit, ...]
+    stages: tuple[SearchStage, ...]
+
+
 class Citation(Record):
     """A passage of a retrieved chunk that an answer relies on."""
 

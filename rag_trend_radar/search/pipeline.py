@@ -9,9 +9,10 @@ import psycopg
 from numpy.typing import NDArray
 from psycopg.rows import TupleRow
 
+from rag_trend_radar.config import get_settings
 from rag_trend_radar.ingest.origin import Origin
 from rag_trend_radar.ingest.origin import origin as origin_of
-from rag_trend_radar.records import SearchHit, SearchStage
+from rag_trend_radar.records import Ranked, SearchHit, SearchStage
 from rag_trend_radar.search import hybrid
 from rag_trend_radar.search.collapse import collapse
 from rag_trend_radar.search.mix import RESULTS, mix
@@ -22,33 +23,36 @@ def reranked(
     conn: psycopg.Connection[TupleRow],
     question: str,
     query_vector: NDArray[np.float32],
-    model: str,
     as_of: date,
-    reranker: str,
-    depth: int,
+    *,
     since: date | None = None,
     origin: Origin | None = None,
-    stages: list[SearchStage] | None = None,
-) -> list[SearchHit]:
-    """Hybrid search's `depth` best chunks, reordered by the cross-encoder.
+    model: str | None = None,
+    reranker: str | None = None,
+    depth: int = hybrid.DEPTH,
+) -> Ranked:
+    """Hybrid search's `depth` best chunks, reordered by the cross-encoder, and each stage's time.
 
     `since` and `origin` narrow the candidates before the rerank, which is the slow part: mail from
-    that day on, chunks of that origin only. The agent narrows; `ask` and the evals don't.
-    `stages`, when given, gets the search's and the rerank's times appended (page 2 shows them).
+    that day on, chunks of that origin only. The agent narrows; `ask` and the evals don't. The
+    embedding model and the reranker default to the configured ones; an experiment passes others.
     """
+    settings = get_settings()
     begun = time.perf_counter()
-    candidates = hybrid.search(conn, question, query_vector, model, as_of, depth, since)
+    candidates = hybrid.search(
+        conn, question, query_vector, model or settings.embedding_model, as_of, depth, since
+    )
     found, fused = time.perf_counter(), len(candidates)
     if origin is not None:
         candidates = [hit for hit in candidates if origin_of(hit.text) is origin]
-    ranked = rerank(question, candidates, reranker, top=depth)
-    if stages is not None:
-        reranking = time.perf_counter() - found
-        stages.append(SearchStage(name="search", seconds=found - begun, items=fused))
-        stages.append(SearchStage(name="rerank", seconds=reranking, items=len(candidates)))
-    return ranked
+    ranked = rerank(conn, question, candidates, reranker or settings.rerank_model, top=depth)
+    stages = (
+        SearchStage(name="search", seconds=found - begun, items=fused),
+        SearchStage(name="rerank", seconds=time.perf_counter() - found, items=len(candidates)),
+    )
+    return Ranked(hits=tuple(ranked), stages=stages)
 
 
-def final(ranked: Sequence[SearchHit], depth: int) -> list[SearchHit]:
+def final(ranked: Sequence[SearchHit], depth: int = hybrid.DEPTH) -> list[SearchHit]:
     """What reaches Claude: repeats of a better result dropped, press and bulk mail capped."""
     return mix(collapse(ranked, depth), RESULTS)

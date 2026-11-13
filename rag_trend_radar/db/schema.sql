@@ -21,7 +21,6 @@ CREATE TABLE IF NOT EXISTS cache.embeddings (
 
 -- Every rerank score ever computed. A cross-encoder reads the question and the chunk together,
 -- so a score depends on both texts and the model, nothing else: a re-run scores only new pairs.
--- Readers get no grant on it: a question must not be able to plant scores for another.
 CREATE TABLE IF NOT EXISTS cache.rerank_scores (
     model      text NOT NULL,
     revision   text NOT NULL,
@@ -194,6 +193,12 @@ END $$;
 -- here with a policy. raw_files and quarantine hold every email whole, so they're never granted.
 -- index/vectors.py grants each vectors_<model> table with a policy through chunks.
 GRANT SELECT ON documents, emails, access, employees, chunks, batches TO radar_reader;
+
+-- The rerank score cache holds hashes and numbers, never mail. A search adds the scores it was
+-- missing on its own connection, so reading never needs the owner; no reader may change or delete
+-- a score once written. The embedding cache stays the pipeline's alone.
+GRANT USAGE ON SCHEMA cache TO radar_reader;
+GRANT SELECT, INSERT ON cache.rerank_scores TO radar_reader;
 
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 CREATE POLICY documents_visible ON documents FOR SELECT TO radar_reader USING (

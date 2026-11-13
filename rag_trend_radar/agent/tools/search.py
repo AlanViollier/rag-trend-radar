@@ -13,7 +13,7 @@ from rag_trend_radar.days import local_day
 from rag_trend_radar.embed import embed
 from rag_trend_radar.ingest.origin import Origin, origin
 from rag_trend_radar.records import SearchStage
-from rag_trend_radar.search import hybrid, pipeline
+from rag_trend_radar.search import pipeline
 
 DESCRIPTION = """Search the mail this person can read: keyword and meaning search, reranked, the \
 best 10 chunks back as citable results, best first. Use it to find what someone wrote or said. \
@@ -38,27 +38,20 @@ class Input(ToolInput):
 def run(desk: Desk, given: Input) -> ToolResult:
     """The best 10 chunks for `query` between the dates, as search_result blocks."""
     settings = get_settings()
-    model = settings.embedding_model
     begun = time.perf_counter()
-    vector = embed([given.query], model, settings.embedding_dims, query=True)[0]
-    stages = [SearchStage(name="embed", seconds=time.perf_counter() - begun, items=1)]
+    vector = embed([given.query], settings.embedding_model, settings.embedding_dims, query=True)[0]
+    embedded = SearchStage(name="embed", seconds=time.perf_counter() - begun, items=1)
     # The argument keeps the name Claude was given, `source`: the recorded runs call it so.
     wanted = None if given.source == "any" else Origin(given.source)
     ranked = pipeline.reranked(
-        desk.conn,
-        given.query,
-        vector,
-        model,
-        desk.until(given.until),
-        settings.rerank_model,
-        hybrid.DEPTH,
-        since=given.since,
-        origin=wanted,
-        stages=stages,
+        desk.conn, given.query, vector, desk.until(given.until), since=given.since, origin=wanted
     )
-    fresh = [h for h in ranked if h.chunk_id not in desk.shown and h.document_id not in desk.read]
-    hits = pipeline.final(fresh, hybrid.DEPTH)
-    again = [h.document_id for h in pipeline.final(ranked, hybrid.DEPTH) if h not in fresh]
+    stages = (embedded, *ranked.stages)
+    fresh = [
+        h for h in ranked.hits if h.chunk_id not in desk.shown and h.document_id not in desk.read
+    ]
+    hits = pipeline.final(fresh)
+    again = [h.document_id for h in pipeline.final(ranked.hits) if h not in fresh]
     aside = (
         f"Left out, already shown in this run: documents {', '.join(map(str, dict.fromkeys(again)))}."
         if again
@@ -66,9 +59,7 @@ def run(desk: Desk, given: Input) -> ToolResult:
     )
     if not hits:
         nothing = "Nothing new matches in the mail this person can read."
-        return ToolResult(
-            [text(f"{nothing} {aside}".strip())], "0 new results", stages=tuple(stages)
-        )
+        return ToolResult([text(f"{nothing} {aside}".strip())], "0 new results", stages=stages)
     desk.shown.update(hit.chunk_id for hit in hits)
     sent: dict[int, datetime] = dict(
         desk.conn.execute(
@@ -90,4 +81,4 @@ def run(desk: Desk, given: Input) -> ToolResult:
     if again:
         summary += f", {len(again)} repeats left out"
     found = tuple(dict.fromkeys(h.document_id for h in hits))
-    return ToolResult(blocks, summary, found, aside, tuple(stages))
+    return ToolResult(blocks, summary, found, aside, stages)

@@ -113,11 +113,12 @@ def no_models(monkeypatch: pytest.MonkeyPatch) -> None:
     """Search without loading the real embedding model or reranker: one fixed query vector."""
     settings = get_settings().model_copy(update={"embedding_model": MODEL, "embedding_dims": DIMS})
     monkeypatch.setattr(search_tool, "get_settings", lambda: settings)
+    monkeypatch.setattr("rag_trend_radar.search.pipeline.get_settings", lambda: settings)
     monkeypatch.setattr(
         search_tool, "embed", lambda texts, *_, **__: np.ones((1, DIMS), np.float32)
     )
 
-    def unchanged(_: str, hits: list[SearchHit], __: str, top: int) -> list[SearchHit]:
+    def unchanged(_c: object, _q: str, hits: list[SearchHit], _m: str, top: int) -> list[SearchHit]:
         return [hit.model_copy(update={"score": 1.0}) for hit in hits[:top]]
 
     monkeypatch.setattr("rag_trend_radar.search.pipeline.rerank", unchanged)

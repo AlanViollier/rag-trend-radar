@@ -16,7 +16,7 @@ from rag_trend_radar.records.mail import (
     SplitBody,
 )
 from rag_trend_radar.records.runs import RadarRun, RecallRun, RunManifest, RunStage, StageSummary
-from rag_trend_radar.records.search import Answer, Citation, SearchHit, SearchStage
+from rag_trend_radar.records.search import Answer, Citation, Ranked, SearchHit, SearchStage
 
 __all__ = [
     "AgentQuestion",
@@ -36,6 +36,7 @@ __all__ = [
     "QuotedBlock",
     "RadarEvent",
     "RadarRun",
+    "Ranked",
     "RawFile",
     "RecallRun",
     "Record",

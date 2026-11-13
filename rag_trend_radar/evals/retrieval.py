@@ -77,14 +77,16 @@ def rankings(
                 lists["vector"] = vector.search(conn, vector_, model, q.as_of, depth)
             with _clock(latency["hybrid"]):
                 lists["hybrid"] = hybrid.search(conn, q.question, vector_, model, q.as_of, depth)
-        if reranker is not None:
-            for under in ("vector", "hybrid"):
-                with _clock(latency[f"{under} + rerank"]):
-                    lists[f"{under} + rerank"] = rerank(q.question, lists[under], reranker, depth)
-            with _clock(latency["hybrid + rerank + collapse"]):
-                lists["hybrid + rerank + collapse"] = collapse(lists["hybrid + rerank"], depth)
-            with _clock(latency["what ask uses (+ press cap)"]):
-                lists["what ask uses (+ press cap)"] = final(lists["hybrid + rerank"], depth)
+            if reranker is not None:
+                for under in ("vector", "hybrid"):
+                    with _clock(latency[f"{under} + rerank"]):
+                        lists[f"{under} + rerank"] = rerank(
+                            conn, q.question, lists[under], reranker, depth
+                        )
+                with _clock(latency["hybrid + rerank + collapse"]):
+                    lists["hybrid + rerank + collapse"] = collapse(lists["hybrid + rerank"], depth)
+                with _clock(latency["what ask uses (+ press cap)"]):
+                    lists["what ask uses (+ press cap)"] = final(lists["hybrid + rerank"], depth)
         for method, hits in lists.items():
             ranked[method][q.id] = documents(hits)
     return dict(ranked), dict(latency)

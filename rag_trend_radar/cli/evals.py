@@ -202,9 +202,7 @@ def facts(path: Path = HARD_QUESTIONS, depth: int = hybrid.DEPTH) -> None:
     passed = {"raw": 0, "ask": 0}
     for q, vector_ in zip(questions, vectors, strict=True):
         with db.connect(q.person) as conn:
-            ranked = pipeline.reranked(
-                conn, q.question, vector_, model, q.as_of, settings.rerank_model, depth
-            )
+            ranked = pipeline.reranked(conn, q.question, vector_, q.as_of, depth=depth).hits
         raw = check_facts(q, ranked[:RESULTS])
         ask_ = check_facts(q, pipeline.final(ranked, depth))
         for name, result in (("raw", raw), ("ask", ask_)):

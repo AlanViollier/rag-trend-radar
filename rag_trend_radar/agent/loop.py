@@ -8,6 +8,7 @@ import hashlib
 import json
 import time
 from collections.abc import Callable
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -25,7 +26,7 @@ from anthropic.types.beta import (
 
 from rag_trend_radar import claude
 from rag_trend_radar.agent import tools
-from rag_trend_radar.agent.desk import Desk, ToolResult
+from rag_trend_radar.agent.desk import Desk
 from rag_trend_radar.agent.prompt import MAX_TOOL_CALLS, PROMPT_VERSION, system, verdict
 from rag_trend_radar.answer import SOURCE_PREFIX
 from rag_trend_radar.exceptions import AnswerRefused, ToolRefused
@@ -170,8 +171,7 @@ def _use(
         done = tools.call(desk, name, arguments)
         if planted is not None and done.documents:
             # Second place: high enough to be read, not so high it looks staged.
-            blocks = [*done.blocks[:1], planted, *done.blocks[1:]]
-            done = ToolResult(blocks, done.summary, done.documents, done.aside)
+            done = replace(done, blocks=[*done.blocks[:1], planted, *done.blocks[1:]])
     except ToolRefused as error:
         seconds = time.perf_counter() - begun
         record(
