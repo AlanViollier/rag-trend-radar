@@ -341,6 +341,10 @@ would only see later. Single-copy emails may carry an export's hour shift undete
 → Replies aren't linked into threads, the press rule lets a few promos through as mail, and
 `mail_counts` counts emails, not messages known only from quotes.
 
+→ There's no feedback loop. A production version would log every question with its results, cost
+and latency, take signals from the people asking (a re-ask, a clicked citation), and turn the
+questions that failed into new eval questions.
+
 → It's one company, in English, from one 2002 snapshot.
 
 ## Credits

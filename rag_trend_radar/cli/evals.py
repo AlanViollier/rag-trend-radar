@@ -88,7 +88,7 @@ def recall(
     limit: int = 0,
     person: str = "",
 ) -> None:
-    """recall@k and MRR for every search method over the labelled questions (free, local).
+    """Hit rate@k and MRR for every search method over the labelled questions (free, local).
 
     `--model` and `--dims` score another embedding (embed it first), `--reranker` another
     cross-encoder; `--no-rerank-rows` skips the reranked rows. `--retype` asks the codes

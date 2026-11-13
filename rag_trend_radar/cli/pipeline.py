@@ -53,7 +53,8 @@ def replay(
 
     Days run in order, each one whole: documents, chunks, vectors, then its `batches` row.
     Re-running a day changes nothing. `--max-tokens` and `--no-header` chunk another way, for an
-    experiment's schema (DB_SCHEMA); `--no-vectors` leaves embedding to `embed`.
+    experiment's schema (DB_SCHEMA): how the 256 and 1,024-token and bare-body rows were measured.
+    `--no-vectors` leaves embedding to `embed`.
     """
     settings = get_settings()
     tz, model, dims = ZoneInfo(settings.timezone), settings.embedding_model, settings.embedding_dims
@@ -96,7 +97,7 @@ def embed_chunks(model: str = "", dims: int = 0, batch_size: int = 512, from_dim
     """Embed every chunk with no vector yet (default: the configured model and size).
 
     `--from-dims 768` derives the vectors from the model's stored 768-dim ones instead (Matryoshka
-    models only, EmbeddingGemma among them). Any text already embedded with this model, revision
+    models only, EmbeddingGemma among them): how the 256-dim row was made. Any text already embedded with this model, revision
     and size, in this schema or another, comes from the cache instead. Stopped, it resumes.
     """
     settings = get_settings()

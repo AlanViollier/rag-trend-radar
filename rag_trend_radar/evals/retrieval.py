@@ -1,4 +1,4 @@
-"""recall@k and friends, computed by ranx so they match trec_eval."""
+"""Hit rate@k and MRR per search method, computed by ranx so they match trec_eval."""
 
 import time
 from collections import defaultdict
