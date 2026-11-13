@@ -19,7 +19,7 @@ from rag_trend_radar.evals.facts import check as check_facts
 from rag_trend_radar.evals.leaks import check as check_leaks
 from rag_trend_radar.evals.questions import Retype, Style, code_holds, retyped, sample, write
 from rag_trend_radar.evals.retrieval import rankings, report
-from rag_trend_radar.records import EvalQuestion, FactQuestion, RecallRun, RunManifest
+from rag_trend_radar.records import EvalQuestion, FactQuestion, RecallRun, RunManifest, read_records
 from rag_trend_radar.run_log import commit
 from rag_trend_radar.search import hybrid, pipeline
 from rag_trend_radar.search.mix import RESULTS
@@ -99,7 +99,7 @@ def recall(
     """
     settings = get_settings()
     model, dims = model or settings.embedding_model, dims or settings.embedding_dims
-    labelled = [EvalQuestion.model_validate_json(line) for line in path.read_text().splitlines()]
+    labelled = read_records(path, EvalQuestion)
     labelled = labelled[:limit] if limit else labelled
     if retype is not None:
         labelled = [retyped(q, retype) for q in labelled if q.code]
@@ -150,7 +150,7 @@ def scores(run: Path) -> None:
     """Print a saved recall run's tables again, with the judgments as they are now (free)."""
     saved = RecallRun.model_validate_json(run.read_text())
     path = QUESTIONS.parent / saved.manifest.questions
-    labelled = [EvalQuestion.model_validate_json(x) for x in path.read_text().splitlines()]
+    labelled = read_records(path, EvalQuestion)
     asked = set(next(iter(saved.rankings.values())))
     _scores(saved, [q for q in labelled if q.id in asked])
 
@@ -187,7 +187,7 @@ def facts(path: Path = HARD_QUESTIONS, depth: int = hybrid.DEPTH) -> None:
     """
     settings = get_settings()
     model, dims = settings.embedding_model, settings.embedding_dims
-    questions = [FactQuestion.model_validate_json(x) for x in path.read_text().splitlines()]
+    questions = read_records(path, FactQuestion)
     vectors = embed([q.question for q in questions], model, dims, query=True)
     table = Table(title=f"{len(questions)} hard questions, 10 chunks each")
     for column in (
@@ -229,9 +229,7 @@ def leaks(paths: list[Path]) -> None:
     """
     settings = get_settings()
     model, dims = settings.embedding_model, settings.embedding_dims
-    questions = [
-        EvalQuestion.model_validate_json(line) for p in paths for line in p.read_text().splitlines()
-    ]
+    questions = [q for path in paths for q in read_records(path, EvalQuestion)]
     vectors = embed([q.question for q in questions], model, dims, query=True)
     found = check_leaks(questions, vectors, model, hybrid.DEPTH)
     table = Table(title=f"{len(questions)} questions, every result checked")

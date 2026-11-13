@@ -1,1 +1,1 @@
-"""Page 1, the radar replayed: built once from the radar tables."""
+"""Page 1, the radar replayed: read from the radar tables, composed, placed, written once."""

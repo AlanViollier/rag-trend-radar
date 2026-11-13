@@ -1,10 +1,16 @@
-"""The data inside the page. A cluster's lists run week by week from its `first` week."""
+"""The data inside page 1, and what was written by hand for it. A cluster's lists run week by week
+from its `first` week."""
 
 from datetime import date
 from pathlib import Path
 from typing import Literal
 
 from rag_trend_radar.records import Record
+
+# Written by hand for the page: real events, the alerts read one by one, where the replay stops.
+EVENTS = Path("curated/radar/events.jsonl")
+ALERT_NOTES = Path("curated/radar/alert_notes.jsonl")
+MOMENTS = Path("curated/radar/moments.jsonl")
 
 
 class PageWeek(Record):
@@ -52,27 +58,13 @@ class PageAlert(Record):
     weight: str = ""
 
 
-class PageEvent(Record):
-    """Something that really happened, on its date."""
+class Event(Record):
+    """Something that really happened, written down before the radar first ran: the page puts it
+    on the timeline, and a moment names the one it follows."""
 
     id: str
     day: date
     title: str
-
-
-# Every cluster as the naming pass read it, one Naming a line.
-NAMES = Path("curated/radar/cluster_names.jsonl")
-
-
-class Naming(Record):
-    """A cluster as a person read it, for the page only: alerts never see this. `names` are (week it
-    starts, name); only a `topic` goes on the map."""
-
-    cluster: int
-    first: date
-    kind: Literal["topic", "newsletter", "footer", "chatter"]
-    family: str
-    names: tuple[tuple[date, str], ...]
 
 
 class AlertNote(Record):
@@ -119,6 +111,6 @@ class PageData(Record):
     weeks: tuple[PageWeek, ...]
     clusters: tuple[PageCluster, ...]
     alerts: tuple[PageAlert, ...]
-    events: tuple[PageEvent, ...]
+    events: tuple[Event, ...]
     moments: tuple[PageMoment, ...]
     dust: PageDust

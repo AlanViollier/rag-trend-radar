@@ -7,7 +7,8 @@ from typing import Literal
 from pydantic import Field
 
 from rag_trend_radar.agent.desk import Desk, ToolInput, ToolResult, text
-from rag_trend_radar.agent.tools import topics
+from rag_trend_radar.days import weeks_within
+from rag_trend_radar.radar import naming
 
 DESCRIPTION = """The radar's topics (clusters of similar mail, followed week by week) that grew \
 most or were biggest between two days. Use it for what was rising, what people were talking \
@@ -47,7 +48,7 @@ def run(desk: Desk, given: Input) -> ToolResult:
     topic missing that week (clusters skip weeks) takes its last week before it, up to `LOOK_BACK`.
     """
     until = desk.until(given.until)
-    first, last = topics.weeks(given.since or until - DEFAULT_SPAN, until)
+    first, last = weeks_within(given.since or until - DEFAULT_SPAN, until)
     before = first - timedelta(weeks=1)
     rows = desk.conn.execute(ROWS, (before - LOOK_BACK, last)).fetchall()
     if not rows:
@@ -55,7 +56,7 @@ def run(desk: Desk, given: Input) -> ToolResult:
     weeks: dict[int, dict[date, tuple[int, int, list[str]]]] = defaultdict(dict)
     baseline: dict[int, int] = {}
     for cluster, built, week, recent, mail, keywords in rows:
-        if topics.kind(cluster, built) != "topic":
+        if naming.kind(cluster, built) != "topic":
             continue
         if week <= before:
             baseline[cluster] = recent  # rows come oldest first: the last one before the range wins
@@ -70,7 +71,7 @@ def run(desk: Desk, given: Input) -> ToolResult:
     found = []
     for cluster, seen in weeks.items():
         latest = max(seen)
-        label = topics.name(cluster, latest, seen[latest][2])
+        label = naming.name(cluster, latest, seen[latest][2])
         wanted = f"{label} {' '.join(w for row in seen.values() for w in row[2])}".lower()
         if given.words and not all(word in wanted for word in given.words.lower().split()):
             continue

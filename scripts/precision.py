@@ -23,7 +23,7 @@ from rag_trend_radar.db import connect as db
 from rag_trend_radar.embed import embed
 from rag_trend_radar.evals.retrieval import documents, score
 from rag_trend_radar.index import vectors_identifier, vectors_table
-from rag_trend_radar.records import EvalQuestion, SearchHit
+from rag_trend_radar.records import EvalQuestion, SearchHit, read_records
 from rag_trend_radar.search import vector
 
 DEPTH = 50
@@ -49,7 +49,7 @@ def main(paths: list[Path]) -> None:
     float32 = _float32(ids, [r[2] for r in rows], model, dims)
 
     for path in paths:
-        questions = [EvalQuestion.model_validate_json(x) for x in path.read_text().splitlines()]
+        questions = read_records(path, EvalQuestion)
         relevant = _relevant(questions)
         queries = embed([q.question for q in questions], model, dims, query=True)
         results: dict[str, dict[str, list[SearchHit]]] = defaultdict(dict)

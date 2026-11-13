@@ -5,8 +5,8 @@ from datetime import date
 from pydantic import Field
 
 from rag_trend_radar.agent.desk import Desk, ToolInput, ToolResult, text
-from rag_trend_radar.agent.tools import topics
-from rag_trend_radar.days import cutoff, opening
+from rag_trend_radar.days import cutoff, opening, weeks_within
+from rag_trend_radar.radar import naming
 
 DESCRIPTION = """One radar topic week by week: emails in or near it, recent mail (the last 4 \
 weeks) and how much of that was press, chunks above its normal, its keywords when they \
@@ -42,15 +42,15 @@ def run(desk: Desk, given: Input) -> ToolResult:
         return ToolResult([text(f"No topic {given.topic}.")], "no topic")
     kind, first_week, _ = cluster[0]
     until = desk.until(given.until)
-    first, last = topics.weeks(given.since or first_week, until)
+    first, last = weeks_within(given.since or first_week, until)
     rows = desk.conn.execute(WEEKS, (given.topic, first, last)).fetchall()
     if not rows:
         return ToolResult(
             [text(f"Topic {given.topic} has no weeks from {first} to {last}.")], "no weeks"
         )
-    names = topics.every_name(given.topic, last)
+    names = naming.every_name(given.topic, last)
     lines = [
-        f"topic {given.topic} ({topics.kind(given.topic, kind)}), first seen week ending {first_week}"
+        f"topic {given.topic} ({naming.kind(given.topic, kind)}), first seen week ending {first_week}"
     ]
     lines += [f"named from {start}: {label}" for start, label in names] or [
         "no name; keywords below"

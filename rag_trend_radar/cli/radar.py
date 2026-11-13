@@ -10,15 +10,20 @@ from rich.table import Table
 from rag_trend_radar.cli.app import app
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
-from rag_trend_radar.pages.radar import export
-from rag_trend_radar.pages.radar.records import NAMES, AlertNote, Moment, Naming, PageEvent
-from rag_trend_radar.radar import build, clustering, frames
-from rag_trend_radar.records import RadarRun
+from rag_trend_radar.pages import publish
+from rag_trend_radar.pages.radar import compose, tables
+from rag_trend_radar.pages.radar.records import (
+    ALERT_NOTES,
+    EVENTS,
+    MOMENTS,
+    AlertNote,
+    Event,
+    Moment,
+)
+from rag_trend_radar.radar import build, clustering, frames, naming
+from rag_trend_radar.records import RadarRun, read_records
 from rag_trend_radar.run_log import RunLog, summarise
 
-EVENTS = Path("curated/radar/events.jsonl")
-MOMENTS = Path("curated/radar/moments.jsonl")
-ALERT_NOTES = Path("curated/radar/alert_notes.jsonl")
 PAGE = Path("docs/radar/index.html")
 
 
@@ -75,22 +80,22 @@ def radar_export(out: Path = PAGE) -> None:
     settings = get_settings()
     log = RunLog("export", {"out": str(out)})
     with log.stage("read tables") as handled, db.connect(db.INVESTIGATOR) as conn:
-        tables = export.read(
+        read = tables.read(
             conn, settings.embedding_model, settings.embedding_dims, frames.week_ends()
         )
-        handled.items = len(tables.seen)
+        handled.items = len(read.seen)
     with log.stage("smooth, place, name") as handled:
-        data = export.page(
-            tables,
-            export.records_from(EVENTS, PageEvent),
-            export.records_from(MOMENTS, Moment),
+        data = compose.page(
+            read,
+            read_records(EVENTS, Event),
+            read_records(MOMENTS, Moment),
             frames.week_ends(),
-            export.records_from(NAMES, Naming),
-            export.records_from(ALERT_NOTES, AlertNote),
+            naming.readings(),
+            read_records(ALERT_NOTES, AlertNote),
         )
         handled.items = len(data.clusters)
     with log.stage("write"):
-        log.results["bytes"] = export.write(data, out)
+        log.results["bytes"] = publish.write(compose.TEMPLATE, data, out)
     log.results |= {
         "weeks": len(data.weeks),
         "clusters": len(data.clusters),

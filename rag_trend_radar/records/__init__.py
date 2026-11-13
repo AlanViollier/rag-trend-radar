@@ -1,8 +1,8 @@
 """Every record that crosses a module boundary, one file per area; import them from here."""
 
 from rag_trend_radar.records.agent import AgentQuestion, AgentRun, AgentScore, AgentStep
-from rag_trend_radar.records.base import Record
-from rag_trend_radar.records.evals import EvalQuestion, FactQuestion, FactResult, RadarEvent
+from rag_trend_radar.records.base import Record, read_records
+from rag_trend_radar.records.evals import EvalQuestion, FactQuestion, FactResult
 from rag_trend_radar.records.mail import (
     Copy,
     DayFile,
@@ -34,12 +34,12 @@ __all__ = [
     "FactResult",
     "ParsedEmail",
     "QuotedBlock",
-    "RadarEvent",
     "RadarRun",
     "Ranked",
     "RawFile",
     "RecallRun",
     "Record",
+    "read_records",
     "Rejected",
     "RunManifest",
     "RunStage",

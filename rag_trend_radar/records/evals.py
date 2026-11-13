@@ -42,13 +42,3 @@ class FactResult(Record):
     leaked: tuple[str, ...]
     top_score: float
     mail: int
-
-
-class RadarEvent(Record):
-    """Something that really happened, written down before the radar first ran: the page puts it
-    on the timeline, and the naming pass notes which alerts caught it."""
-
-    id: str
-    day: date
-    title: str
-    words: tuple[str, ...]

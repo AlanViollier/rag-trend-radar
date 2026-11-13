@@ -17,10 +17,7 @@ from rag_trend_radar.pages.investigator import baseline, replay
 from rag_trend_radar.pages.investigator.records import (
     Baseline,
     Hit,
-    InvestigatorPage,
     Note,
-    PageEmail,
-    PageGroup,
     Thought,
     ToolCall,
     Turn,
@@ -65,7 +62,7 @@ def _tool(name: str, documents: tuple[int, ...] = (), arguments: str = "{}") -> 
 
 
 def test_the_picked_runs_are_questions_of_the_sets_once_each() -> None:
-    picked = investigator.chosen(investigator.PICKS)
+    picked = investigator.picks()
     ids = [p.id for p in picked]
     asked = {q.id for name in checks.SETS for q in checks.questions(name)}
     assert len(ids) == len(set(ids))
@@ -144,27 +141,6 @@ def test_the_prompt_without_rag_tells_of_the_mail_but_not_the_tools() -> None:
     mine = baseline.prompt(held, "kean-s", date(2002, 12, 31))
     assert "kean-s, an Enron employee" in mine
     assert "Your mailbox holds 1,234 emails" in mine
-
-
-def _page(subject: str) -> InvestigatorPage:
-    email = PageEmail(kind="email", date=date(2001, 1, 1), subject=subject, sender="a@enron.com")
-    return InvestigatorPage(groups=(PageGroup(title="g", runs=()),), emails={1: email})
-
-
-def test_the_page_is_written_with_its_data_inside(tmp_path: Path) -> None:
-    out = tmp_path / "index.html"
-    size = investigator.write(_page("a </script> inside"), out)
-    html = out.read_text()
-    assert size == len(html.encode())
-    assert "__DATA__" not in html
-    assert "a <\\/script> inside" in html
-
-
-def test_a_card_shaped_number_stops_the_write(tmp_path: Path) -> None:
-    out = tmp_path / "index.html"
-    with pytest.raises(ExportRefused, match="card-shaped"):
-        investigator.write(_page("4111 1111 1111 1111"), out)
-    assert not out.exists()
 
 
 def test_an_answer_kept_with_another_prompt_is_not_reused(

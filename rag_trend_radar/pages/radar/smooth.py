@@ -5,6 +5,9 @@ from collections.abc import Sequence
 import numpy as np
 from numpy.typing import NDArray
 
+# Weeks either side that calm a cluster's size and its place, and its faster-moving numbers.
+SLOW, QUICK = 4, 2
+
 
 def fill(seen: Sequence[int], values: Sequence[float]) -> NDArray[np.float64]:
     """One value per week from the first seen to the last, weeks a cluster went missing drawn straight."""

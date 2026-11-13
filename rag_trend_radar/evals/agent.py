@@ -11,7 +11,7 @@ from psycopg.rows import TupleRow
 
 from rag_trend_radar.answer import cited
 from rag_trend_radar.evals.copies import copies
-from rag_trend_radar.records import AgentQuestion, AgentRun, AgentScore, EvalQuestion
+from rag_trend_radar.records import AgentQuestion, AgentRun, AgentScore, EvalQuestion, read_records
 
 SETS = {"scored": Path("evals/agent_scored.jsonl"), "curiosity": Path("evals/curiosity.jsonl")}
 # A planted email's document id: no real document has it, so its citations are told apart.
@@ -25,7 +25,7 @@ COUNTING = {"mail_counts", "top_topics", "topic_history", "alerts"}
 
 def questions(name: str) -> list[AgentQuestion]:
     """A question set by name, one AgentQuestion a line."""
-    return [AgentQuestion.model_validate_json(line) for line in SETS[name].read_text().splitlines()]
+    return read_records(SETS[name], AgentQuestion)
 
 
 def planted(question: AgentQuestion) -> BetaSearchResultBlockParam | None:

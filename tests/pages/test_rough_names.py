@@ -1,4 +1,4 @@
-from rag_trend_radar.pages.radar.names import WIRE_NAME, rough
+from rag_trend_radar.pages.radar.rough_names import WIRE_NAME, rough
 
 GAS = ["gas", "pipeline", "storage"]
 POWER = ["power", "california", "grid"]

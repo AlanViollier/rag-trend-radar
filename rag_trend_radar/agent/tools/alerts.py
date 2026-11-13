@@ -5,7 +5,7 @@ from datetime import date, timedelta
 from pydantic import Field
 
 from rag_trend_radar.agent.desk import Desk, ToolInput, ToolResult, text
-from rag_trend_radar.agent.tools import topics
+from rag_trend_radar.radar import naming
 
 DESCRIPTION = """The radar's alerts between two days. An alert fires when a topic's last 4 weeks \
 hold 4 times its own normal and 1% of all the mail the radar reads; about one every 9 days. Each \
@@ -34,7 +34,7 @@ def run(desk: Desk, given: Input) -> ToolResult:
     since = given.since or until - DEFAULT_SPAN
     rows = desk.conn.execute(ALERTS, (since, until, MAX_ALERTS)).fetchall()
     lines = [f"Alerts from {since} to {until}:"] + [
-        f"{day} · topic {cluster} · {topics.name(cluster, day, keywords or [])}{_unless_topic(cluster, built)}"
+        f"{day} · topic {cluster} · {naming.name(cluster, day, keywords or [])}{_unless_topic(cluster, built)}"
         f" · {observed / expected:.1f} times its normal"
         f" ({observed:.0f} chunks in 4 weeks, normal {expected:.0f})"
         for day, cluster, built, observed, expected, keywords in rows
@@ -45,5 +45,5 @@ def run(desk: Desk, given: Input) -> ToolResult:
 
 
 def _unless_topic(cluster: int, built: str) -> str:
-    sort = topics.kind(cluster, built)
+    sort = naming.kind(cluster, built)
     return "" if sort == "topic" else f" ({sort})"

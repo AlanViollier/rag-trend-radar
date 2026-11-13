@@ -1,5 +1,7 @@
 """Where each cluster sits: one map for the whole run, then pushed apart week by week so bubbles don't overlap."""
 
+from collections.abc import Mapping, Sequence
+from datetime import date
 from typing import cast
 
 import numpy as np
@@ -7,6 +9,7 @@ from numpy.typing import NDArray
 from umap import UMAP
 
 from rag_trend_radar.pages.radar import smooth
+from rag_trend_radar.pages.radar.tables import Seen, Speck
 
 # A bubble's radius, as a share of the map's side: area follows the mail.
 RADIUS_PER_ROOT, RADIUS_BASE = 0.00085, 0.002
@@ -83,6 +86,39 @@ def pack(want: NDArray[np.float64], mail: NDArray[np.float64]) -> NDArray[np.flo
     return placed
 
 
+def placed(
+    lives: Sequence[Sequence[Seen]],
+    dust: Sequence[Speck],
+    where: Mapping[date, int],
+    weeks: int,
+) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
+    """Each cluster's flat and lifted place every week, then the dust's. Only shown clusters shape the
+    map or push apart."""
+    main = [life for life in lives if life[0].shown]
+    others = [life for life in lives if not life[0].shown]
+    dims = main[0][0].centre.size
+    centres = _centres(main, dims)
+    extra = np.concatenate(
+        [
+            _centres(others, dims),
+            np.array([s.vector for s in dust], dtype=np.float32).reshape(len(dust), dims),
+        ]
+    )
+    flat, flat_extra = map_points(centres, extra)
+    lifted, lifted_extra = lift(centres, flat, extra)
+    joined = len(extra) - len(dust)
+
+    def packed(rows: Sequence[Sequence[Seen]], points: NDArray[np.float64]) -> NDArray[np.float64]:
+        return pack(_wanted(rows, where, points, weeks), _mail(rows, where, weeks))
+
+    return (
+        np.concatenate([packed(main, flat), packed(others, flat_extra[:joined])]),
+        np.concatenate([packed(main, lifted), packed(others, lifted_extra[:joined])]),
+        flat_extra[joined:],
+        lifted_extra[joined:],
+    )
+
+
 def _embedded(
     reducer: UMAP, main: NDArray[np.float32], others: NDArray[np.float32]
 ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
@@ -108,3 +144,38 @@ def _push_apart(
         push = (between / distance[..., None] * overlap[..., None]).sum(axis=1)
         points = np.clip(points + push * _PUSH + (goal - points) * _PULL, _EDGE, 1 - _EDGE)
     return points
+
+
+def _centres(lives: Sequence[Sequence[Seen]], dims: int) -> NDArray[np.float32]:
+    centres = [r.centre for life in lives for r in life]
+    return np.array(centres, dtype=np.float32).reshape(len(centres), dims)
+
+
+def _mail(
+    lives: Sequence[Sequence[Seen]], where: Mapping[date, int], weeks: int
+) -> NDArray[np.float64]:
+    mail = np.zeros((len(lives), weeks))
+    for row, life in enumerate(lives):
+        seen = [where[r.week] for r in life]
+        mail[row, seen[0] : seen[-1] + 1] = smooth.median(
+            smooth.fill(seen, [r.mail for r in life]), smooth.SLOW
+        )
+    return mail
+
+
+def _wanted(
+    ordered: Sequence[Sequence[Seen]],
+    where: Mapping[date, int],
+    points: NDArray[np.float64],
+    weeks: int,
+) -> NDArray[np.float64]:
+    want = np.full((len(ordered), weeks, points.shape[1]), np.nan)
+    used = 0
+    for row, life in enumerate(ordered):
+        seen = [where[r.week] for r in life]
+        span = np.arange(seen[0], seen[-1] + 1)
+        for axis in range(points.shape[1]):
+            track = smooth.fill(seen, points[used : used + len(life), axis].tolist())
+            want[row, span, axis] = smooth.median(track, smooth.SLOW)
+        used += len(life)
+    return want

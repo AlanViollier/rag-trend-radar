@@ -34,6 +34,12 @@ def week_of(day: date) -> date:
     return day + timedelta(days=6 - day.weekday())
 
 
+def weeks_within(since: date, until: date) -> tuple[date, date]:
+    """The first and last radar week inside the days: a week counts once its Sunday is in range."""
+    last = week_of(until)
+    return week_of(since), last if last <= until else last - timedelta(weeks=1)
+
+
 def last_day(conn: psycopg.Connection[TupleRow]) -> date:
     """The default `as_of`: the last day the pipeline finished (rule 2)."""
     day = conn.execute("SELECT max(day) FROM batches WHERE finished_at IS NOT NULL").fetchall()[0][

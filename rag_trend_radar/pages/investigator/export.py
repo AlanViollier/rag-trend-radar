@@ -21,8 +21,7 @@ from rag_trend_radar.pages.investigator.records import (
     PageRun,
     Step,
 )
-from rag_trend_radar.pages.radar.export import SHAPES
-from rag_trend_radar.records import AgentRun
+from rag_trend_radar.records import AgentRun, read_records
 
 TEMPLATE = Path(__file__).with_name("page.html")
 # The runs picked for the page, in page order.
@@ -41,9 +40,9 @@ WHERE d.id = ANY(%s)
 """
 
 
-def chosen(path: Path) -> list[ChosenRun]:
+def picks() -> list[ChosenRun]:
     """The runs picked for the page, in page order."""
-    return [ChosenRun.model_validate_json(line) for line in path.read_text().splitlines()]
+    return read_records(PICKS, ChosenRun)
 
 
 def build(
@@ -76,18 +75,6 @@ def build(
         groups=tuple(PageGroup(title=t, runs=tuple(r)) for t, r in groups.items()),
         emails=emails,
     )
-
-
-def write(page: InvestigatorPage, out: Path) -> int:
-    """Put the data into the page, unless it holds a number it shouldn't; return the page's bytes."""
-    text = page.model_dump_json()
-    for what, shape in SHAPES.items():
-        if shape.search(text):
-            raise ExportRefused(f"the page data holds a {what} number: nothing written")
-    html = TEMPLATE.read_text().replace("__DATA__", text.replace("</", "<\\/"))
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(html)
-    return len(html.encode())
 
 
 def _page_run(
