@@ -11,7 +11,7 @@
 <style>
 :root {
   --paper: #1A1714; --ink: #EDE6D8; --muted: #8A8474; --line: #2E2924; --dim: #3A352E;
-  --ember: #EA580C; --surge: #F06A25; --active: #E8C25A; --rest: #4A443C;
+  --ember: #C2410C; --ember-on-dark: #EA580C; --surge: #F06A25; --active: #E8C25A; --rest: #4A443C;
   --font: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   --chrome: linear-gradient(115deg, #e6e8f2 0%, #ff9de2 18%, #9de8ff 36%, #ffffff 50%, #b8ffcf 64%, #ffe29d 82%, #e6e8f2 100%);
   --side: clamp(440px, calc(100vh - 322px), min(800px, calc(100vw - 470px)));
@@ -33,7 +33,7 @@ button { all: unset; cursor: pointer; padding: 3px 9px; color: var(--muted); fon
 button:hover { color: var(--ink); }
 .seg button + button { border-left: 1px solid var(--dim); }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
+button:focus-visible { outline: 1px solid var(--ember-on-dark); outline-offset: 1px; }
 #play { color: var(--paper); background: var(--ember); min-width: 7ch; font-weight: 500; }
 #depth { position: absolute; left: 0; top: 0; z-index: 1; padding: 7px 15px; font-weight: 600; font-size: 13px; border: 1.5px solid transparent; border-radius: 3px;
   background: linear-gradient(var(--paper), var(--paper)) padding-box, var(--chrome) border-box;
@@ -46,7 +46,7 @@ button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
 .panel { display: flex; flex-direction: column; height: calc(var(--side) + 34px); min-width: 0; }
 .when { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .date { color: var(--surge); font-size: 22px; font-weight: 500; line-height: 1.2; }
-#restart { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 1; padding: 6px 14px; background: rgba(26, 23, 20, .92); border: 1px solid var(--ember); color: var(--ink); font-size: 14px; white-space: nowrap; pointer-events: none; }
+#restart { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 1; padding: 6px 14px; background: rgba(26, 23, 20, .92); border: 1px solid var(--ember-on-dark); color: var(--ink); font-size: 14px; white-space: nowrap; pointer-events: none; }
 #restart:empty { display: none; }
 .date { margin-bottom: 8px; }
 .stats { display: grid; grid-template-columns: 1fr auto; row-gap: 1px; }
@@ -65,14 +65,14 @@ button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
 .alert.muted { opacity: .42; }
 .alert small { display: block; color: var(--muted); font-size: 11px; }
 .alert p { font-size: 11.5px; margin-top: 2px; }
-.alert .follows { color: var(--ember); }
-.happened { color: var(--ember); font-size: 11.5px; margin-bottom: 7px; line-height: 1.4; }
+.alert .follows { color: var(--ember-on-dark); }
+.happened { color: var(--ember-on-dark); font-size: 11.5px; margin-bottom: 7px; line-height: 1.4; }
 .alert .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
-.caption { position: absolute; left: 0; top: 46px; width: min(72%, 440px); padding: 10px 12px 12px; background: rgba(26, 23, 20, .92); border-left: 2px solid var(--ember); cursor: pointer; display: none; z-index: 1; }
+.caption { position: absolute; left: 0; top: 46px; width: min(72%, 440px); padding: 10px 12px 12px; background: rgba(26, 23, 20, .92); border-left: 2px solid var(--ember-on-dark); cursor: pointer; display: none; z-index: 1; }
 .caption small { display: block; color: var(--muted); font-size: 11px; margin-top: 3px; }
-#caption-follows { color: var(--ember); margin: 0 0 3px; }
+#caption-follows { color: var(--ember-on-dark); margin: 0 0 3px; }
 #caption-follows:empty { display: none; }
-#caption-left { height: 1px; background: var(--ember); margin-top: 8px; transform-origin: left; }
+#caption-left { height: 1px; background: var(--ember-on-dark); margin-top: 8px; transform-origin: left; }
 .card { position: absolute; z-index: 2; width: 250px; padding: 10px 12px; background: var(--paper); border: 1px solid var(--dim); pointer-events: none; display: none; }
 .card h2 { font-size: 12.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .card .was { color: var(--muted); font-size: 11px; line-height: 1.45; margin: 3px 0 7px; }
@@ -80,10 +80,11 @@ button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
 .card .row { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; color: var(--muted); margin-top: 5px; }
 .strip { position: relative; margin-top: 12px; height: 88px; cursor: pointer; touch-action: none; }
 .strip canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-#head { position: absolute; top: 0; bottom: 18px; width: 1px; background: var(--ember); pointer-events: none; }
+#head { position: absolute; top: 0; bottom: 18px; width: 1px; background: var(--ember-on-dark); pointer-events: none; }
 #tip { min-height: 1.6em; color: var(--muted); margin-top: 2px; font-size: 11px; }
 .note { color: var(--muted); margin-top: 10px; font-size: 11px; }
-.note a { color: var(--ember); text-decoration: none; }
+.note a, .sub a { color: var(--ember-on-dark); text-decoration: none; }
+.note a:hover, .sub a:hover { text-decoration: underline; }
 @media (max-width: 1000px) {
   :root { --side: 100%; }
   .stage { grid-template-columns: minmax(0, 1fr); gap: 16px; }
@@ -105,7 +106,7 @@ button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
 <body>
 <div class="tick"></div>
 <h1>The radar, replayed</h1>
-<p class="sub">Every Enron email is a vector. Each week we cluster the last 6 months, name each cluster, and alert when one grows fast. The glow is the emails left out.</p>
+<p class="sub">Every Enron email is a vector. Each week I cluster the last 6 months, name each cluster, and alert when one grows fast. The glow is the emails left out. <a href="../investigator/index.html">Watch the agent work a case →</a></p>
 
 <div class="stage">
   <div>
@@ -144,7 +145,7 @@ button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
       <span><i style="background:var(--rest)"></i>everything else</span>
       <span><i class="ring"></i><b>ring</b>: an alert fired on this cluster</span>
       <span><i style="background:#6B5C47"></i><b>glow</b>: emails no cluster took</span>
-      <span><i style="background:#332E28"></i><b>+ junk</b>: newsletters, footers, chatter, one-offs we filter out</span>
+      <span><i style="background:#332E28"></i><b>+ junk</b>: newsletters, footers, chatter, one-offs I filter out</span>
     </div>
     <div class="head">events and alerts</div>
     <div id="alerts"></div>
@@ -156,7 +157,7 @@ button:focus-visible { outline: 1px solid var(--ember); outline-offset: 1px; }
   <div id="head"></div>
 </div>
 <div id="tip">Emails per week. The line is how many different people sent mail. Events on top, alerts underneath. Click or drag to move through time.</div>
-<p class="note">The Enron corpus, as released by CMU. Each week's clusters and every alert saw only the mail up to that week. Sizes and places are smoothed with later mail, for the picture only. <a href="https://github.com/AlanViollier/rag-trend-radar">The code →</a></p>
+<p class="note">The Enron emails, made public by FERC in 2003, in CMU's May 2015 release. Each week's clusters and every alert saw only the mail up to that week. Sizes and places are smoothed with later mail, for the picture only. <a href="https://github.com/AlanViollier/rag-trend-radar">The code on GitHub →</a></p>
 
 <script id="data" type="application/json">__DATA__</script>
 <script type="module">

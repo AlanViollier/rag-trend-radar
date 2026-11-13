@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>rag-trend-radar</title>
+<meta name="description" content="A RAG and a trend radar over the public Enron emails, in one Postgres database: two recorded demos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #FBF8F3; --ink: #1C1A17; --muted: #97907F; --line: #E8E2D6; --ember: #C2410C;
+  --font: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--paper); color: var(--ink); font: 400 13px/1.6 var(--font); max-width: 720px; margin: 0 auto; padding: 48px 16px; }
+.tick { height: 3px; width: 56px; background: var(--ember); margin-bottom: 14px; }
+h1 { font-size: 20px; font-weight: 600; }
+.sub { color: var(--muted); margin: 4px 0 28px; }
+.head { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 11px; margin: 0 0 10px; }
+.head::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.row { display: block; padding: 10px 0 14px; color: inherit; text-decoration: none; border-bottom: 1px solid var(--line); }
+.row b { font-weight: 500; }
+.row span { display: block; color: var(--muted); }
+.row:hover b { color: var(--ember); }
+.foot { color: var(--muted); font-size: 11.5px; margin-top: 24px; }
+a { color: var(--ember); text-decoration: none; }
+a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="tick"></div>
+<h1>rag-trend-radar</h1>
+<p class="sub">A RAG and a trend radar over the public Enron emails, in one Postgres database. Two recorded demos.</p>
+<div class="head">01 · demos</div>
+<a class="row" href="investigator/index.html"><b>→ The recorded investigator</b><span>Real questions worked by the agent, step by step: its plan, its searches, the emails it read, its cited answer.</span></a>
+<a class="row" href="radar/index.html"><b>→ The radar, replayed</b><span>Twenty months of Enron's mail as clusters growing week by week, stopping on the alerts that mattered.</span></a>
+<p class="foot">The Enron emails, made public by FERC in 2003, in CMU's May 2015 release. <a href="https://github.com/AlanViollier/rag-trend-radar">The code on GitHub →</a></p>
+</body>
+</html>
