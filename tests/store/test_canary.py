@@ -47,7 +47,6 @@ def _document(external_id: str, body: str, reader: str, sent_at: datetime) -> Do
         author="",
         body=body,
         quoted="",
-        public=False,
         readers=(reader,),
     )
 

@@ -119,13 +119,13 @@ def _upsert_document(cur: psycopg.Cursor[TupleRow], doc: Document) -> tuple[int,
     # A quoted message comes back each day someone quotes it: it keeps the date and subject of
     # its first quote. An email's date is resolved once, so for it LEAST changes nothing.
     cur.execute(
-        "INSERT INTO documents (source, external_id, kind, sent_at, title, body, quoted,"
-        " public) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+        "INSERT INTO documents (source, external_id, kind, sent_at, title, body, quoted)"
+        " VALUES (%s, %s, %s, %s, %s, %s, %s)"
         " ON CONFLICT (source, external_id) DO UPDATE SET kind = EXCLUDED.kind,"
         " sent_at = LEAST(documents.sent_at, EXCLUDED.sent_at), title = CASE"
         " WHEN EXCLUDED.sent_at < documents.sent_at THEN EXCLUDED.title ELSE documents.title END,"
         " body = EXCLUDED.body,"
-        " quoted = EXCLUDED.quoted, public = EXCLUDED.public"
+        " quoted = EXCLUDED.quoted"
         " RETURNING id, sent_at",
         (
             doc.source,
@@ -135,7 +135,6 @@ def _upsert_document(cur: psycopg.Cursor[TupleRow], doc: Document) -> tuple[int,
             doc.title,
             doc.body,
             doc.quoted,
-            doc.public,
         ),
     )
     document_id, sent_at = cur.fetchall()[0]

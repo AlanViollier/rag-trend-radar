@@ -41,7 +41,6 @@ def test_a_quoted_message_leads_without_the_date_it_was_first_quoted() -> None:
         author="Pat Rowe",
         body="Prices rose.\n\nPat Rowe\nEnron",
         quoted="",
-        public=False,
         readers=("kim-d",),
     )
     assert pieces(doc, _words, frozenset({"Pat Rowe", "Enron"})) == [
@@ -92,7 +91,6 @@ def _reply(body: str, quoted: str, kind: str = "email") -> Document:
         author="",
         body=body,
         quoted=quoted,
-        public=False,
         readers=(),
     )
 

@@ -26,7 +26,6 @@ def _document(body: str, readers: tuple[str, ...] = ("lee-p",)) -> Document:
         author="",
         body=body,
         quoted="",
-        public=False,
         readers=readers,
     )
 

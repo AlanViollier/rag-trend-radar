@@ -50,12 +50,9 @@ CREATE TABLE documents (
     title       text NOT NULL,
     body        text NOT NULL,           -- the document's own text: what gets chunked
     quoted      text NOT NULL DEFAULT '', -- quoted replies, kept but never chunked
-    public      boolean NOT NULL DEFAULT false,
     deleted_at  timestamptz,
     UNIQUE (source, external_id)
 );
--- The few public documents, for the chunk policy's check (none in the Enron store).
-CREATE INDEX documents_public ON documents (id) WHERE public;
 
 -- Every file in the dataset exactly as read. Never edited: everything else rebuilds from it.
 CREATE TABLE raw_files (
@@ -203,8 +200,7 @@ ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 CREATE POLICY documents_visible ON documents FOR SELECT TO radar_reader USING (
     deleted_at IS NULL
     AND (
-        public
-        OR current_setting('app.person', true) = 'investigator'
+        current_setting('app.person', true) = 'investigator'
         OR EXISTS (
             SELECT 1 FROM access
             WHERE access.document_id = documents.id
@@ -232,7 +228,6 @@ CREATE POLICY chunks_visible ON chunks FOR SELECT TO radar_reader USING (
         WHERE a.document_id = chunks.document_id
           AND a.mailbox = current_setting('app.person', true)
     )
-    OR EXISTS (SELECT 1 FROM documents d WHERE d.id = chunks.document_id AND d.public)
 );
 
 -- An email's details are visible when its document is; the subquery goes through documents' policy.

@@ -25,7 +25,7 @@ Twenty months of Enron's mail as moving clusters, stopping on the moments that m
 |---|---|
 | the data | 517,401 files → 244,534 emails → 464,603 chunks |
 | finding the right email, top 10 | .959 as an employee, .893 as the investigator |
-| permission leaks | 0 in 185,589 results |
+| permission leaks | 0 in 184,589 results |
 | the agent | 36 of 36 checked questions, median 32 s, about 7 cents each |
 | the radar | 87 weeks, 973 clusters, 72 alerts |
 
@@ -155,7 +155,7 @@ HNSW, told to keep walking until enough rows pass the filters.
 following subjects through time can't.
 
 The permissions were checked at full scale: every question asked as a mailbox that can't read its
-answer, and again on the day before its answer was sent. 185,589 results, 0 leaks.
+answer, and again on the day before its answer was sent. 184,589 results, 0 leaks.
 
 ## 05 · The agent
 

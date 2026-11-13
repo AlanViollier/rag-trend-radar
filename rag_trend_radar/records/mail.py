@@ -61,7 +61,6 @@ class Document(Record):
     author: str
     body: str
     quoted: str
-    public: bool
     readers: tuple[str, ...]
     paths: tuple[str, ...] = ()
     # A quoted message's readers are recounted from the emails quoting it (external ids).

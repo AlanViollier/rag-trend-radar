@@ -21,7 +21,6 @@ def _document(external_id: str, body: str) -> Document:
         author="",
         body=body,
         quoted="",
-        public=False,
         readers=("lay-k",),
     )
 

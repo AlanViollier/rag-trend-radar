@@ -22,7 +22,6 @@ def _document(external_id: str, body: str, quoted: str) -> Document:
         author="",
         body=body,
         quoted=quoted,
-        public=False,
         readers=("mann-k",),
     )
 

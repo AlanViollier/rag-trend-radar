@@ -37,7 +37,6 @@ def _email(external_id: str, body: str, mailbox: str, sender: str, sent_at: date
         author=sender,
         body=body,
         quoted="",
-        public=False,
         readers=(mailbox,),
         email=EmailHeaders(
             message_id=external_id,

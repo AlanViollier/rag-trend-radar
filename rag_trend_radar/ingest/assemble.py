@@ -121,7 +121,6 @@ def _email(group: list[DayFile]) -> tuple[Document, SplitBody]:
         author=email.sender,
         body=split.own,
         quoted=quoted,
-        public=False,
         readers=tuple(sorted({f.raw.mailbox for f in group})),
         paths=tuple(sorted(f.raw.path for f in group)),
         email=EmailHeaders.model_validate(email.model_dump(include=set(EmailHeaders.model_fields))),
@@ -152,7 +151,6 @@ def _orphans(emails: list[tuple[Document, SplitBody]], held: set[str]) -> list[D
             author=block_author(block.header),
             body=block.text,
             quoted="",
-            public=False,
             readers=(),
             quoted_by=tuple(quoted_by[digest]),
         )
