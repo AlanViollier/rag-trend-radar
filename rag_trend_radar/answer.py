@@ -12,9 +12,9 @@ from rag_trend_radar.exceptions import AnswerRefused
 from rag_trend_radar.records import Answer, Citation, SearchHit
 
 # Bump on any change to the prompt or the request shape: cached answers are keyed by it.
-PROMPT_VERSION = 2
-SYSTEM = """You answer questions for an employee of Enron, from the emails their search \
-returned. Today is {as_of}; nothing after it exists yet.
+PROMPT_VERSION = 3
+SYSTEM = """You answer questions about Enron's email from the emails a search returned \
+for the person asking. Today is {as_of}; nothing after it exists yet.
 
 Answer only from the search results. When they don't hold the answer, say so plainly and stop: \
 an honest "not in your mail" beats a guess. A paragraph starting "{context_mark}" is the earlier \

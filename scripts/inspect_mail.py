@@ -66,7 +66,7 @@ class Profile:
 
 def main(root: Path) -> None:
     """Profile every file under `root`, dedup, then print the report."""
-    paths = sorted(p for p in root.rglob("*") if p.is_file())
+    paths = enron.paths(root)
     quarantine: Counter[str] = Counter()
     by_key: dict[str, Profile] = {}
     dates: dict[str, list[datetime]] = {}

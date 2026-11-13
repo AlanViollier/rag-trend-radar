@@ -28,7 +28,7 @@ RAW_CAP = 4000  # chars of the raw body shown; the rest is summarised
 
 def main(root: Path) -> None:
     """Sample emails from `root`, clean them, print the page."""
-    paths = sorted(p for p in root.rglob("*") if p.is_file())
+    paths = enron.paths(root)
     unique: dict[str, tuple[str, str, int]] = {}
     with ProcessPoolExecutor() as pool:
         for result in pool.map(_own, [(root, p) for p in paths], chunksize=2000):

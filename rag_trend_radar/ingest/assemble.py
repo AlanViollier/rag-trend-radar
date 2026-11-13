@@ -42,8 +42,7 @@ def scan(root: Path) -> Scan:
     copies: list[Copy] = []
     rejected: list[Rejected] = []
     with ProcessPoolExecutor() as pool:
-        paths = sorted(p for p in root.rglob("*") if p.is_file())
-        for scanned in pool.map(partial(_scan, root=root), paths, chunksize=500):
+        for scanned in pool.map(partial(_scan, root=root), enron.paths(root), chunksize=500):
             if isinstance(scanned, Rejected):
                 rejected.append(scanned)
             else:

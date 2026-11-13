@@ -10,6 +10,7 @@ from rag_trend_radar.exceptions import OtherStore
 from rag_trend_radar.radar import build, frames
 from rag_trend_radar.radar.clustering import Pool
 from rag_trend_radar.run_log import RunLog
+from tests.factories import take
 
 D = date(2001, 3, 4)
 SUBJECTS = ("gas pipeline", "power grid", "fantasy football")
@@ -90,7 +91,7 @@ def test_a_week_already_saved_isnt_made_again(tmp_path: Path) -> None:
 
 
 def _without(chosen: Pool, gone: int) -> Pool:
-    return chosen.take(np.flatnonzero(chosen.chunk_ids != gone))
+    return take(chosen, np.flatnonzero(chosen.chunk_ids != gone))
 
 
 def _labelled(made: list[frames.Frame], chosen: Pool) -> dict[int, int]:

@@ -4,7 +4,7 @@ import pytest
 
 from rag_trend_radar.exceptions import ParseError
 from rag_trend_radar.records import RawFile
-from rag_trend_radar.sources.enron import iter_raw_files, parse
+from rag_trend_radar.sources.enron import parse, paths, read_raw_file
 
 HEADERS = (
     "Message-ID: <1.2.JavaMail.evans@thyme>\r\n"
@@ -61,11 +61,11 @@ def test_unusable_files_raise_with_a_reason(headers: str, body: str, reason: str
         parse(raw)
 
 
-def test_iter_raw_files_reads_mailbox_and_nested_folder(tmp_path: Path) -> None:
+def test_files_are_read_with_their_mailbox_and_nested_folder(tmp_path: Path) -> None:
     (tmp_path / "kim-d" / "projects" / "west").mkdir(parents=True)
     (tmp_path / "kim-d" / "projects" / "west" / "3.").write_bytes(b"x")
     (tmp_path / "kim-d" / "1.").write_bytes(b"y")
-    files = list(iter_raw_files(tmp_path))
+    files = [read_raw_file(tmp_path, path) for path in paths(tmp_path)]
     assert [(f.path, f.mailbox, f.folder) for f in files] == [
         ("kim-d/1.", "kim-d", ""),
         ("kim-d/projects/west/3.", "kim-d", "projects/west"),

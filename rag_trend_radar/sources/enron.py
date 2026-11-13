@@ -3,7 +3,6 @@
 import email
 import email.utils
 import re
-from collections.abc import Iterator
 from datetime import datetime
 from email.header import decode_header
 from email.message import Message
@@ -29,10 +28,9 @@ _BOUNCE_SUBJECTS = re.compile(
 _FOLD = re.compile(r"\r?\n[ \t]+")
 
 
-def iter_raw_files(root: Path) -> Iterator[RawFile]:
-    """Yield every email file under `root` (the extracted maildir/), in path order."""
-    for path in sorted(p for p in root.rglob("*") if p.is_file()):
-        yield read_raw_file(root, path)
+def paths(root: Path) -> list[Path]:
+    """Every email file under `root` (the extracted maildir/), in path order."""
+    return sorted(p for p in root.rglob("*") if p.is_file())
 
 
 def read_raw_file(root: Path, path: Path) -> RawFile:

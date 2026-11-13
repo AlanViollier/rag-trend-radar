@@ -5,7 +5,7 @@ Re-running a day changes nothing (rule 5): documents upsert by content hash, and
 """
 
 from collections.abc import Callable
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -14,7 +14,7 @@ from psycopg import sql
 from psycopg.rows import TupleRow
 
 from rag_trend_radar import index
-from rag_trend_radar.days import cutoff
+from rag_trend_radar.days import cutoff, opening
 from rag_trend_radar.ingest import assemble
 from rag_trend_radar.ingest.dedup import text_hash
 from rag_trend_radar.records import DayFile, Document, RawFile, Scan
@@ -78,7 +78,7 @@ def run_day(
         "SELECT r.path, r.mailbox, r.folder, r.content, c.email_key, c.sent_at, c.date_uncertain"
         " FROM copies c JOIN raw_files r USING (path)"
         " WHERE c.sent_at >= %s AND c.sent_at < %s ORDER BY c.sent_at, c.email_key, c.path",
-        (cutoff(day - timedelta(days=1)), cutoff(day)),
+        (opening(day), cutoff(day)),
     ).fetchall()
     files = [
         DayFile(
@@ -118,7 +118,7 @@ def recount_day(conn: psycopg.Connection[TupleRow], day: date, model: str, dims:
             "  ON c.document_id = d.id JOIN {vectors} v ON v.chunk_id = c.id WHERE {in_day})"
             " WHERE day = %(day)s"
         ).format(in_day=sql.SQL(in_day), vectors=index.ensure_vectors(conn, model, dims)),
-        {"day": day, "start": cutoff(day - timedelta(days=1)), "end": cutoff(day)},
+        {"day": day, "start": opening(day), "end": cutoff(day)},
     )
 
 

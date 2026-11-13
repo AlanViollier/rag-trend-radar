@@ -42,9 +42,9 @@ def weeks_within(since: date, until: date) -> tuple[date, date]:
 
 def last_day(conn: psycopg.Connection[TupleRow]) -> date:
     """The default `as_of`: the last day the pipeline finished (rule 2)."""
-    day = conn.execute("SELECT max(day) FROM batches WHERE finished_at IS NOT NULL").fetchall()[0][
-        0
-    ]
+    ((day,),) = conn.execute(
+        "SELECT max(day) FROM batches WHERE finished_at IS NOT NULL"
+    ).fetchall()
     if day is None:
         raise NoDaysLoaded("no finished day in batches: run `rag-trend-radar replay` first")
     return cast(date, day)

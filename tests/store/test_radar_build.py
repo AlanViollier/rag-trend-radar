@@ -12,6 +12,7 @@ from rag_trend_radar.db import connect as db
 from rag_trend_radar.radar import build, frames
 from rag_trend_radar.radar.clustering import Pool
 from rag_trend_radar.radar.frames import Frame
+from tests.factories import take
 
 MODEL, DIMS = "test/build", 8
 START = date(2001, 1, 7)
@@ -166,7 +167,7 @@ def test_a_delete_then_a_rebuild_takes_the_chunk_out_and_leaves_other_clusters_t
     with db.connect() as conn:
         document = conn.execute("SELECT document_id FROM chunks WHERE id = %s", (gone,)).fetchall()
         index.delete_document(conn, document[0][0])
-    left = chosen.take(np.flatnonzero(chosen.chunk_ids != gone))
+    left = take(chosen, np.flatnonzero(chosen.chunk_ids != gone))
     after = frames.load(left, WEEKS, tmp_path)
     with db.connect() as conn:
         build.write(conn, left, after, after, MODEL)

@@ -12,7 +12,7 @@ from pgvector import HalfVector
 from psycopg.rows import TupleRow
 
 from rag_trend_radar.config import get_settings
-from rag_trend_radar.days import cutoff
+from rag_trend_radar.days import cutoff, opening
 from rag_trend_radar.radar import alerts, cluster_kinds, links, signals
 from rag_trend_radar.radar.clustering import NOISE, Pool
 from rag_trend_radar.radar.frames import Frame
@@ -242,7 +242,7 @@ def _write_days(conn: psycopg.Connection[TupleRow], pool: Pool) -> int:
     conn.execute("DELETE FROM day_totals")
     settings = get_settings()
     first, last = min(pool.days), max(pool.days)
-    since, until = cutoff(date.fromordinal(first.toordinal() - 1)), cutoff(last)
+    since, until = opening(first), cutoff(last)
     rows = conn.execute(
         "WITH sent AS (SELECT id, kind, (sent_at AT TIME ZONE %s)::date AS day FROM documents"
         " WHERE deleted_at IS NULL AND sent_at >= %s AND sent_at < %s),"

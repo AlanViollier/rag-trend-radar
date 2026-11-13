@@ -1,7 +1,7 @@
 """Find clusters: the chunks a period's clustering runs on, the map they're clustered on, the clusters."""
 
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date
 
 import numpy as np
 import psycopg
@@ -13,7 +13,7 @@ from umap import UMAP
 
 from rag_trend_radar import index
 from rag_trend_radar.config import get_settings
-from rag_trend_radar.days import cutoff
+from rag_trend_radar.days import cutoff, opening
 from rag_trend_radar.ingest.origin import Origin, origin
 
 NOISE = -1
@@ -40,18 +40,6 @@ class Pool:
     press: list[bool]
     store: str
 
-    def take(self, rows: NDArray[np.int64]) -> Pool:
-        """The same pool cut down to `rows`."""
-        return Pool(
-            self.chunk_ids[rows],
-            self.document_ids[rows],
-            [self.texts[i] for i in rows],
-            self.vectors[rows],
-            [self.days[i] for i in rows],
-            [self.press[i] for i in rows],
-            self.store,
-        )
-
 
 def pool(
     conn: psycopg.Connection[TupleRow],
@@ -72,7 +60,7 @@ def pool(
             " WHERE d.deleted_at IS NULL AND d.sent_at >= %s AND d.sent_at < %s"
             " AND c.quote_chars = 0 ORDER BY c.id"
         ).format(index.vectors_identifier(model, dims)),
-        (get_settings().timezone, cutoff(since - timedelta(days=1)), cutoff(until)),
+        (get_settings().timezone, opening(since), cutoff(until)),
     ).fetchall()
     origins = [origin(row[2]) for row in rows]
     kept = [(row, came) for row, came in zip(rows, origins, strict=True) if came is not Origin.BULK]

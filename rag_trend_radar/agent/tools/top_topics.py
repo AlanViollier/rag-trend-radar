@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from datetime import date, timedelta
-from typing import Literal
+from typing import Literal, NamedTuple
 
 from pydantic import Field
 
@@ -68,7 +68,7 @@ def run(desk: Desk, given: Input) -> ToolResult:
             (first, last),
         ).fetchall()
     )
-    found = []
+    found: list[_Topic] = []
     for cluster, seen in weeks.items():
         latest = max(seen)
         label = naming.name(cluster, latest, seen[latest][2])
@@ -77,18 +77,30 @@ def run(desk: Desk, given: Input) -> ToolResult:
             continue
         start, end = baseline.get(cluster, 0), (seen[last][0] if last in seen else 0)
         size = sum(mail for _, mail, _ in seen.values()) / len(seen)
-        found.append(
-            (cluster, label, start, end, max(r for r, _, _ in seen.values()), size, seen[latest][2])
-        )
-    key = (lambda t: t[3] - t[2]) if given.order == "growth" else (lambda t: t[5])
-    found.sort(key=key, reverse=True)
+        peak = max(recent for recent, _, _ in seen.values())
+        found.append(_Topic(cluster, label, start, end, peak, size, seen[latest][2]))
+    if given.order == "growth":
+        found.sort(key=lambda topic: topic.end - topic.start, reverse=True)
+    else:
+        found.sort(key=lambda topic: topic.size, reverse=True)
     lines = [
         f"Topics, weeks ending {first} to {last}, by {given.order} since week ending {before}:"
     ] + [
-        f"topic {cluster} · {label} · recent mail {start} → {end} ({end - start:+}) · peak {peak}"
-        f" · {size:.0f} mail a week · {alerts.get(cluster, 0)} alerts · keywords: {', '.join(kw[:6])}"
-        for cluster, label, start, end, peak, size, kw in found[: min(given.limit, MAX_TOPICS)]
+        f"topic {t.cluster} · {t.label} · recent mail {t.start} → {t.end} ({t.end - t.start:+})"
+        f" · peak {t.peak} · {t.size:.0f} mail a week · {alerts.get(t.cluster, 0)} alerts"
+        f" · keywords: {', '.join(t.keywords[:6])}"
+        for t in found[: min(given.limit, MAX_TOPICS)]
     ]
     if not found:
         lines.append("none match")
     return ToolResult([text("\n".join(lines))], f"{len(found)} topics, {first} to {last}")
+
+
+class _Topic(NamedTuple):
+    cluster: int
+    label: str
+    start: int
+    end: int
+    peak: int
+    size: float
+    keywords: list[str]
