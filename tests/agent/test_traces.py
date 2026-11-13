@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from rag_trend_radar.agent import traces
-from rag_trend_radar.schema import AgentRun
+from rag_trend_radar.records import AgentRun
 
 
 def _run(answer: str) -> AgentRun:

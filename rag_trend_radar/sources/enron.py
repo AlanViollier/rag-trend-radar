@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import cast
 
 from rag_trend_radar.exceptions import ParseError
-from rag_trend_radar.schema import ParsedEmail, RawFile
+from rag_trend_radar.records import ParsedEmail, RawFile
 
 # 1997–2002 holds real mail. Outside it: the 1979-12-31 "no date" placeholder, a few 1986
 # stragglers, and 2004+ stamps from when CMU processed the files.

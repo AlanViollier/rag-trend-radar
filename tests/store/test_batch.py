@@ -10,7 +10,7 @@ from psycopg.rows import TupleRow
 from rag_trend_radar import batch, index
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.ingest.chunk import pieces
-from rag_trend_radar.schema import Document
+from rag_trend_radar.records import Document
 
 CHICAGO = ZoneInfo("America/Chicago")
 MODEL, DIMS = "test/fake", 8

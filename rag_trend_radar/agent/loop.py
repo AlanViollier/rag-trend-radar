@@ -29,8 +29,8 @@ from rag_trend_radar.agent.desk import Desk, ToolResult
 from rag_trend_radar.agent.prompt import MAX_TOOL_CALLS, PROMPT_VERSION, system, verdict
 from rag_trend_radar.answer import SOURCE_PREFIX
 from rag_trend_radar.exceptions import AnswerRefused, ToolRefused
+from rag_trend_radar.records import AgentRun, AgentStep, Citation
 from rag_trend_radar.run_log import commit
-from rag_trend_radar.schema import AgentRun, AgentStep, Citation
 
 # A question that runs past this stops calling tools and answers with what it has. The smoke run
 # averaged 4 cents at medium effort and 2 tool calls (2026-11-10); thorough runs cost more.

@@ -11,7 +11,7 @@ from ranx import Qrels, Run, compare, evaluate
 from ranx.data_structures.report import Report
 
 from rag_trend_radar.db import connect as db
-from rag_trend_radar.schema import EvalQuestion, SearchHit
+from rag_trend_radar.records import EvalQuestion, SearchHit
 from rag_trend_radar.search import hybrid, keyword, vector
 from rag_trend_radar.search.collapse import collapse
 from rag_trend_radar.search.pipeline import final

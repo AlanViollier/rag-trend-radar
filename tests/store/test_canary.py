@@ -21,7 +21,7 @@ from rag_trend_radar.days import EARLIEST, cutoff
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.evals import leaks
 from rag_trend_radar.evals.retrieval import rankings
-from rag_trend_radar.schema import Document, EvalQuestion
+from rag_trend_radar.records import Document, EvalQuestion
 from rag_trend_radar.search import hybrid, keyword, vector
 
 MODEL, DIMS = "test/fake", 8

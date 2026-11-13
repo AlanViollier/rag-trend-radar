@@ -1,4 +1,4 @@
-"""Simulated days: where one ends, and which is the latest the pipeline finished."""
+"""Simulated days: where one starts and ends, its radar week, and the latest the pipeline finished."""
 
 from datetime import date, datetime, time, timedelta
 from typing import cast
@@ -22,6 +22,16 @@ def cutoff(as_of: date) -> datetime:
 def opening(day: date | None) -> datetime:
     """The instant `day` starts in the store's local days; with no day, before any mail."""
     return EARLIEST if day is None else cutoff(day - timedelta(days=1))
+
+
+def local_day(instant: datetime) -> date:
+    """The store's local day an instant falls on (America/Chicago)."""
+    return instant.astimezone(ZoneInfo(get_settings().timezone)).date()
+
+
+def week_of(day: date) -> date:
+    """The Sunday a day's week ends on: the radar names its weeks by their last day."""
+    return day + timedelta(days=6 - day.weekday())
 
 
 def last_day(conn: psycopg.Connection[TupleRow]) -> date:

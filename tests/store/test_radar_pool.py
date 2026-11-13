@@ -6,7 +6,7 @@ import pytest
 
 from rag_trend_radar import index
 from rag_trend_radar.db import connect as db
-from rag_trend_radar.trends import topics
+from rag_trend_radar.radar import clustering
 
 MODEL, DIMS = "test/pool", 4
 # Chicago: 23:30 on the last day of March is already April in UTC, and still counts as March.
@@ -46,7 +46,7 @@ def filled(store: None) -> Iterator[None]:
 @pytest.mark.usefixtures("filled")
 def test_the_pool_holds_a_periods_chunks_that_say_something() -> None:
     with db.connect() as conn:
-        pool = topics.pool(conn, MODEL, DIMS, date(2000, 3, 1), date(2000, 3, 31))
+        pool = clustering.pool(conn, MODEL, DIMS, date(2000, 3, 1), date(2000, 3, 31))
         store = conn.execute("SELECT id::text FROM store").fetchall()
     assert [(pool.store,)] == [(pool.take(np.array([1])).store,)] == store
     assert sorted(pool.texts) == ["Subject: Gas\n\nPrices fell.", "Subject: Gas\n\nPrices rose."]

@@ -10,15 +10,15 @@ from rich.table import Table
 from rag_trend_radar.cli.app import app
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
+from rag_trend_radar.pages.radar import export
+from rag_trend_radar.pages.radar.records import NAMES, AlertNote, Moment, Naming, PageEvent
+from rag_trend_radar.radar import build, clustering, frames
+from rag_trend_radar.records import RadarRun
 from rag_trend_radar.run_log import RunLog, summarise
-from rag_trend_radar.schema import RadarRun
-from rag_trend_radar.site import export
-from rag_trend_radar.site.records import NAMES, AlertNote, Moment, Naming, PageEvent
-from rag_trend_radar.trends import build, frames, topics
 
-EVENTS = Path("evals/events.jsonl")
-MOMENTS = Path("evals/moments.jsonl")
-ALERT_NOTES = Path("evals/alert_notes.jsonl")
+EVENTS = Path("curated/radar/events.jsonl")
+MOMENTS = Path("curated/radar/moments.jsonl")
+ALERT_NOTES = Path("curated/radar/alert_notes.jsonl")
 PAGE = Path("docs/radar/index.html")
 
 
@@ -150,11 +150,11 @@ def _show(run: RadarRun) -> None:
     show(" · ".join(f"{k} {v}" for k, v in {**run.settings, **run.results}.items()))
 
 
-def _pool(log: RunLog, last: date) -> topics.Pool:
+def _pool(log: RunLog, last: date) -> clustering.Pool:
     settings = get_settings()
     since = frames.FIRST - timedelta(weeks=frames.WEEKS)
     with log.stage("read chunks") as handled, db.connect() as conn:
-        pool = topics.pool(conn, settings.embedding_model, settings.embedding_dims, since, last)
+        pool = clustering.pool(conn, settings.embedding_model, settings.embedding_dims, since, last)
         handled.items = len(pool.chunk_ids)
     return pool
 

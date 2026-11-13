@@ -7,8 +7,8 @@ from typing import NamedTuple
 import psycopg
 from psycopg.rows import TupleRow
 
-from rag_trend_radar.agent.desk import Desk, local_day
-from rag_trend_radar.days import cutoff
+from rag_trend_radar.agent.desk import Desk
+from rag_trend_radar.days import cutoff, local_day
 
 # Bump on any change to the prompt or the request shape: saved runs are keyed by it.
 PROMPT_VERSION = 9

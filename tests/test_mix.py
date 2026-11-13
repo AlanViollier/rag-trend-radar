@@ -1,7 +1,7 @@
 import pytest
 
-from rag_trend_radar.ingest.kinds import Source, source
-from rag_trend_radar.schema import SearchHit
+from rag_trend_radar.ingest.origin import Origin, origin
+from rag_trend_radar.records import SearchHit
 from rag_trend_radar.search.mix import MAX_PRESS, mix
 
 PRESS = "Subject: Enron Mentions -- 01/25/02\nFrom: ann.schmidt@enron.com\n\nThe stock fell again."
@@ -14,18 +14,18 @@ def _hit(chunk_id: int, text: str, score: float) -> SearchHit:
 
 
 @pytest.mark.parametrize(
-    ("text", "kind"),
+    ("text", "came"),
     [
-        (PRESS, Source.PRESS),
-        (MAIL, Source.MAIL),
-        (BULK, Source.BULK),
-        ("Subject: FW: news\n\nHOUSTON -(Dow Jones)- Enron said on Monday.", Source.PRESS),
-        ("Subject: Hi\nFrom: noreply@ccomad3.uu.commissioner.com\n\nWeek 8 scores.", Source.BULK),
-        ("Subject: prices\n\nCheck Bloomberg for the close.", Source.MAIL),
-        ("Mary: can someone else handle this?", Source.MAIL),
+        (PRESS, Origin.PRESS),
+        (MAIL, Origin.MAIL),
+        (BULK, Origin.BULK),
+        ("Subject: FW: news\n\nHOUSTON -(Dow Jones)- Enron said on Monday.", Origin.PRESS),
+        ("Subject: Hi\nFrom: noreply@ccomad3.uu.commissioner.com\n\nWeek 8 scores.", Origin.BULK),
+        ("Subject: prices\n\nCheck Bloomberg for the close.", Origin.MAIL),
+        ("Mary: can someone else handle this?", Origin.MAIL),
         (
             "Subject: Demand Ken Lay Donate Proceeds from Enron Stock Sales\n\nDear Mr. Lay,",
-            Source.BULK,
+            Origin.BULK,
         ),
     ],
     ids=[
@@ -39,15 +39,15 @@ def _hit(chunk_id: int, text: str, score: float) -> SearchHit:
         "form-letter",
     ],
 )
-def test_a_chunks_source_comes_from_its_own_text(text: str, kind: Source) -> None:
-    assert source(text) is kind
+def test_a_chunks_origin_comes_from_its_own_text(text: str, came: Origin) -> None:
+    assert origin(text) is came
 
 
 def test_press_is_capped_and_mail_moves_up() -> None:
     press = [_hit(n, PRESS, 0.99) for n in range(8)]
     mail = [_hit(n, MAIL, 0.5) for n in range(8, 16)]
     chosen = mix([*press, *mail], 10)
-    assert sum(source(hit.text) is Source.PRESS for hit in chosen) == MAX_PRESS
+    assert sum(origin(hit.text) is Origin.PRESS for hit in chosen) == MAX_PRESS
     assert len(chosen) == 10
 
 

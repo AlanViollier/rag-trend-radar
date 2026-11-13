@@ -10,7 +10,7 @@ from psycopg import sql
 from psycopg.rows import TupleRow
 
 from rag_trend_radar.days import cutoff, opening
-from rag_trend_radar.schema import SearchHit
+from rag_trend_radar.records import SearchHit
 from rag_trend_radar.search import keyword, vector
 from rag_trend_radar.search.ranking import hits
 

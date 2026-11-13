@@ -5,8 +5,8 @@ import numpy as np
 import psycopg
 import pytest
 
-from rag_trend_radar.ingest.kinds import Source
-from rag_trend_radar.schema import SearchHit, SearchStage
+from rag_trend_radar.ingest.origin import Origin
+from rag_trend_radar.records import SearchHit, SearchStage
 from rag_trend_radar.search import hybrid, pipeline
 from rag_trend_radar.search.mix import RESULTS
 from rag_trend_radar.search.pipeline import final
@@ -38,7 +38,7 @@ def _reranked(monkeypatch: pytest.MonkeyPatch, stages: list[SearchStage] | None)
     monkeypatch.setattr(pipeline, "rerank", lambda _q, hits, _m, top: list(hits)[:top])
     return pipeline.reranked(
         cast(psycopg.Connection[Any], None), "q", np.zeros(4, dtype=np.float32), "m",
-        date(2001, 9, 1), "r", 50, keep=Source.MAIL, stages=stages,
+        date(2001, 9, 1), "r", 50, origin=Origin.MAIL, stages=stages,
     )  # fmt: skip
 
 

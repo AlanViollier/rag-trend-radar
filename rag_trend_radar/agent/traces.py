@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from rag_trend_radar.config import get_settings
-from rag_trend_radar.schema import AgentRun
+from rag_trend_radar.records import AgentRun
 
 # The latest run of every question in the sets, one file each, tracked: page 2 and the scores are
 # built from them, and making them again costs real money.

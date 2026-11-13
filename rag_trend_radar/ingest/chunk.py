@@ -7,7 +7,7 @@ from typing import cast
 from semchunk.semchunk import chunk as split
 
 from rag_trend_radar.ingest.clean import split_quoted, strip_boilerplate
-from rag_trend_radar.schema import Document
+from rag_trend_radar.records import Document
 
 # 90% of own texts are under ~400 tokens, so most emails stay whole. 256 and 1,024 are rival
 # rows in the M1 recall table. No overlap between pieces: semchunk's overlap adds a piece that

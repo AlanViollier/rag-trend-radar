@@ -1,4 +1,4 @@
-"""The agent's search: the pipeline `ask` runs, with optional dates and source."""
+"""The agent's search: the pipeline `ask` runs, with optional dates and origin."""
 
 import time
 from datetime import date, datetime
@@ -6,12 +6,13 @@ from typing import Literal
 
 from pydantic import Field
 
-from rag_trend_radar.agent.desk import Desk, ToolInput, ToolResult, local_day, text
+from rag_trend_radar.agent.desk import Desk, ToolInput, ToolResult, text
 from rag_trend_radar.answer import search_result
 from rag_trend_radar.config import get_settings
+from rag_trend_radar.days import local_day
 from rag_trend_radar.embed import embed
-from rag_trend_radar.ingest.kinds import Source, source
-from rag_trend_radar.schema import SearchStage
+from rag_trend_radar.ingest.origin import Origin, origin
+from rag_trend_radar.records import SearchStage
 from rag_trend_radar.search import hybrid, pipeline
 
 DESCRIPTION = """Search the mail this person can read: keyword and meaning search, reranked, the \
@@ -41,7 +42,8 @@ def run(desk: Desk, given: Input) -> ToolResult:
     begun = time.perf_counter()
     vector = embed([given.query], model, settings.embedding_dims, query=True)[0]
     stages = [SearchStage(name="embed", seconds=time.perf_counter() - begun, items=1)]
-    keep = None if given.source == "any" else Source(given.source)
+    # The argument keeps the name Claude was given, `source`: the recorded runs call it so.
+    wanted = None if given.source == "any" else Origin(given.source)
     ranked = pipeline.reranked(
         desk.conn,
         given.query,
@@ -51,7 +53,7 @@ def run(desk: Desk, given: Input) -> ToolResult:
         settings.rerank_model,
         hybrid.DEPTH,
         since=given.since,
-        keep=keep,
+        origin=wanted,
         stages=stages,
     )
     fresh = [h for h in ranked if h.chunk_id not in desk.shown and h.document_id not in desk.read]
@@ -77,14 +79,14 @@ def run(desk: Desk, given: Input) -> ToolResult:
     blocks = []
     for hit in hits:
         # The API takes a tool result of search results only, no text beside them: the date and
-        # source ride in each title, the document id in its `source`.
+        # origin ride in each title, the document id in its `source`.
         block = search_result(hit)
         block["title"] = (
-            f"{local_day(sent[hit.document_id])} · {source(hit.text)} · {block['title']}"
+            f"{local_day(sent[hit.document_id])} · {origin(hit.text)} · {block['title']}"
         )
         blocks.append(block)
-    kinds = [source(hit.text) for hit in hits]
-    summary = f"{len(hits)} results, {kinds.count(Source.MAIL)} of them people's own mail"
+    origins = [origin(hit.text) for hit in hits]
+    summary = f"{len(hits)} results, {origins.count(Origin.MAIL)} of them people's own mail"
     if again:
         summary += f", {len(again)} repeats left out"
     found = tuple(dict.fromkeys(h.document_id for h in hits))

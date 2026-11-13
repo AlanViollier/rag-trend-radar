@@ -9,7 +9,7 @@ from rich import print as show
 from rag_trend_radar import agent
 from rag_trend_radar.cli.app import app
 from rag_trend_radar.db import connect as db
-from rag_trend_radar.site import investigator
+from rag_trend_radar.pages import investigator
 
 PAGE = Path("docs/investigator/index.html")
 

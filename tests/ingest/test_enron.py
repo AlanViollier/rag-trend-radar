@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from rag_trend_radar.exceptions import ParseError
-from rag_trend_radar.schema import RawFile
+from rag_trend_radar.records import RawFile
 from rag_trend_radar.sources.enron import iter_raw_files, parse
 
 HEADERS = (

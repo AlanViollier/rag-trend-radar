@@ -22,7 +22,7 @@ from rag_trend_radar.ingest.clean import (
     split_quoted,
 )
 from rag_trend_radar.ingest.dedup import content_hash, resolve_sent_at, text_hash
-from rag_trend_radar.schema import (
+from rag_trend_radar.records import (
     Copy,
     DayFile,
     Document,

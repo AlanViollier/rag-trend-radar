@@ -9,7 +9,7 @@ from anthropic.types.beta import BetaSearchResultBlockParam, BetaTextBlockParam
 
 from rag_trend_radar import claude
 from rag_trend_radar.exceptions import AnswerRefused
-from rag_trend_radar.schema import Answer, Citation, SearchHit
+from rag_trend_radar.records import Answer, Citation, SearchHit
 
 # Bump on any change to the prompt or the request shape: cached answers are keyed by it.
 PROMPT_VERSION = 2

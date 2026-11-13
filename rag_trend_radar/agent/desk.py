@@ -2,17 +2,15 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta
-from zoneinfo import ZoneInfo
+from datetime import date
 
 import psycopg
 from anthropic.types.beta import BetaSearchResultBlockParam, BetaTextBlockParam
 from psycopg.rows import TupleRow
 from pydantic import ConfigDict
 
-from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
-from rag_trend_radar.schema import Record, SearchStage
+from rag_trend_radar.records import Record, SearchStage
 
 type Block = BetaTextBlockParam | BetaSearchResultBlockParam
 
@@ -74,13 +72,3 @@ class ToolInput(Record):
 def text(body: str) -> BetaTextBlockParam:
     """Plain text for Claude to read."""
     return {"type": "text", "text": body}
-
-
-def local_day(instant: datetime) -> date:
-    """The store's local day an instant falls on (America/Chicago)."""
-    return instant.astimezone(ZoneInfo(get_settings().timezone)).date()
-
-
-def week_of(day: date) -> date:
-    """The Sunday a day's week ends on: the radar names its weeks by their last day."""
-    return day + timedelta(days=6 - day.weekday())

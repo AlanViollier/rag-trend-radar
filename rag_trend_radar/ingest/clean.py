@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from datetime import date
 from itertools import pairwise
 
-from rag_trend_radar.schema import QuotedBlock, SplitBody
+from rag_trend_radar.records import QuotedBlock, SplitBody
 
 # Lines that open a quoted or forwarded message, as Outlook and Lotus Notes wrote them. Every
 # pattern allows a leading `>` so a quote inside a quote still splits.

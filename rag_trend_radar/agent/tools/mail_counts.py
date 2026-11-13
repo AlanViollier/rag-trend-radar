@@ -11,9 +11,9 @@ from typing import Literal
 from psycopg import sql
 from pydantic import Field, field_validator
 
-from rag_trend_radar.agent.desk import Desk, ToolInput, ToolResult, local_day, text, week_of
-from rag_trend_radar.days import cutoff, opening
-from rag_trend_radar.ingest.kinds import Source, source
+from rag_trend_radar.agent.desk import Desk, ToolInput, ToolResult, text
+from rag_trend_radar.days import cutoff, local_day, opening, week_of
+from rag_trend_radar.ingest.origin import Origin, origin
 
 DESCRIPTION = """Count emails (not forwards of the same one) by week, month or sender, filtered by \
 phrases, senders, recipients, source and dates. Use it for when something started or peaked, \
@@ -143,7 +143,7 @@ def run(desk: Desk, given: Input) -> ToolResult:
                 ],
                 "too broad",
             )
-        rows = [row for row in rows if source(row[2] or "") is Source(given.source)]
+        rows = [row for row in rows if origin(row[2] or "") is Origin(given.source)]
     if not rows:
         return ToolResult([text("No emails match.")], "0 emails")
     days = sorted(local_day(sent) for sent, _, _ in rows)

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.ingest.dedup import text_hash
-from rag_trend_radar.schema import SearchHit
+from rag_trend_radar.records import SearchHit
 
 if TYPE_CHECKING:
     from sentence_transformers import CrossEncoder

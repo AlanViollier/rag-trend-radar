@@ -18,7 +18,7 @@ from pathlib import Path
 from rag_trend_radar.exceptions import ParseError
 from rag_trend_radar.ingest.clean import normalize, split_quoted, strip_boilerplate
 from rag_trend_radar.ingest.dedup import content_hash, resolve_sent_at
-from rag_trend_radar.schema import ParsedEmail, RawFile, SplitBody
+from rag_trend_radar.records import ParsedEmail, RawFile, SplitBody
 from rag_trend_radar.sources import enron
 
 # Each detector is one kind of leftover. A hit means the text still carries it.

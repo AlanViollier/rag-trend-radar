@@ -3,9 +3,9 @@ from datetime import date, timedelta
 import numpy as np
 from numpy.typing import NDArray
 
-from rag_trend_radar.trends import signals
-from rag_trend_radar.trends.frames import Frame
-from rag_trend_radar.trends.topics import Pool
+from rag_trend_radar.radar import signals
+from rag_trend_radar.radar.clustering import Pool
+from rag_trend_radar.radar.frames import Frame
 
 WEEK = date(2001, 6, 3)
 

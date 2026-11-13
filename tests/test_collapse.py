@@ -1,7 +1,7 @@
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from rag_trend_radar.schema import SearchHit
+from rag_trend_radar.records import SearchHit
 from rag_trend_radar.search.collapse import collapse
 
 ARTICLE = (

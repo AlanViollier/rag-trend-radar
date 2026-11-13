@@ -3,7 +3,7 @@ from datetime import date
 import pytest
 
 from rag_trend_radar.evals.questions import WORDS_RULES, Retype, Style, _one_question, retyped
-from rag_trend_radar.schema import EvalQuestion
+from rag_trend_radar.records import EvalQuestion
 
 
 @pytest.mark.parametrize(

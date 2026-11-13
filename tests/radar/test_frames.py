@@ -7,9 +7,9 @@ import pytest
 from numpy.typing import NDArray
 
 from rag_trend_radar.exceptions import OtherStore
+from rag_trend_radar.radar import build, frames
+from rag_trend_radar.radar.clustering import Pool
 from rag_trend_radar.run_log import RunLog
-from rag_trend_radar.trends import build, frames
-from rag_trend_radar.trends.topics import Pool
 
 D = date(2001, 3, 4)
 SUBJECTS = ("gas pipeline", "power grid", "fantasy football")

@@ -2,8 +2,8 @@ from datetime import date, timedelta
 
 import numpy as np
 
-from rag_trend_radar.trends import links
-from rag_trend_radar.trends.frames import Frame
+from rag_trend_radar.radar import links
+from rag_trend_radar.radar.frames import Frame
 
 START = date(2001, 1, 7)
 

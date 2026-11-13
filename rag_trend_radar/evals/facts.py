@@ -3,8 +3,8 @@
 import re
 from collections.abc import Sequence
 
-from rag_trend_radar.ingest.kinds import Source, source
-from rag_trend_radar.schema import FactQuestion, FactResult, SearchHit
+from rag_trend_radar.ingest.origin import Origin, origin
+from rag_trend_radar.records import FactQuestion, FactResult, SearchHit
 
 
 def check(question: FactQuestion, hits: Sequence[SearchHit]) -> FactResult:
@@ -14,7 +14,7 @@ def check(question: FactQuestion, hits: Sequence[SearchHit]) -> FactResult:
     and a short reply's quote included. With `needs_mail`, only chunks from people's own mail
     count: a press report of the fact won't do.
     """
-    texts = [h.full_text for h in hits if not question.needs_mail or source(h.text) is Source.MAIL]
+    texts = [h.full_text for h in hits if not question.needs_mail or origin(h.text) is Origin.MAIL]
     missing = tuple(f for f in question.facts if not any(_found(f, text) for text in texts))
     leaked = tuple(f for f in question.forbid if any(_found(f, hit.full_text) for hit in hits))
     return FactResult(
@@ -22,7 +22,7 @@ def check(question: FactQuestion, hits: Sequence[SearchHit]) -> FactResult:
         missing=missing,
         leaked=leaked,
         top_score=max((hit.score for hit in hits), default=0.0),
-        mail=sum(source(hit.text) is Source.MAIL for hit in hits),
+        mail=sum(origin(hit.text) is Origin.MAIL for hit in hits),
     )
 
 

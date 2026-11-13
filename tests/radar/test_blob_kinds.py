@@ -1,6 +1,6 @@
 import numpy as np
 
-from rag_trend_radar.trends import blob_kinds
+from rag_trend_radar.radar import blob_kinds
 
 
 def _text(subject: str, sender: str, body: str = "Gas prices rose.") -> str:

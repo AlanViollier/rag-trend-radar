@@ -5,8 +5,8 @@ import re
 from psycopg import sql
 from pydantic import Field
 
-from rag_trend_radar.agent.desk import Desk, ToolInput, ToolResult, local_day, text
-from rag_trend_radar.days import cutoff
+from rag_trend_radar.agent.desk import Desk, ToolInput, ToolResult, text
+from rag_trend_radar.days import cutoff, local_day
 
 DESCRIPTION = """Find a person by name: their mailbox, if they're one of the 150 employees whose \
 mail is in the store, and every address they sent from, with how much mail and when. People \

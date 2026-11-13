@@ -3,9 +3,9 @@
 from psycopg import sql
 from pydantic import Field
 
-from rag_trend_radar.agent.desk import Desk, ToolInput, ToolResult, local_day, text
+from rag_trend_radar.agent.desk import Desk, ToolInput, ToolResult, text
 from rag_trend_radar.answer import cited
-from rag_trend_radar.days import cutoff
+from rag_trend_radar.days import cutoff, local_day
 from rag_trend_radar.search.ranking import SEEN
 
 DESCRIPTION = """Read one email whole: sender, recipients, date, its full text and what it \

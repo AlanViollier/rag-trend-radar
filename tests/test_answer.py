@@ -1,5 +1,5 @@
 from rag_trend_radar.answer import CONTEXT_MARK, search_result
-from rag_trend_radar.schema import SearchHit
+from rag_trend_radar.records import SearchHit
 
 
 def test_a_chunk_becomes_one_citable_block_per_paragraph() -> None:

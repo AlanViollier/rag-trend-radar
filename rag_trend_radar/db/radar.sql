@@ -59,7 +59,7 @@ CREATE TABLE day_totals (
     press_chunks int NOT NULL
 );
 
--- A blob growing fast on a week (`trends/alerts.py`): `observed` is its chunks in the last 4 weeks,
+-- A blob growing fast on a week (`radar/alerts.py`): `observed` is its chunks in the last 4 weeks,
 -- `expected` its normal.
 CREATE TABLE alerts (
     id       bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

@@ -12,7 +12,7 @@ from psycopg.rows import TupleRow
 from rag_trend_radar.days import EARLIEST, cutoff
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.index import vectors_identifier
-from rag_trend_radar.schema import SearchHit
+from rag_trend_radar.records import SearchHit
 from rag_trend_radar.search.ranking import hits
 
 # The investigator reads most of the store: a walk of the HNSW index finds enough rows.

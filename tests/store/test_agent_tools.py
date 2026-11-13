@@ -18,7 +18,7 @@ from rag_trend_radar.agent.tools import search as search_tool
 from rag_trend_radar.config import get_settings
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.exceptions import ToolRefused
-from rag_trend_radar.schema import Document, EmailHeaders, SearchHit
+from rag_trend_radar.records import Document, EmailHeaders, SearchHit
 
 MODEL, DIMS = "test/agent", 8
 CHICAGO = ZoneInfo("America/Chicago")
@@ -244,7 +244,7 @@ def test_addresses_may_come_as_one_comma_separated_string() -> None:
 @pytest.mark.usefixtures("world")
 def test_a_lookup_passes_when_a_cited_email_is_a_labelled_one(world: dict[str, int]) -> None:
     from rag_trend_radar.evals import agent as checks
-    from rag_trend_radar.schema import AgentQuestion, AgentRun, Citation
+    from rag_trend_radar.records import AgentQuestion, AgentRun, Citation
 
     question = AgentQuestion(
         id="l", kind="lookup", question="Q", person="rowe-p", relevant=("rowe-0",)

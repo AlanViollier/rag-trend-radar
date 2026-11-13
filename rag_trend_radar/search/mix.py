@@ -2,8 +2,8 @@
 
 from collections.abc import Iterable
 
-from rag_trend_radar.ingest.kinds import Source, source
-from rag_trend_radar.schema import SearchHit
+from rag_trend_radar.ingest.origin import Origin, origin
+from rag_trend_radar.records import SearchHit
 
 # An investigator's top 10 was 91% press on story questions (109 of 120, 2026-11-02), with press
 # about 6% of the chunks. At most this many of a list are press or bulk mail, unless nothing
@@ -22,17 +22,17 @@ def mix(hits: Iterable[SearchHit], top: int) -> list[SearchHit]:
     What the caps hold back comes back only when nothing else is left, ahead of mail scoring
     under `MIN_SCORE`.
     """
-    limits = {Source.MAIL: top, Source.PRESS: MAX_PRESS, Source.BULK: MAX_BULK}
-    taken = dict.fromkeys(Source, 0)
+    limits = {Origin.MAIL: top, Origin.PRESS: MAX_PRESS, Origin.BULK: MAX_BULK}
+    taken = dict.fromkeys(Origin, 0)
     chosen: list[SearchHit] = []
     held: list[SearchHit] = []
     noise: list[SearchHit] = []
     for hit in hits:
-        kind = source(hit.text)
-        if kind is Source.MAIL and hit.score < MIN_SCORE:
+        came = origin(hit.text)
+        if came is Origin.MAIL and hit.score < MIN_SCORE:
             noise.append(hit)
-        elif taken[kind] < limits[kind]:
-            taken[kind] += 1
+        elif taken[came] < limits[came]:
+            taken[came] += 1
             chosen.append(hit)
         else:
             held.append(hit)

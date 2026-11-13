@@ -4,9 +4,9 @@ from collections.abc import Sequence
 from datetime import date, timedelta
 from functools import cache
 
-from rag_trend_radar.agent.desk import week_of
-from rag_trend_radar.site.export import records_from
-from rag_trend_radar.site.records import NAMES, Naming
+from rag_trend_radar.days import week_of
+from rag_trend_radar.pages.radar.export import records_from
+from rag_trend_radar.pages.radar.records import NAMES, Naming
 
 
 def weeks(since: date, until: date) -> tuple[date, date]:

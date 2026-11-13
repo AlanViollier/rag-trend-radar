@@ -23,7 +23,7 @@ from rag_trend_radar.db import connect as db
 from rag_trend_radar.embed import embed
 from rag_trend_radar.evals.retrieval import documents, score
 from rag_trend_radar.index import vectors_identifier, vectors_table
-from rag_trend_radar.schema import EvalQuestion, SearchHit
+from rag_trend_radar.records import EvalQuestion, SearchHit
 from rag_trend_radar.search import vector
 
 DEPTH = 50

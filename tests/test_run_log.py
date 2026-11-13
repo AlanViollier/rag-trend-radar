@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
+from rag_trend_radar.records import RadarRun, RunStage
 from rag_trend_radar.run_log import RunLog, summarise
-from rag_trend_radar.schema import RadarRun, RunStage
 
 
 def test_a_step_that_repeats_keeps_every_sample_and_its_items() -> None:

@@ -7,7 +7,7 @@ from psycopg import sql
 from psycopg.rows import TupleRow
 
 from rag_trend_radar.days import EARLIEST, cutoff
-from rag_trend_radar.schema import SearchHit
+from rag_trend_radar.records import SearchHit
 from rag_trend_radar.search.ranking import SEEN, hits
 
 # `|||` matches any of the words, unparsed: a question's `?` or `:` isn't query syntax.

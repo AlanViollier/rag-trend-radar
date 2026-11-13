@@ -11,7 +11,7 @@ from psycopg.rows import TupleRow
 
 from rag_trend_radar.answer import cited
 from rag_trend_radar.evals.copies import copies
-from rag_trend_radar.schema import AgentQuestion, AgentRun, AgentScore, EvalQuestion
+from rag_trend_radar.records import AgentQuestion, AgentRun, AgentScore, EvalQuestion
 
 SETS = {"scored": Path("evals/agent_scored.jsonl"), "curiosity": Path("evals/curiosity.jsonl")}
 # A planted email's document id: no real document has it, so its citations are told apart.

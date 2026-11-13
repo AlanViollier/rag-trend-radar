@@ -7,7 +7,7 @@ import psycopg
 import pytest
 
 from rag_trend_radar.evals import agent as checks
-from rag_trend_radar.schema import AgentQuestion, AgentRun, AgentStep, Citation
+from rag_trend_radar.records import AgentQuestion, AgentRun, AgentStep, Citation
 
 NO_DB = cast(psycopg.Connection[Any], None)
 

@@ -19,8 +19,8 @@ from rag_trend_radar.evals.facts import check as check_facts
 from rag_trend_radar.evals.leaks import check as check_leaks
 from rag_trend_radar.evals.questions import Retype, Style, code_holds, retyped, sample, write
 from rag_trend_radar.evals.retrieval import rankings, report
+from rag_trend_radar.records import EvalQuestion, FactQuestion, RecallRun, RunManifest
 from rag_trend_radar.run_log import commit
-from rag_trend_radar.schema import EvalQuestion, FactQuestion, RecallRun, RunManifest
 from rag_trend_radar.search import hybrid, pipeline
 from rag_trend_radar.search.mix import RESULTS
 
@@ -47,12 +47,12 @@ def questions(
     the case keyword search is there for. A different `--seed` samples different documents.
     """
     settings = get_settings()
-    # Spare sources: Claude marks some unusable (automated notices; for codes, mail whose only
+    # Spare emails: Claude marks some unusable (automated notices; for codes, mail whose only
     # long numbers are phone numbers or zip codes, or codes too many documents hold).
     spare = 3 if style is Style.CODES else 3 / 2
     with db.connect() as conn:
         day = last_day(conn)
-        sources = {
+        sampled = {
             kind: sample(conn, kind, int(n * spare), seed, style=style)
             for kind, n in (("email", emails), ("quoted", quoted))
         }
@@ -67,7 +67,7 @@ def questions(
         q
         for kind, n in (("email", emails), ("quoted", quoted))
         for q in islice(
-            filter(kept, write(sources[kind], day, settings.answer_model, style=style)), n
+            filter(kept, write(sampled[kind], day, settings.answer_model, style=style)), n
         )
     ]
     out.parent.mkdir(parents=True, exist_ok=True)

@@ -17,7 +17,7 @@ from rag_trend_radar import index
 from rag_trend_radar.days import cutoff
 from rag_trend_radar.ingest import assemble
 from rag_trend_radar.ingest.dedup import text_hash
-from rag_trend_radar.schema import DayFile, Document, RawFile, Scan
+from rag_trend_radar.records import DayFile, Document, RawFile, Scan
 from rag_trend_radar.sources import enron
 
 

@@ -4,7 +4,7 @@ import psycopg
 import pytest
 
 from rag_trend_radar.db import connect as db
-from rag_trend_radar.schema import SearchHit
+from rag_trend_radar.records import SearchHit
 from rag_trend_radar.search import rerank as module
 from rag_trend_radar.search.rerank import rerank
 

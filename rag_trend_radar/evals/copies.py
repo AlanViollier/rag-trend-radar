@@ -12,7 +12,7 @@ import psycopg
 from psycopg.rows import TupleRow
 
 from rag_trend_radar.ingest.dedup import numbers, words
-from rag_trend_radar.schema import EvalQuestion
+from rag_trend_radar.records import EvalQuestion
 
 # Shared words over all words (Jaccard) from which two texts are the same message re-sent.
 # The judge's verdicts (2026-10-30) put real re-sends well above it and look-alikes below.

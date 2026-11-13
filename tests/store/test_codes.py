@@ -6,7 +6,7 @@ import pytest
 from rag_trend_radar import index
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.evals.questions import code_holds
-from rag_trend_radar.schema import Document, EvalQuestion
+from rag_trend_radar.records import Document, EvalQuestion
 
 SENT = datetime(2001, 9, 5, 10, 0, tzinfo=ZoneInfo("America/Chicago"))
 

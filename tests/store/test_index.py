@@ -9,7 +9,7 @@ from psycopg.rows import TupleRow
 
 from rag_trend_radar import index
 from rag_trend_radar.db import connect as db
-from rag_trend_radar.schema import Document
+from rag_trend_radar.records import Document
 
 CHICAGO = ZoneInfo("America/Chicago")
 MAILBOXES = ("lee-p", "moss-k")

@@ -9,9 +9,9 @@ import pytest
 
 from rag_trend_radar import index
 from rag_trend_radar.db import connect as db
-from rag_trend_radar.trends import build, frames
-from rag_trend_radar.trends.frames import Frame
-from rag_trend_radar.trends.topics import Pool
+from rag_trend_radar.radar import build, frames
+from rag_trend_radar.radar.clustering import Pool
+from rag_trend_radar.radar.frames import Frame
 
 MODEL, DIMS = "test/build", 8
 START = date(2001, 1, 7)

@@ -17,7 +17,7 @@ from pathlib import Path
 
 import numpy as np
 
-from rag_trend_radar.schema import RadarRun, RunStage, StageSummary
+from rag_trend_radar.records import RadarRun, RunStage, StageSummary
 
 
 @dataclass

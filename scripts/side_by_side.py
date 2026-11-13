@@ -19,7 +19,7 @@ from rag_trend_radar.ingest.clean import (
     strip_boilerplate,
 )
 from rag_trend_radar.ingest.dedup import content_hash
-from rag_trend_radar.schema import ParsedEmail, RawFile, SplitBody
+from rag_trend_radar.records import ParsedEmail, RawFile, SplitBody
 from rag_trend_radar.sources import enron
 
 RANDOM, WITH_QUOTES = 25, 25

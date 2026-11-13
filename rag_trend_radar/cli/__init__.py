@@ -3,7 +3,7 @@
 import typer
 
 # Importing an area registers its commands on `app`.
-from rag_trend_radar.cli import agents, evals, investigator, pipeline, radar, search  # noqa: F401
+from rag_trend_radar.cli import agent, evals, investigator, pipeline, radar, search  # noqa: F401
 from rag_trend_radar.cli.app import app
 from rag_trend_radar.exceptions import AppError
 

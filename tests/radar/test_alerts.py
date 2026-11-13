@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-from rag_trend_radar.trends import alerts, blob_kinds
+from rag_trend_radar.radar import alerts, blob_kinds
 
 START = date(2001, 1, 7)
 TOPIC = blob_kinds.Trait(chunks=200, top_sender=0.1, footers=0.0, empty_subjects=0, chatty_words=0)

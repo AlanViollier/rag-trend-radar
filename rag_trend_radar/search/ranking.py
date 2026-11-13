@@ -6,7 +6,7 @@ import psycopg
 from psycopg import sql
 from psycopg.rows import TupleRow
 
-from rag_trend_radar.schema import SearchHit
+from rag_trend_radar.records import SearchHit
 
 # A document `d` the reader could have read by `cutoff`, on top of row-level security: it says who
 # may read a quoted message, not since when, and that needs the day asked.

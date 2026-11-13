@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from rag_trend_radar import claude
 from rag_trend_radar.days import cutoff
-from rag_trend_radar.schema import EvalQuestion, Record
+from rag_trend_radar.records import EvalQuestion, Record
 
 # Bump on any change to the prompt or the sample: cached questions are keyed by it.
 PROMPT_VERSION = 4
@@ -71,7 +71,7 @@ WORDS_RULES = {
     "words. Phone numbers, zip codes, dates and amounts aren't identifiers: if the email holds "
     "none, set usable to false.",
 }
-# A code-style source must name an identifier: a record word, then a run of five or more
+# A codes-style email must name an identifier: a record word, then a run of five or more
 # digits close after it ("deal #143709", "contract 96003435"). Five digits alone drew zip codes,
 # phone numbers and URL fragments: Claude found 1 usable code in 12 (2026-10-30). Matched
 # without regard to case.
@@ -96,7 +96,7 @@ class Retype(StrEnum):
     HASH = "hash"
 
 
-class Source(Record):
+class Sampled(Record):
     """An email or quoted message chosen to ask about."""
 
     external_id: str
@@ -116,7 +116,7 @@ class _Written(BaseModel):
 
 def sample(
     conn: psycopg.Connection[TupleRow], kind: str, n: int, seed: int, *, style: Style = Style.NAMES
-) -> list[Source]:
+) -> list[Sampled]:
     """`n` documents of `kind` with chunks and a body of usable length, in a seeded random order.
 
     For the codes style, only documents naming an identifier (`CODE_PATTERN`) are drawn.
@@ -143,30 +143,30 @@ def sample(
         },
     ).fetchall()
     return [
-        Source(external_id=x, kind=k, title=t, author=a or "", day=d, body=b, mailbox=m)
+        Sampled(external_id=x, kind=k, title=t, author=a or "", day=d, body=b, mailbox=m)
         for x, k, t, a, d, b, m in rows
     ]
 
 
 def write(
-    sources: list[Source], as_of: date, model: str, *, style: Style = Style.NAMES
+    picked: list[Sampled], as_of: date, model: str, *, style: Style = Style.NAMES
 ) -> Iterator[EvalQuestion]:
-    """A question per usable source; unusable ones are skipped. Cached per source (rule 6)."""
+    """A question per usable email; unusable ones are skipped. Cached per email (rule 6)."""
     client = claude.client()
-    # Calls run 8 at a time and come back in source order, so the set reproduces. Every source
+    # Calls run 8 at a time and come back in order, so the set reproduces. Every email
     # is asked, even past the ones the caller keeps: the spares are cached for the next run.
     with ThreadPoolExecutor(max_workers=8) as pool:
         answers = list(
-            pool.map(lambda s: _cached(s, model, style) or _ask(client, s, model, style), sources)
+            pool.map(lambda s: _cached(s, model, style) or _ask(client, s, model, style), picked)
         )
-    for source, written in zip(sources, answers, strict=True):
+    for sampled, written in zip(picked, answers, strict=True):
         if written.usable and _one_question(written.question):
             yield EvalQuestion(
-                id=f"q-{source.external_id[:12]}",
+                id=f"q-{sampled.external_id[:12]}",
                 question=written.question,
                 as_of=as_of,
-                person=source.mailbox,
-                relevant=(source.external_id,),
+                person=sampled.mailbox,
+                relevant=(sampled.external_id,),
                 code=written.code if style is Style.CODES else "",
             )
 
@@ -208,7 +208,7 @@ def retyped(question: EvalQuestion, how: Retype) -> EvalQuestion:
 
 def _one_question(text: str) -> bool:
     # 4 of the first 200 broke "one fact, one question": two questions in one, or a rewrite
-    # after "Actually, simplified:". A spare source takes their place.
+    # after "Actually, simplified:". A spare email takes their place.
     # "..., and what was the day total?" asks two facts behind one question mark.
     text = text.strip()
     return (
@@ -220,7 +220,7 @@ def _one_question(text: str) -> bool:
     )
 
 
-def _ask(client: anthropic.Anthropic, source: Source, model: str, style: Style) -> _Written:
+def _ask(client: anthropic.Anthropic, sampled: Sampled, model: str, style: Style) -> _Written:
     response = client.beta.messages.parse(
         model=model,
         max_tokens=16000,
@@ -229,7 +229,7 @@ def _ask(client: anthropic.Anthropic, source: Source, model: str, style: Style) 
             {
                 "role": "user",
                 "content": INSTRUCTIONS.format(
-                    **source.model_dump(), words_rule=WORDS_RULES[style]
+                    **sampled.model_dump(), words_rule=WORDS_RULES[style]
                 ),
             }
         ],
@@ -241,17 +241,17 @@ def _ask(client: anthropic.Anthropic, source: Source, model: str, style: Style) 
     written = response.parsed_output
     if written is None:
         return _Written(usable=False, question="")
-    path = _cache_path(source, model, style)
+    path = _cache_path(sampled, model, style)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(written.model_dump_json())
     return written
 
 
-def _cached(source: Source, model: str, style: Style) -> _Written | None:
-    path = _cache_path(source, model, style)
+def _cached(sampled: Sampled, model: str, style: Style) -> _Written | None:
+    path = _cache_path(sampled, model, style)
     return _Written.model_validate_json(path.read_text()) if path.exists() else None
 
 
-def _cache_path(source: Source, model: str, style: Style) -> Path:
-    key = f"{PROMPT_VERSION}\x00{model}\x00{style}\x00{source.model_dump_json()}"
+def _cache_path(sampled: Sampled, model: str, style: Style) -> Path:
+    key = f"{PROMPT_VERSION}\x00{model}\x00{style}\x00{sampled.model_dump_json()}"
     return claude.cache_path("questions", key)

@@ -5,7 +5,7 @@ import pytest
 from rag_trend_radar import index
 from rag_trend_radar.db import connect as db
 from rag_trend_radar.ingest.chunk import pieces
-from rag_trend_radar.schema import Document
+from rag_trend_radar.records import Document
 from rag_trend_radar.search import keyword
 
 ABOVE = "-----Original Message-----\nFrom: Rowe, Pat\nSubject: Tickets\n\nPlease send the tickets to Judge Wombat."

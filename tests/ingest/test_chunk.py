@@ -11,7 +11,7 @@ from rag_trend_radar.ingest.chunk import (
     pieces,
     reply_quote,
 )
-from rag_trend_radar.schema import Document
+from rag_trend_radar.records import Document
 
 
 def _words(text: str) -> int:

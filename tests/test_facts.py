@@ -1,7 +1,7 @@
 from datetime import date
 
 from rag_trend_radar.evals.facts import check
-from rag_trend_radar.schema import FactQuestion, SearchHit
+from rag_trend_radar.records import FactQuestion, SearchHit
 
 MAIL = "Subject: Raptors\nFrom: vince.kaminski@enron.com\nDate: 2001-12-20\n\nIt disappeared from my mailbox."
 PRESS = "Subject: Enron Mentions\n\nThe memo said it could implode in a wave of scandals."

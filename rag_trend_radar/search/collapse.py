@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from typing import NamedTuple
 
 from rag_trend_radar.ingest.dedup import numbers, words
-from rag_trend_radar.schema import SearchHit
+from rag_trend_radar.records import SearchHit
 
 # Share of a chunk's words a better one must hold for it to drop. Read on 2,985 pairs of real
 # results (2026-11-02): below .9 it takes different mail for copies, wire reports for other
