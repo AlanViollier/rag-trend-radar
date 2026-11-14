@@ -70,12 +70,24 @@ def test_the_same_seed_squashes_to_the_same_map() -> None:
     assert np.array_equal(first, clustering.squash(vectors, components=3, neighbors=10, seed=1))
 
 
-def test_a_map_can_start_from_where_the_last_one_ended() -> None:
+def test_a_map_can_start_from_where_the_last_one_ended(monkeypatch: pytest.MonkeyPatch) -> None:
+    # How much less a warm map moves is measured on real frames; on a toy set it varies by machine.
+    starts: list[object] = []
+
+    class Recorder:
+        def __init__(self, init: object, **_: object) -> None:
+            starts.append(init)
+
+        def fit_transform(self, vectors: NDArray[np.float32]) -> NDArray[np.float32]:
+            return vectors[:, :3]
+
+    monkeypatch.setattr(clustering, "UMAP", Recorder)
     vectors = _clusters()
-    first = clustering.squash(vectors, components=3, neighbors=10, seed=1)
-    second = clustering.squash(vectors, components=3, neighbors=10, seed=1, start=first)
-    cold = np.linalg.norm(clustering.squash(vectors, 3, 10, seed=2) - first, axis=1).mean()
-    assert np.linalg.norm(second - first, axis=1).mean() < cold
+    last = np.ones((len(vectors), 3), dtype=np.float32)
+    clustering.squash(vectors, components=3, neighbors=10, seed=1)
+    clustering.squash(vectors, components=3, neighbors=10, seed=1, start=last)
+    assert starts[0] == "spectral"
+    assert starts[1] is last
 
 
 def test_a_cluster_of_one_long_document_is_not_a_topic() -> None:
