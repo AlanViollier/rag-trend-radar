@@ -26,7 +26,8 @@ Twenty months of Enron's mail as moving clusters, stopping on the moments that m
 | the data | 517,401 files → 244,534 emails → 464,603 chunks |
 | finding the right email, top 10 | .959 as an employee, .893 as the investigator |
 | permission leaks | 0 in 184,589 results |
-| the agent | 36 of 36 scored questions, median 32 s on my laptop, about 7 cents each |
+| the agent | 36 of 36 scored questions, about 7 cents each |
+| agent speed | median 32 s on my laptop, around 15 s expected on a server GPU |
 | the radar | 87 weeks, 973 clusters, 72 alerts |
 
 ## 01 · Playing investigator
@@ -46,29 +47,32 @@ re-runs that must not double-count.
 Most of the early work went here. The files are exports from two mail systems, Outlook and Lotus
 Notes, and each one mangled things its own way.
 
-→ **The same email sat in many mailboxes.** I match copies on subject and body, because the
-exports rewrote senders (`walton@` vs `leann.walton@`) and shifted dates by whole hours. 517,401
-files became 244,534 emails.
+The first problem was that the same email sat in many mailboxes, once for the sender and once for
+every recipient. The exports even rewrote senders (`walton@` in one copy, `leann.walton@` in
+another) and shifted dates by whole hours, so I match copies on subject and body instead. That
+took 517,401 files down to 244,534 emails.
 
-→ **Copies disagreed on the date.** A copy stamped to the second came from a mail server, so it
-wins (674 emails). Otherwise the earliest is kept and the email is flagged as maybe a few hours
-off (6,572).
+The copies also disagreed on when the email was sent. A copy stamped to the second came from a
+mail server, so I trust it (674 emails). Otherwise I keep the earliest date and flag the email as
+maybe a few hours off (6,572).
 
-→ **Some files aren't mail.** 1,335 went to quarantine: 605 dated outside 1997–2002 (mostly a
+Some files weren't mail at all. 1,335 went to quarantine: 605 dated outside 1997–2002 (mostly a
 1979 "no date" placeholder), 716 bounces and 14 address-book dumps.
 
-→ **Replies carry the whole thread under them.** Each email is split into what its author wrote
-and the messages it quotes. No library handled Lotus Notes forwards and headers, which are most of
-Enron's quoting, so the splitter is my own code.
+Replies carry the whole thread under them, so each email is split into what its author wrote and
+the messages it quotes. No library handled Lotus Notes forwards and headers, which are most of
+Enron's quoting, so I wrote the splitter myself.
 
-→ **Signatures and footers repeat.** A line that ends at least 200 different emails is trimmed
-from what gets searched. It only counts from the day its 200th email was sent, so a day's results
-never depend on mail that came later. An email that is nothing but repeated lines keeps them:
-1,116 people sent the same "To Mr. Ken Lay," letter, and that's content, not a footer.
+Signatures and legal footers repeat everywhere and would turn up in all kinds of searches. So a
+line that ends at least 200 different emails is trimmed from what gets searched. It only counts
+from the day its 200th email was sent, so a day's results never depend on mail that came later.
+An email that is nothing but repeated lines keeps them, though: 1,116 people sent the same "To
+Mr. Ken Lay," letter, and that's content, not a footer.
 
-→ **Newsletters drown everything.** On questions about a story, press digests were 91% of the
-results while being about 6% of the chunks. So every chunk is labelled people's mail, press or
-bulk by rule. Search caps the last two, and the radar leaves them out.
+The last one surprised me. On questions about a story, press digests were 91% of the results
+while being about 6% of the chunks, because every newsletter retells the same news. So every
+chunk is labelled people's mail, press or bulk by rule. Search caps the last two, and the radar
+leaves them out.
 
 <details>
 <summary>The smaller fixes</summary>
