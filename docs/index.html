@@ -10,22 +10,24 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --paper: #FBF8F3; --ink: #1C1A17; --muted: #97907F; --line: #E8E2D6; --ember: #C2410C;
+  --paper: #1A1714; --ink: #EDE6D8; --muted: #8A8474; --line: #2E2924;
+  --ember: #C2410C; --ember-on-dark: #EA580C;
   --font: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 }
 * { box-sizing: border-box; margin: 0; }
-body { background: var(--paper); color: var(--ink); font: 400 13px/1.6 var(--font); max-width: 720px; margin: 0 auto; padding: 48px 16px; }
+body { background: var(--paper); color: var(--ink); font: 400 13px/1.6 var(--font); max-width: 880px; margin: 0 auto; padding: 48px 16px; }
 .tick { height: 3px; width: 56px; background: var(--ember); margin-bottom: 14px; }
 h1 { font-size: 20px; font-weight: 600; }
-.sub { color: var(--muted); margin: 4px 0 28px; }
-.head { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 11px; margin: 0 0 10px; }
+.sub { color: var(--muted); margin: 4px 0 32px; }
+.head { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 11px; margin: 0 0 12px; }
 .head::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-.row { display: block; padding: 10px 0 14px; color: inherit; text-decoration: none; border-bottom: 1px solid var(--line); }
-.row b { font-weight: 500; }
-.row span { display: block; color: var(--muted); }
-.row:hover b { color: var(--ember); }
-.foot { color: var(--muted); font-size: 11.5px; margin-top: 24px; }
-a { color: var(--ember); text-decoration: none; }
+.demo { display: block; color: inherit; text-decoration: none; padding: 4px 0 28px; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
+.demo b { font-weight: 500; font-size: 14px; }
+.demo span { display: block; color: var(--muted); margin: 2px 0 14px; }
+.demo img { display: block; width: 100%; height: auto; border: 1px solid var(--line); }
+.demo:hover b { color: var(--ember-on-dark); }
+.foot { color: var(--muted); font-size: 11.5px; }
+a { color: var(--ember-on-dark); text-decoration: none; }
 .foot a { white-space: nowrap; }
 a:hover { text-decoration: underline; }
 </style>
@@ -35,8 +37,8 @@ a:hover { text-decoration: underline; }
 <h1>rag-trend-radar</h1>
 <p class="sub">A RAG and a trend radar over the public Enron emails, in one Postgres database. Two recorded demos.</p>
 <div class="head">01 · demos</div>
-<a class="row" href="investigator/index.html"><b>→ The recorded investigator</b><span>Real questions worked by the agent, step by step: its plan, its searches, the emails it read, its cited answer.</span></a>
-<a class="row" href="radar/index.html"><b>→ The radar, replayed</b><span>Twenty months of Enron's mail as clusters growing week by week, stopping on the alerts that mattered.</span></a>
+<a class="demo" href="investigator/index.html"><b>→ The recorded investigator</b><span>Real questions worked by the agent, step by step: its plan, its searches, the emails it read, its cited answer.</span><img src="investigator/investigator.gif" width="1280" height="802" alt="The agent working a question about Enron's Star Wars partnership: it plans, runs two searches through vector, keyword and rerank stages, then writes a cited answer."></a>
+<a class="demo" href="radar/index.html"><b>→ The radar, replayed</b><span>Twenty months of Enron's mail as clusters growing week by week, stopping on the alerts that mattered.</span><img src="radar/radar.gif" width="1280" height="994" loading="lazy" alt="The opening of the radar replay: clusters of Enron's mail appearing and growing week by week from July 2000, with alerts landing in a feed beside them."></a>
 <p class="foot">The Enron emails, made public by FERC in 2003, in CMU's May 2015 release. <a href="https://github.com/AlanViollier/rag-trend-radar">The code on GitHub →</a></p>
 </body>
 </html>
