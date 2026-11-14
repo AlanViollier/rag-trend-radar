@@ -139,8 +139,8 @@ mail at 1, and the top 10 come back.
 
 Claude wrote 196 questions from real emails, each with the email it came from. I scored every
 layer by whether that email came back, as an employee who can read it and as the investigator
-searching everything. Every choice in this README won a side-by-side test like this one; I only
-quote the numbers that changed my mind.
+searching everything. The chunking and search choices were made with side-by-side tests like this
+one, and I only quote the numbers that changed my mind. The radar's were picked by eye.
 
 | method | employee, top 10 | first | investigator, top 10 | first |
 |---|---|---|---|---|
