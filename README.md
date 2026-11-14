@@ -2,17 +2,17 @@
 
 A RAG over all of the public Enron emails, in one Postgres database. You can ask the agent about
 an email, a person, a deal or a stat, and it finds the mail and answers with citations. I built
-it to get more hands-on experience with RAG and vector databases.
+it to get more hands-on experience with RAG and vector databases :)
 
-I also used the same vectors to track topics over time. Every week the mail is clustered, each
-cluster is followed as it grows, and an alert fires when one suddenly takes off. Then I compared
-those alerts to what really happened at Enron.
+I also used the same embeddings to track topics over time. Every week the mail's vectors are
+clustered, each cluster is followed as it grows, and an alert fires when one suddenly takes off.
+Then I compared those alerts to what really happened at Enron.
 
 **There are two demos I'd recommend if you just want to see the cool part. More detail below.**
 
 **[Watch the agent work a case →](https://alanviollier.github.io/rag-trend-radar/investigator/)**
 Real questions, step by step: the tools it picks, the search, the answer with its citations. It's
-a recording, because live API calls on a public page are not in my budget.
+a recording, because live API calls on a public page are not in my budget lol.
 
 <a href="https://alanviollier.github.io/rag-trend-radar/investigator/"><img src="docs/investigator/investigator.gif" alt="The agent working a question about Enron's Star Wars partnership: it thinks, plans, runs two searches through vector, keyword and rerank stages, then writes a cited answer naming Michael Kopper."></a>
 
@@ -26,7 +26,7 @@ Twenty months of Enron's mail as moving clusters, stopping on the moments that m
 | the data | 517,401 files → 244,534 emails → 464,603 chunks |
 | finding the right email, top 10 | .959 as an employee, .893 as the investigator |
 | permission leaks | 0 in 184,589 results |
-| the agent | 36 of 36 checked questions, median 32 s, about 7 cents each |
+| the agent | 36 of 36 scored questions, median 32 s on my laptop, about 7 cents each |
 | the radar | 87 weeks, 973 clusters, 72 alerts |
 
 ## 01 · Playing investigator
@@ -43,31 +43,32 @@ re-runs that must not double-count.
 
 ## 02 · Cleaning the mail
 
-Most of the early work went here. The files are exports from two mail systems (Outlook and Lotus
-Notes), and each one mangled things its own way.
+Most of the early work went here. The files are exports from two mail systems, Outlook and Lotus
+Notes, and each one mangled things its own way.
 
-→ **The same email sat in many mailboxes.** Copies are matched on subject and body, because the
+→ **The same email sat in many mailboxes.** I match copies on subject and body, because the
 exports rewrote senders (`walton@` vs `leann.walton@`) and shifted dates by whole hours. 517,401
 files became 244,534 emails.
 
-→ **Copies disagreed on the date.** A copy stamped to the second came from a mail server and wins
-(674 emails). Otherwise the earliest is kept and the email is flagged as maybe hours off (6,572).
+→ **Copies disagreed on the date.** A copy stamped to the second came from a mail server, so it
+wins (674 emails). Otherwise the earliest is kept and the email is flagged as maybe a few hours
+off (6,572).
 
 → **Some files aren't mail.** 1,335 went to quarantine: 605 dated outside 1997–2002 (mostly a
-1979 "no date" placeholder), 716 bounces, 14 address-book dumps.
+1979 "no date" placeholder), 716 bounces and 14 address-book dumps.
 
-→ **Replies quote everything before them.** Each email is split into what its author wrote and the
-messages it quotes, so one sentence doesn't count 15 times. No library handled Lotus forwards and
-headers, which are most of Enron's quoting, so the splitter is my own code.
+→ **Replies carry the whole thread under them.** Each email is split into what its author wrote
+and the messages it quotes. No library handled Lotus Notes forwards and headers, which are most of
+Enron's quoting, so the splitter is my own code.
 
-→ **Signatures and footers repeat.** A trailing line found in at least 200 different emails is
-trimmed from what gets searched, counted only from the day its 200th email was sent, so a day's
-chunks never depend on later mail. The guard keeps a form letter whole: 1,116 people wrote "To
-Mr. Ken Lay," and that's content.
+→ **Signatures and footers repeat.** A line that ends at least 200 different emails is trimmed
+from what gets searched. It only counts from the day its 200th email was sent, so a day's results
+never depend on mail that came later. An email that is nothing but repeated lines keeps them:
+1,116 people sent the same "To Mr. Ken Lay," letter, and that's content, not a footer.
 
-→ **Newsletters drown everything.** On story questions, press digests were 91% of the results from
-about 6% of the chunks. Every chunk is labelled people's mail, press or bulk by rule, so search
-can cap them and the radar can leave them out.
+→ **Newsletters drown everything.** On questions about a story, press digests were 91% of the
+results while being about 6% of the chunks. So every chunk is labelled people's mail, press or
+bulk by rule. Search caps the last two, and the radar leaves them out.
 
 <details>
 <summary>The smaller fixes</summary>
@@ -86,49 +87,56 @@ Williamses on one address) take the name the mail client showed.<br>
 
 ## 03 · Chunks and quotes
 
-→ **One email, one chunk.** An email is usually one thought, and 90% of them fit in 512 tokens, so
-an email stays whole unless it's longer. The long ones (9.6%) split at paragraphs, then sentences,
-then words. 256 and 1,024 tokens scored within noise of 512.
+Most emails are short and about one thing, so each email is one chunk. Only the long ones, about
+1 in 10, get split, at paragraphs first. I tried 256- and 1,024-token chunks too, and they scored
+the same as 512. I also tried overlapping chunks, and the overlap mixed back together the two
+subjects a split had just separated.
 
-→ **Every chunk starts with its subject, sender and date.** "Sounds good" alone is unfindable; with
-its subject it isn't. The right email comes first 4 to 6 points more often with the header.
+Each chunk starts with its subject, sender and date. A reply that just says "sounds good" means
+nothing on its own, but with "Re: Q3 gas contract" above it, it can be found. That header put the
+right email first 4 to 6 points more often.
 
-→ **No overlap.** I built it, and the overlapping piece mixed the two subjects a split had just
-separated.
+Replies were the tricky part. A reply usually carries the whole thread under it, so if I embedded
+emails as they are, the same paragraph would be stored fifteen times and crowd everything else
+out of search. So I only embed what each person actually wrote. But that breaks the other way:
+"i sent it today" is useless without the message it answers. So a short reply (under 200
+characters, 59,595 of them) is searched together with the start of the message it answers, while
+the agent only ever sees and cites the reply's own words.
 
-→ **Quoted text is kept but not chunked,** except a message that no email in the store holds as its
-own text: mostly mail from outside the 150 mailboxes, which would be unsearchable otherwise. Each
-of those 84,358 becomes its own document, readable by every mailbox holding an email that quotes
-it, from the day that mailbox got it.
-
-→ **"i sent it today" can't be found on its own.** A reply under 200 characters is indexed with up
-to 600 characters of the message it answered (59,595 replies), while results and citations still
-show only the reply's own words.
+One last case: quoted messages that nobody in the 150 mailboxes has as an email of their own,
+mostly mail from outside Enron. Those would be lost, so each becomes its own document (84,358 of
+them), readable by whoever got an email quoting it, from the day they got it.
 
 ## 04 · Search
 
-A question runs two searches over the chunks the asker may read, sent on or before the day asked:
+A question runs two searches, both only over chunks the asker may read and that were sent by the
+day asked.
 
-→ **Keyword, BM25** (pg_search), any word of the question, common words dropped and endings folded
-("employee" finds "employees"). It wins when the question quotes something exact: on questions
-naming a deal number, keyword ranks the right email first 93–96% of the time, vector 60–72%.
+Keyword search (BM25, from pg_search) looks for the question's words, with common words dropped
+and endings folded, so "employee" finds "employees". It wins when the question has something
+exact in it. On questions naming a deal number, it put the right email first 93–96% of the time,
+against 60–72% for vector search.
 
-→ **Vector**, EmbeddingGemma 2 at 768 dimensions, run locally for free. It wins when the words
-differ. It found the right email .970 of the time against MiniLM's .910 (vector alone,
-September). 256 dimensions lost 1 to 2 points and weren't faster. Stored as halfvec, half the
-size, which changed 1 question in 200.
+Vector search wins when the email uses different words than the question. The embeddings come
+from EmbeddingGemma 2, 768 numbers per chunk, run locally for free. On the first month I built,
+it found the right email .970 of the time, against .910 for MiniLM, the usual small default. They
+are stored as halfvec, pgvector's type that keeps each number in 2 bytes instead of 4. That halves
+their size (0.7 GB instead of 1.4) and changed the result on 1 question in 200.
 
-→ **Merged by rank** (reciprocal rank fusion, k = 60, 50 from each): BM25 and cosine scores aren't
-on the same scale, but ranks are.
+The two lists are merged by position, not by score (reciprocal rank fusion), because a keyword
+score of 12.3 and a vector score of 0.82 can't be added. An email near the top of both lists
+beats one that only one search loves. That gives 50 candidates.
 
-→ **Reranked** by a cross-encoder (bge-reranker-v2-m3) that reads the question and each of the 50
-candidates together. Cutting to 30 candidates dropped the investigator's top 10 to .878.
+Then a reranker (bge-reranker-v2-m3) reads the question and each candidate together and scores
+how well that email answers it. It's much more accurate than either search, but too slow to run
+over 464k chunks, so it only reorders the 50. Last, a chunk that a better one already says is
+dropped (one article pasted into five digests isn't five results), press is capped at 3 and bulk
+mail at 1, and the top 10 come back.
 
-→ **Trimmed to 10:** a chunk that a better one already says is dropped (one article pasted into
-five digests isn't five results), and press is capped at 3, bulk mail at 1.
-
-Claude wrote 196 questions from real emails, and I scored each layer by whether the right email
-came back, as an employee who can read the answer and as the investigator among everything.
+Claude wrote 196 questions from real emails, each with the email it came from. I scored every
+layer by whether that email came back, as an employee who can read it and as the investigator
+searching everything. Every choice in this README won a side-by-side test like this one; I only
+quote the numbers that changed my mind.
 
 | method | employee, top 10 | first | investigator, top 10 | first |
 |---|---|---|---|---|
@@ -137,33 +145,47 @@ came back, as an employee who can read the answer and as the investigator among 
 | hybrid | .908 | .658 | .821 | .556 |
 | **with rerank, collapse and caps** | **.959** | **.791** | **.893** | **.750** |
 
+Getting the right email is harder than it sounds with this mail. Only the email a question was
+written from counts, plus its copies and forwards, which I find by comparing text. Another email
+that says the same thing in other words counts as a miss, and Enron's mail is full of those: the
+same news forwarded around, replies restating the thread, one notice sent to every desk. Counting
+copies alone lifts the investigator from .827 to .893. On the other side, I tuned search on these
+same questions, which flatters it. I'd guess the two roughly cancel out, but I haven't measured
+that.
+
 ### Why Postgres is the vector database here
 
-The hard part of this search isn't the vectors, it's the filters: who may read what, as of which
-day, minus deleted mail. In Postgres they sit in the same query as the vectors, and row-level
-security refuses rows the asker can't read, whatever the code above it does. That changes how the
-vector index is used:
+Honestly, I also just wanted hands-on time with the whole stack, because a project like this
+doesn't always need all of it. There's a ladder. You only need RAG when a model has to answer
+from documents it has never seen. If people search with the words that are in the documents,
+keyword search is enough. When they ask in other words, you add embeddings, and with a few
+thousand documents you can compare against every one of them, no index needed. Lots of vectors
+and lots of searches is when a vector index earns its place. A separate vector database comes in
+only when the database you have can't keep up, and Postgres kept up fine at 464k chunks.
 
-→ **An employee's mailbox needs no index.** They read about 0.5% of the mail, and computing the
-distance to each of their chunks takes 102 ms. The HNSW index walks everyone's mail first and
-then filters, and for a small mailbox it gave up with 8 results of 50.
+It also made the hard part easy. The hard part isn't the vectors, it's the filters: who may read
+what, as of which day, minus deleted mail. In Postgres they sit in the same query as the vectors,
+and row-level security refuses rows the asker can't read, whatever the code above it does.
 
-→ **Everyone's mail needs the index.** Exact search over all of it takes 8 s. The investigator gets
-HNSW, told to keep walking until enough rows pass the filters.
+That changed how the vector index is used. An employee reads about 0.5% of the mail, so comparing
+the question against each of their chunks takes 102 ms, no index needed. The HNSW index walks
+everyone's mail first and filters after, and for a small mailbox it gave up with 8 results of 50.
+The investigator searches everything, where the exact search takes 8 s, so they get HNSW, told to
+keep walking until enough rows pass the filters.
 
-→ **The radar is the part that truly needs vectors.** Search could get far on keywords alone;
+The radar is the part that truly needs vectors. Search could get far on keywords alone, but
 following subjects through time can't.
 
-The permissions were checked at full scale: every question asked as a mailbox that can't read its
-answer, and again on the day before its answer was sent. 184,589 results, 0 leaks.
+I checked the permissions at full scale: every question asked again as a mailbox that can't read
+its answer, and again on the day before its answer was sent. 0 leaks in 184,589 results.
 
 ## 05 · The agent
 
-A plain tool loop on the Anthropic SDK, with no framework: Claude (Sonnet 5.5) plans, calls tools,
-reads what comes back, and answers. Each tool is a fixed query through the asker's own database
-connection, so row-level security and the day asked apply to everything it sees. It never writes
-SQL: a reader's connection could switch its role back, so only fixed queries keep the permissions
-whole.
+A plain tool loop on the Anthropic SDK, with no framework. Claude (Sonnet 5.5) plans, calls
+tools, reads what comes back, and answers. Each tool is a fixed query through the asker's own
+database connection, so row-level security and the day asked apply to everything it sees. It
+never writes SQL, because a reader's connection could switch its role back, and only fixed
+queries keep the permissions whole.
 
 | tool | what it does | who |
 |---|---|---|
@@ -175,11 +197,11 @@ whole.
 | `topic_history` | one cluster week by week: size, keywords, alerts, who wrote in it | investigator |
 | `alerts` | the radar's alerts between two days | investigator |
 
-The [prompt](rag_trend_radar/agent/prompt.py) asks it to write a plan of smaller questions first,
-search in the words the emails would use, check a claim by a second route (a count and a search,
-or the email read whole), back "first", "most" or "never" with a count, quote exactly, cite every
-claim from mail, and mark what it infers. The emails are data: instructions inside one are never
-followed. It ends on a line, `Found: yes`, `partly` or `no`, that code reads.
+The [prompt](rag_trend_radar/agent/prompt.py) asks it to plan smaller questions first, search in
+the words the emails would use, and check a claim a second way (a count and a search, or the
+email read whole). A "first", "most" or "never" needs a count behind it. It quotes exactly, cites
+every claim from mail, and marks what it infers. The emails are data, so instructions inside one
+are never followed. It ends on a line, `Found: yes`, `partly` or `no`, that code reads.
 
 **An example.** *"Is there any trace of Sherron Watkins's letter to Ken Lay in the mail?"*, as the
 investigator, 7 tool calls, 52 s, 11 cents:
@@ -220,38 +242,45 @@ Asked the same question with the same prompt but no mail and no tools, the same 
 from what it knows of the public record and said it couldn't tell.
 </details>
 
-**How it scored.** 36 questions checked by code, not by a model: a right email cited (10), the
-facts asked for in the answer (5), counts matching SQL in its opening line (10), an honest "no" on
-subjects the mail doesn't hold (6), and an email planted in its search results asking it to do
-something else (5). 36 of 36, every citation an email a tool returned in that run, $2.41. 17 more
-open questions were read one by one, every quote checked against the mail it saw. Without RAG, the 19
-runs on page 2 got 15 "no" and 4 "partly" from the public record.
+**How it did.** Every scored question was answered well: 36 of 36, checked by code, not by
+another model. I gave it different kinds of questions: finding one email, pulling out facts,
+counting, subjects the mail never mentions (it has to say no), and emails planted in its results
+telling it to do something else. Every citation is an email a tool returned in that run. 17 more
+open questions I read one by one, checking every quote against the mail it saw, and 19 of the
+runs are on the demo page. Without RAG, the same model on those 19 answered "no" 15 times and
+"partly" 4 times.
+
+I tuned it to be thorough, so it checks claims a second way and writes a full answer. It could
+just as well search less and answer shorter, but I wanted to show what the agent can do when it
+digs. A run takes a median 32 s on my laptop, about two thirds of it the local search models; on
+a server GPU I'd expect around 15 s.
 
 ## 06 · Tracking trends with the vectors
 
 This was my favourite part. Search can't answer "what was suddenly rising in October?", because
 no single email holds that answer.
 
-Each week, the last 26 weeks of mail are clustered from scratch, using only mail sent so far:
-UMAP squashes each chunk's 768 numbers to 5, then HDBSCAN finds dense groups without being told
-how many there are, and leaves out what fits none. Clustered in all 768 numbers, it left 89–90%
-of the mail out and found near-copies. Neighbouring weeks are linked by the chunks they share, so
-a **cluster** is one subject followed week to week. Four earlier versions with fixed topics that
-moved melted together or got taken over by unrelated mail.
+Each week, the vectors of the last 26 weeks of mail are clustered from scratch, using only mail
+sent so far. UMAP squashes each vector's 768 numbers down to 5, then HDBSCAN finds dense groups
+without being told how many there are, and leaves out what fits none. On all 768 numbers it left
+89–90% of the mail out. Neighbouring weeks are linked by the chunks they share, so a **cluster**
+is one subject followed week to week.
 
-A cluster is a topic, or a newsletter, footer or chatter, judged by rule and then read by hand.
-Those last three were 30% of the mail in clusters, so the replay hides them behind a button. The
-faint glow on the map is 4,000 real chunks of mail no cluster took.
+Not every cluster is a topic. Newsletters, footers and chatter form clusters too. They're judged
+by rule and then read by hand, and they were 30% of the mail in clusters, so the replay hides them
+behind a button. The faint glow on the map is 4,000 real chunks of mail no cluster took.
 
-26 weeks won over 8 and 16: two runs with different seeds agreed on 55–58% of lasting splits,
-against 29–45% at 8 weeks, at the cost of a new subject taking longer to appear. A cluster needs
-at least 100 chunks; 200 was too coarse. Only clusters both seeds found make the map.
+I picked 26 weeks over 8 and 16 because two runs with different random seeds agreed much more
+often on how clusters split. The cost is that a new subject takes longer to show up. Only
+clusters both seeds found make the map.
 
-**An alert fires when a cluster, in its last 4 weeks, holds at least 4 times its own normal and
-at least 1% of all the mail the radar read,** was also found by the second seed, looks like a real
-subject so far, and hasn't alerted in 8 weeks. Seven of the 72, the ones the replay stops on:
+**An alert fires when a cluster, in its last 4 weeks, holds at least 4 times its normal and at
+least 1% of all the mail the radar read.** It also has to be found by the second seed, look like a
+real subject so far, and not have alerted in the last 8 weeks. Normal is what the cluster would
+have got by keeping its earlier share of all the mail, since the total swung tenfold in late
+2001. Seven of the 72, the ones the replay stops on:
 
-| alert | cluster | emails in 4 weeks | normal | it followed |
+| alert | cluster | chunks in 4 weeks | normal | it followed |
 |---|---|---|---|---|
 | Feb 18, 2001 | California utilities | 284 | 22 | blackouts, 32 days before |
 | Aug 26, 2001 | Skilling's exit | 124 | 3 | his resignation, 12 days before |
@@ -269,14 +298,17 @@ turn. It could also run day by day, about 18 hours on a laptop, but I didn't wan
 that compute.
 
 My favourite alert isn't in that table. On September 24, 2000, one fired on the Raptor swaps: 140
-emails in 4 weeks where normal was 12, from staff drawing up the hedges that unravelled in the
+chunks in 4 weeks where normal was 12, from staff drawing up the hedges that unravelled in the
 collapse a year later, long before any of it was news. The radar had no idea why they'd matter,
 only that a new subject had appeared in the mail.
 
 ## 07 · The tables
 
-Everything lives in one Postgres database (pgvector and pg_search on the ParadeDB image). Every
-table but the first is rebuilt from it, which is why there are no migrations.
+Everything lives in one Postgres database (pgvector and pg_search on the ParadeDB image). Apart
+from `raw_files` and the two caches, every table is rebuilt from `raw_files`, which is why there
+are no migrations.
+
+**What came in.** The files as read, and what cleaning decided about them.
 
 | table | holds | rows |
 |---|---|---|
@@ -284,6 +316,12 @@ table but the first is rebuilt from it, which is why there are no migrations.
 | `quarantine` | files set aside and why | 1,335 |
 | `copies` | each file's email and its resolved date: the replay's schedule | 516,066 |
 | `boilerplate` | trailing lines trimmed from chunks, from the day they qualified | 319 |
+
+**What search reads.** `access` is what row-level security checks, and each embedding model gets
+its own vectors table, so trying a new model never touches the old one.
+
+| table | holds | rows |
+|---|---|---|
 | `documents` | one per email or orphan quoted message: title, own text, quoted text | 328,892 |
 | `emails` | sender and recipients of the emails among them | 244,534 |
 | `employees` | the 150 mailboxes that can log in | 150 |
@@ -292,17 +330,26 @@ table but the first is rebuilt from it, which is why there are no migrations.
 | `chunks` | the searched pieces, with the BM25 index | 464,603 |
 | `vectors_embeddinggemma_2_768` | one halfvec per chunk, with the HNSW index | 464,603 |
 | `batches` | one row per simulated day, finished or not | 2,191 |
-| `cache.embeddings` | every vector ever computed, kept across rebuilds | 514,973 |
+
+**The caches.** In their own schema, so a rebuild doesn't spend 19 hours embedding again.
+
+| table | holds | rows |
+|---|---|---|
+| `cache.embeddings` | every vector ever computed | 514,973 |
 | `cache.rerank_scores` | every rerank score ever computed | 91,724 |
+
+**The radar.** Investigator-only.
+
+| table | holds | rows |
+|---|---|---|
 | `clusters` | one per cluster over its life: kind, shown, name | 973 |
 | `cluster_weeks` | a cluster in one week, from mail up to it: centre, keywords, counts | 13,881 |
 | `cluster_chunks` | which chunks a cluster held, first and last week | 613,800 |
-| `day_totals` | the store and the people in it, per day | 784 |
+| `day_totals` | the store and the people in it, per day, for the replay's timeline | 784 |
 | `alerts` | a cluster growing fast on a week | 72 |
 
-The radar's tables are investigator-only. Deleting a document takes its chunks, vectors and
-headers out of every search and every later radar build; the corpus never asks for it, so it's
-built and tested, not run on the store.
+Deleting a document takes its chunks, vectors and headers out of every search and every later
+radar build. The corpus never asks for it, so it's built and tested, not run on the store.
 
 ## 08 · Run it
 
@@ -323,29 +370,21 @@ The whole corpus is `replay --since 1997-01-01 --until 2002-12-31`, about 19 hou
 The radar is `radar-frames` (about 2 hours), `radar-build` and `radar-export`. The agent's runs
 and page 2's inputs are in `curated/`, so `agent-scores` and `investigator-export` rerun for free.
 
-## 09 · Limits
-
-→ Search was tuned on the same 196 questions as the table, and Claude wrote them, so .893 is
-probably a little flattering. The agent's questions were written knowing the store too.
+## 09 · Known gaps
 
 → The alert thresholds were picked watching the whole run, ending included. Each alert only reads
 past mail, but "4 times" and "1%" knew how the story ended. About half of the alerts from August
 2001 on are newsletters and ads.
 
-→ The permissions hold against the queries this code runs, but not against someone writing their
-own SQL. That's why the agent gets search and stats tools and doesn't write SQL.
+→ The permissions hold against the queries this code runs, not against someone writing their own
+SQL. That's why the agent gets fixed tools and never writes SQL.
 
-→ Dates were resolved over the whole 2002 snapshot, so a day can know a copy that a live pipeline
-would only see later. Single-copy emails may carry an export's hour shift undetected.
-
-→ Replies aren't linked into threads, the press rule lets a few promos through as mail, and
-`mail_counts` counts emails, not messages known only from quotes.
+→ Replies aren't linked into threads, so the agent follows a conversation by searching, not by
+walking it.
 
 → There's no feedback loop. A production version would log every question with its results, cost
 and latency, take signals from the people asking (a re-ask, a clicked citation), and turn the
 questions that failed into new eval questions.
-
-→ It's one company, in English, from one 2002 snapshot.
 
 ## Credits
 
